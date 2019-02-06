@@ -27,6 +27,7 @@ package database
 	import services.TransmitterService;
 	
 	import stats.BasicUserStats;
+	import stats.StatsManager;
 	
 	import treatments.BasalRate;
 	import treatments.Insulin;
@@ -170,6 +171,8 @@ package database
 			"isbasalabsolute STRING, " +
 			"isbasalrelative STRING, " +
 			"istempbasalend STRING, " +
+			"basalabsoluteamount REAL, " +
+			"basalpercentamount REAL, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_INSULINS:String = "CREATE TABLE IF NOT EXISTS insulins(" +
@@ -811,8 +814,48 @@ package database
 														sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check10Error);
 														sqlStatement.clearParameters();
 														
-														//All checks performed. Continue with next table
-														createInsulinsTable();
+														sqlStatement.text = "SELECT basalabsoluteamount FROM treatments";
+														sqlStatement.addEventListener(SQLEvent.RESULT,check11Performed);
+														sqlStatement.addEventListener(SQLErrorEvent.ERROR,check11Error);
+														sqlStatement.execute();
+														
+														function check11Performed(se:SQLEvent):void 
+														{
+															sqlStatement.removeEventListener(SQLEvent.RESULT,check11Performed);
+															sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check11Error);
+															sqlStatement.clearParameters();
+															
+															sqlStatement.text = "SELECT basalpercentamount FROM treatments";
+															sqlStatement.addEventListener(SQLEvent.RESULT,check12Performed);
+															sqlStatement.addEventListener(SQLErrorEvent.ERROR,check12Error);
+															sqlStatement.execute();
+															
+															function check12Performed(se:SQLEvent):void 
+															{
+																sqlStatement.removeEventListener(SQLEvent.RESULT,check12Performed);
+																sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check12Error);
+																sqlStatement.clearParameters();
+																
+																//All checks performed. Continue with next table
+																createInsulinsTable();
+															}
+															
+															function check12Error(see:SQLErrorEvent):void 
+															{
+																if (debugMode) trace("Database.as : basalpercentamount column not found in treatments table (old version of Spike). Updating table...");
+																sqlStatement.clearParameters();
+																sqlStatement.text = "ALTER TABLE treatments ADD COLUMN basalpercentamount REAL;";
+																sqlStatement.execute();
+															}
+														}
+														
+														function check11Error(see:SQLErrorEvent):void 
+														{
+															if (debugMode) trace("Database.as : basalabsoluteamount column not found in treatments table (old version of Spike). Updating table...");
+															sqlStatement.clearParameters();
+															sqlStatement.text = "ALTER TABLE treatments ADD COLUMN basalabsoluteamount REAL;";
+															sqlStatement.execute();
+														}
 													}
 													
 													function check10Error(see:SQLErrorEvent):void 
@@ -2567,6 +2610,8 @@ package database
 				text += "isbasalabsolute, ";
 				text += "isbasalrelative, ";
 				text += "istempbasalend, ";
+				text += "basalabsoluteamount, ";
+				text += "basalpercentamount, ";
 				text += "needsadjustment) ";
 				text += "VALUES (";
 				text += "'" + treatment.ID + "', ";
@@ -2587,6 +2632,8 @@ package database
 				text += "'" + String(treatment.isBasalAbsolute) + "', ";
 				text += "'" + String(treatment.isBasalRelative) + "', ";
 				text += "'" + String(treatment.isTempBasalEnd) + "', ";
+				text += treatment.basalAbsoluteAmount + ", ";
+				text += treatment.basalPercentAmount + ", ";
 				text += "'" + String(treatment.needsAdjustment) + "')";
 				
 				insertRequest.text = text;
@@ -2637,6 +2684,8 @@ package database
 				"isbasalabsolute = '" + String(treatment.isBasalAbsolute) + "', " +
 				"isbasalrelative = '" + String(treatment.isBasalRelative) + "', " +
 				"istempbasalend = '" + String(treatment.isTempBasalEnd) + "', " +
+				"basalabsoluteamount = " + treatment.basalAbsoluteAmount + ", " +
+				"basalpercentamount = " + treatment.basalPercentAmount + ", " +
 				"needsadjustment = '" + String(treatment.needsAdjustment) + "' " +
 				"WHERE id = '" + treatment.ID + "'";
 				updateRequest.execute();
@@ -3126,6 +3175,7 @@ package database
 			var treatmentsOffSet:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_TREATMENTS_OFFSET));
 			var lowThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));;
 			var highThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+			var userType:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI);
 			var now:Number = new Date().valueOf();
 			
 			try 
@@ -3168,6 +3218,10 @@ package database
 					getRequest.clearParameters();
 					getRequest.text = "SELECT SUM(insulinamount) AS `totalBolus`, ";
 					getRequest.text +=	"(SELECT SUM(carbs) FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + (isNaN(fromTime) ? (now - treatmentsOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `totalCarbs`, ";
+					if (userType == "mdi")
+					{
+						getRequest.text +=	"(SELECT SUM(basalabsoluteamount) FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + (isNaN(fromTime) ? (now - treatmentsOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `totalBasal`, ";
+					}
 					getRequest.text +=	"(SELECT SUM(duration) FROM treatments WHERE type == '" + Treatment.TYPE_EXERCISE + "' AND lastmodifiedtimestamp BETWEEN " + (isNaN(fromTime) ? (now - treatmentsOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `totalExercise` ";
 					getRequest.text += "FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + (isNaN(fromTime) ? (now - treatmentsOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime);
 					getRequest.execute();
@@ -3267,6 +3321,17 @@ package database
 					userStats.bolus = Math.round(resultTreatments.data[0]["totalBolus"] * 100) / 100;
 					userStats.carbs = Math.round(resultTreatments.data[0]["totalCarbs"] * 10) / 10;
 					userStats.exercise = resultTreatments.data[0]["totalExercise"] != null && !isNaN(resultTreatments.data[0]["totalExercise"]) ? Math.round(resultTreatments.data[0]["totalExercise"]) : 0;
+					if (userType == "pump")
+					{
+						StatsManager.performBasalCalculations(userStats);
+					}
+					else if (userType == "mdi")
+					{
+						if (resultTreatments.data[0]["totalBasal"] != null)
+						{
+							userStats.basal = !isNaN(resultTreatments.data[0]["totalBasal"]) ? resultTreatments.data[0]["totalBasal"] : 0;
+						}
+					}
 				}
 			} catch (error:SQLError) {
 				if (conn.connected) conn.close();

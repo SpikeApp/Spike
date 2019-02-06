@@ -1986,6 +1986,7 @@ package ui.chart
 			var highestBasalAmount:Number = Math.max(TreatmentsManager.getHighestBasal(Treatment.TYPE_TEMP_BASAL), scheduledHighestBasal);
 			
 			//Temp Basal Area Calculation & Plotting
+			ProfileManager.totalDeliveredPumpBasalAmount = 0;
 			var absoluteBasalDataPointsArray:Array = [];
 			var desiredBasalHeight:Number = _graphHeight * 0.2; //20%
 			basalScaler = desiredBasalHeight / highestBasalAmount;
@@ -2471,6 +2472,7 @@ package ui.chart
 			{
 				if (basalProps != null && basalProps.basalTreatment != null)
 				{
+					activeBasalAreaQuad = null;
 					TreatmentsManager.deleteTreatment(basalProps.basalTreatment);
 				}
 				
@@ -2498,6 +2500,7 @@ package ui.chart
 					if (basalProps != null && basalProps.basalTreatment != null)
 					{
 						//Update Basal
+						activeBasalAreaQuad = null;
 						basalProps.basalTreatment.timestamp = movedTimestamp;
 						TreatmentsManager.updateTreatment(basalProps.basalTreatment);
 					}

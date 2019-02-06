@@ -403,6 +403,8 @@ package treatments
 						treatment.isBasalAbsolute = dbTreatment.isbasalabsolute != null && dbTreatment.isbasalabsolute == "true";
 						treatment.isBasalRelative = dbTreatment.isbasalrelative != null && dbTreatment.isbasalrelative == "true";
 						treatment.isTempBasalEnd = dbTreatment.istempbasalend != null && dbTreatment.istempbasalend == "true";
+						treatment.basalAbsoluteAmount = dbTreatment.basalabsoluteamount != null && !isNaN(dbTreatment.basalabsoluteamount) ? dbTreatment.basalabsoluteamount : 0;
+						treatment.basalPercentAmount = dbTreatment.basalpercentamount != null && !isNaN(dbTreatment.basalpercentamount) ? dbTreatment.basalpercentamount : 0;
 						
 						if (dbTreatment.needsadjustment != null && dbTreatment.needsadjustment == "true")
 						{

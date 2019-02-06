@@ -196,7 +196,7 @@ package ui.screens.display.settings.treatments
 			
 			if (validBasalRate)
 			{
-				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','total_basal_rate_per_day') + ": " + GlucoseFactory.formatIOB(GlucoseFactory.getTotalDailyBasalRates()) } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','total_basal_rate_per_day') + ": " + GlucoseFactory.formatIOB(GlucoseFactory.getTotalDailyBasalRate()) } );
 			}
 				
 			if (!validBasalRate && !editMode && !addMode)

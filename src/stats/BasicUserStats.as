@@ -31,6 +31,7 @@ package stats
 		public var carbs:Number = Number.NaN;
 		public var bolus:Number = Number.NaN;
 		public var basal:Number = Number.NaN;
+		public var basalRates:Number = Number.NaN;
 		public var exercise:Number = Number.NaN;
 		public var page:String = "";
 		

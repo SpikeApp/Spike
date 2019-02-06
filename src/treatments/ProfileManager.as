@@ -29,6 +29,7 @@ package treatments
 		public static var basalRatesMap:Dictionary = new Dictionary();
 		public static var basalRatesMapByTime:Object = {};
 		private static var nightscoutCarbAbsorptionRate:Number = 0;
+		public static var totalDeliveredPumpBasalAmount:Number = 0;
 		
 		public function ProfileManager()
 		{
@@ -655,6 +656,16 @@ package treatments
 			
 			if (tempBasalAreaAmount < 0) tempBasalAreaAmount = 0;
 			if (tempBasalAmount < 0) tempBasalAmount = 0;
+			
+			//
+			if (tempBasalTreatment != null)
+			{
+				totalDeliveredPumpBasalAmount += tempBasalAmount / tempBasalTreatment.basalDuration;
+			}
+			else
+			{
+				totalDeliveredPumpBasalAmount += scheduledBasalRate / 60;
+			}
 			
 			//Result
 			return {

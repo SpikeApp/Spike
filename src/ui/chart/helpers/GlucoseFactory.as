@@ -670,7 +670,7 @@ package ui.chart.helpers
 			return basalResult;
 		}
 		
-		public static function getTotalDailyBasalRates():Number
+		public static function getTotalDailyBasalRate():Number
 		{
 			var userBasalRates:Array = ProfileManager.basalRatesList;
 			var total:Number = 0;

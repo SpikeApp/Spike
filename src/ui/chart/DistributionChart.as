@@ -32,6 +32,8 @@ package ui.chart
 	import stats.BasicUserStats;
 	import stats.StatsManager;
 	
+	import treatments.ProfileManager;
+	
 	import ui.AppInterface;
 	import ui.chart.helpers.GlucoseFactory;
 	import ui.chart.visualcomponents.PieDistributionSection;
@@ -121,9 +123,17 @@ package ui.chart
 		private var carbsSection:PieDistributionSection;
 		private var bolusSection:PieDistributionSection;
 		private var exerciseSection:PieDistributionSection;
-		private var emptySection1:PieDistributionSection;
-		private var emptySection2:PieDistributionSection;
-		private var emptySection3:PieDistributionSection;
+		private var basalAmountSection:PieDistributionSection;
+		private var basalRateSection:PieDistributionSection;
+		private var deliveredBasalSection:PieDistributionSection;
+
+		private var userType:String;
+
+		private var basalAmountOutput:String;
+
+		private var basalRateOutput:String;
+
+		private var deliveredBasalOutput:String;
 
 		[ResourceBundle("globaltranslations")]
 		[ResourceBundle("chartscreen")]
@@ -164,6 +174,9 @@ package ui.chart
 			highColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_HIGH_COLOR));
 			fontColor = uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_PIE_CHART_FONT_COLOR));
 			
+			//User Type
+			userType = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI);
+			
 			//Set Strings
 			lowOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','low_title');
 			highOutput = ModelLocator.resourceManagerInstance.getString('chartscreen','high_title');
@@ -180,6 +193,9 @@ package ui.chart
 			bolusOutput = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bolus');
 			carbsOutput = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs');
 			exerciseOutput = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_exercise');
+			basalAmountOutput = userType == "mdi" ? ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal') : ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_temp_basal');
+			basalRateOutput = ModelLocator.resourceManagerInstance.getString('treatments','basal_rate');
+			deliveredBasalOutput = ModelLocator.resourceManagerInstance.getString('treatments','delivered_basal');
 		}
 		
 		private function setupProperties():void
@@ -382,29 +398,29 @@ package ui.chart
 			exerciseSection.title.text = exerciseOutput;
 			statsContainer.addChild(exerciseSection);
 			
-			/* Empty #1 */
-			emptySection1 = new PieDistributionSection(sectionWidth, sectionHeight, sectionColor, fontColor);
-			emptySection1.touchable = false;
-			emptySection1.x = timeFluctuation10Section.x + timeFluctuation10Section.width + sectionsGap;
-			emptySection1.y = meanHourlyChangeSection.y;
-			emptySection1.title.text = "";
-			statsContainer.addChild(emptySection1);
+			/* Basal Amount */
+			basalAmountSection = new PieDistributionSection(sectionWidth, sectionHeight, sectionColor, fontColor);
+			basalAmountSection.touchable = false;
+			basalAmountSection.x = timeFluctuation10Section.x + timeFluctuation10Section.width + sectionsGap;
+			basalAmountSection.y = meanHourlyChangeSection.y;
+			basalAmountSection.title.text = basalAmountOutput;
+			statsContainer.addChild(basalAmountSection);
 			
-			/* Empty #2 */
-			emptySection2 = new PieDistributionSection(sectionWidth, sectionHeight, sectionColor, fontColor);
-			emptySection2.touchable = false;
-			emptySection2.x = emptySection1.x + emptySection1.width + sectionsGap;
-			emptySection2.y = emptySection1.y;
-			emptySection2.title.text = "";
-			statsContainer.addChild(emptySection2);
+			/* EDaily Basal Rate */
+			basalRateSection = new PieDistributionSection(sectionWidth, sectionHeight, sectionColor, fontColor);
+			basalRateSection.touchable = false;
+			basalRateSection.x = basalAmountSection.x + basalAmountSection.width + sectionsGap;
+			basalRateSection.y = basalAmountSection.y;
+			basalRateSection.title.text = userType == "pump" ? basalRateOutput : "";
+			statsContainer.addChild(basalRateSection);
 			
-			/* Empty #3 */
-			emptySection3 = new PieDistributionSection(sectionWidth, sectionHeight, sectionColor, fontColor);
-			emptySection3.touchable = false;
-			emptySection3.x = emptySection2.x + emptySection2.width + sectionsGap;
-			emptySection3.y = emptySection2.y;
-			emptySection3.title.text = "";
-			statsContainer.addChild(emptySection3);
+			/* Empty */
+			deliveredBasalSection = new PieDistributionSection(sectionWidth, sectionHeight, sectionColor, fontColor);
+			deliveredBasalSection.touchable = false;
+			deliveredBasalSection.x = basalRateSection.x + basalRateSection.width + sectionsGap;
+			deliveredBasalSection.y = basalRateSection.y;
+			deliveredBasalSection.title.text = userType == "pump" ? deliveredBasalOutput : "";
+			statsContainer.addChild(deliveredBasalSection);
 			
 			/* STATS HIT AREA */
 			statsHitArea = new Quad(statsContainer.width, statsContainer.height, 0xFF0000);
@@ -588,6 +604,9 @@ package ui.chart
 				if (carbsSection != null) carbsSection.message.text = !dummyModeActive && !isNaN(userStats.carbs) ? GlucoseFactory.formatCOB(userStats.carbs) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 				if (bolusSection != null) bolusSection.message.text = !dummyModeActive && !isNaN(userStats.bolus) ? GlucoseFactory.formatIOB(userStats.bolus) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 				if (exerciseSection != null) exerciseSection.message.text = !dummyModeActive && !isNaN(userStats.exercise) ? TimeSpan.formatHoursMinutesFromMinutes(userStats.exercise, true, userStats.exercise != 0) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (basalAmountSection != null) basalAmountSection.message.text = !dummyModeActive && !isNaN(userStats.basal) ? GlucoseFactory.formatIOB(userStats.basal) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (userType == "pump" && basalRateSection != null) basalRateSection.message.text = !dummyModeActive && !isNaN(userStats.basalRates) ? GlucoseFactory.formatIOB(userStats.basalRates) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+				if (userType == "pump" && deliveredBasalSection != null) deliveredBasalSection.message.text = !dummyModeActive && !isNaN(ProfileManager.totalDeliveredPumpBasalAmount) ? GlucoseFactory.formatIOB(ProfileManager.totalDeliveredPumpBasalAmount) : ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
 			}
 			
 			if (page != BasicUserStats.PAGE_ALL && page != BasicUserStats.PAGE_BG_DISTRIBUTION && !pieChartDrawn)
@@ -1083,25 +1102,25 @@ package ui.chart
 				exerciseSection = null;
 			}
 			
-			if (emptySection1 != null)
+			if (basalAmountSection != null)
 			{
-				emptySection1.removeFromParent();
-				emptySection1.dispose();
-				emptySection1 = null;
+				basalAmountSection.removeFromParent();
+				basalAmountSection.dispose();
+				basalAmountSection = null;
 			}
 			
-			if (emptySection2 != null)
+			if (basalRateSection != null)
 			{
-				emptySection2.removeFromParent();
-				emptySection2.dispose();
-				emptySection2 = null;
+				basalRateSection.removeFromParent();
+				basalRateSection.dispose();
+				basalRateSection = null;
 			}
 			
-			if (emptySection3 != null)
+			if (deliveredBasalSection != null)
 			{
-				emptySection3.removeFromParent();
-				emptySection3.dispose();
-				emptySection3 = null;
+				deliveredBasalSection.removeFromParent();
+				deliveredBasalSection.dispose();
+				deliveredBasalSection = null;
 			}
 			
 			if (statsRightSection != null)

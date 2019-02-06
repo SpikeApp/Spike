@@ -697,6 +697,17 @@ package ui.screens
 			Trace.myTrace("ChartScreen.as", "Updating Basals");
 			
 			glucoseChart.renderBasals();
+			
+			if (pieChart != null && pieChart.currentPageName == BasicUserStats.PAGE_TREATMENTS)
+			{
+				clearTimeout(pieChartTreatmentUpdaterTimeout);
+				
+				pieChartTreatmentUpdaterTimeout = setTimeout( function():void 
+				{
+					if (pieChart == null) return;
+					SystemUtil.executeWhenApplicationIsActive(pieChart.updateStats, BasicUserStats.PAGE_TREATMENTS);
+				}, 1000 );
+			}
 		}
 		
 		private function onTreatmentAdded(e:TreatmentsEvent):void

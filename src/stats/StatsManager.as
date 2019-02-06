@@ -7,6 +7,7 @@ package stats
 	
 	import model.ModelLocator;
 	
+	import treatments.ProfileManager;
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
@@ -149,6 +150,7 @@ package stats
 					var totalCarbs:Number = 0;
 					var totalExercise:Number = 0;
 					
+					//Treatments
 					var numberOfTreatments:uint = TreatmentsManager.treatmentsList.length;
 					for (i = 0; i < numberOfTreatments; i++) 
 					{
@@ -165,10 +167,92 @@ package stats
 					followerUserStats.bolus = totalBolus;
 					followerUserStats.carbs = totalCarbs;
 					followerUserStats.exercise = totalExercise;
+					
+					//Basals
+					performBasalCalculations(followerUserStats);
 				}
 				
 				return followerUserStats;
 			}
+		}
+		
+		public static function performBasalCalculations(userStats:BasicUserStats):void
+		{
+			var userType:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI);
+			var basalType:String = userType == "pump" ? Treatment.TYPE_TEMP_BASAL : Treatment.TYPE_MDI_BASAL;
+			var now:Number = new Date().valueOf();
+			var totalBasal:Number = 0;
+			var totalBasalRate:Number = Number.NaN;
+			var i:int;
+			var relevantBasalsList:Array = TreatmentsManager.basalsList.filter
+				(
+					function (basal:Treatment, index:int, arr:Array):Boolean 
+					{
+						//Consider treatments of correct basal type (pump vs MDI)
+						var validated:Boolean = basal != null && basal.type == basalType && basal.timestamp <= now && basal.timestamp >= now - TimeSpan.TIME_24_HOURS;
+						
+						return validated;
+					}
+				);
+			relevantBasalsList.sortOn(["timestamp"], Array.NUMERIC);
+			
+			var numberOfBasals:uint = relevantBasalsList.length;
+			var basal:Treatment;
+			
+			if (userType == "pump")
+			{
+				//Temp Basals
+				for (i = 0; i < numberOfBasals; i++) 
+				{
+					basal = relevantBasalsList[i];
+					var naiveBasalAmount:Number = 0;
+					var givenBasalAmount:Number = 0;
+					var basalDuration:Number = 0;
+					
+					if (basal.isBasalAbsolute)
+					{
+						naiveBasalAmount = basal.basalAbsoluteAmount;
+					}
+					else if (basal.isBasalRelative)
+					{
+						var correspondingBasalRate:Number = ProfileManager.getBasalRateByTime(basal.timestamp);
+						naiveBasalAmount = correspondingBasalRate * (100 + basal.basalPercentAmount) / 100;
+					}
+					
+					basalDuration = basal.basalDuration;
+					var basalRatePerMinute:Number = naiveBasalAmount / basalDuration;
+					
+					if (i < numberOfBasals - 1)
+					{
+						var nextBasal:Treatment = TreatmentsManager.basalsList[i+1];
+						if (nextBasal != null)
+						{
+							if (basal.timestamp + (basalDuration * TimeSpan.TIME_1_MINUTE) > nextBasal.timestamp)
+							{
+								//Readjust duration
+								basalDuration = (nextBasal.timestamp - basal.timestamp) / 1000 / 60;
+							}
+						}
+					}
+					
+					givenBasalAmount = basalRatePerMinute * basalDuration;
+					totalBasal += givenBasalAmount;
+				}
+				
+				//Basal Rates
+				totalBasalRate = GlucoseFactory.getTotalDailyBasalRate();
+			}
+			else if (userType == "mdi")
+			{
+				for (i = 0; i < numberOfBasals; i++) 
+				{
+					basal = relevantBasalsList[i];
+					totalBasal += basal.basalAbsoluteAmount;
+				}
+			}
+			
+			userStats.basal = totalBasal;
+			userStats.basalRates = totalBasalRate;
 		}
 	}
 }
