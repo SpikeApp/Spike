@@ -196,7 +196,7 @@ package ui.screens.display.settings.treatments
 			
 			if (validBasalRate)
 			{
-				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','total_basal_rate_per_day') + ": " + GlucoseFactory.formatIOB(getBasalRateTotals()) } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','total_basal_rate_per_day') + ": " + GlucoseFactory.formatIOB(GlucoseFactory.getTotalDailyBasalRates()) } );
 			}
 				
 			if (!validBasalRate && !editMode && !addMode)
@@ -229,46 +229,6 @@ package ui.screens.display.settings.treatments
 			}
 			
 			dataProvider = new ArrayCollection(data);
-			
-			
-			
-			for (var j:int = 0; j < data.length; j++) 
-			{
-				
-			}
-			
-		}
-		
-		private function getBasalRateTotals():Number
-		{
-			var total:Number = 0;
-			
-			for (var i:Number = 0, len:uint = userBasalRates.length; i < len; i++) 
-			{
-				var basalRate1:BasalRate = userBasalRates[i];
-				var basalRate2:BasalRate = userBasalRates[(i+1)%len];
-				
-				if (basalRate1 != null && basalRate2 != null)
-				{
-					var time1:Date = new Date();
-					time1.hours = basalRate1.startHours;
-					time1.minutes = basalRate1.startMinutes;
-					time1.seconds = 0;
-					time1.milliseconds = 0;
-					
-					var time2:Date = new Date();
-					time2.hours = i < len - 1 ? basalRate2.startHours : 23;
-					time2.minutes = i < len - 1 ? basalRate2.startMinutes : 59;
-					time2.seconds = 0;
-					time2.milliseconds = 0;
-					
-					var value:Number = basalRate1.basalRate;
-					
-					total += TimeSpan.fromDates(time1, time2).totalMinutes * value / 60;
-				}
-			}
-			
-			return total;
 		}
 		
 		private function configureComponents():void
