@@ -640,7 +640,7 @@ package ui.chart.helpers
 			
 			if (userType == "pump")
 			{
-				var pumpBasalProperties:Object = ProfileManager.getPumpBasalData(now);
+				var pumpBasalProperties:Object = ProfileManager.getPumpBasalData(now, CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout", Number.NaN);
 				if (pumpBasalProperties != null)
 				{
 					var currentPumpBasal:Number = pumpBasalProperties.tempBasalAmount != null && !isNaN(pumpBasalProperties.tempBasalAmount) ? pumpBasalProperties.tempBasalAmount : 0;

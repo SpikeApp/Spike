@@ -4,6 +4,7 @@ package services
 	import com.distriqt.extension.networkinfo.NetworkInfo;
 	import com.distriqt.extension.networkinfo.events.NetworkInfoEvent;
 	import com.hurlant.crypto.hash.SHA1;
+	import com.hurlant.util.Base64;
 	import com.hurlant.util.Hex;
 	
 	import flash.events.Event;
@@ -13,6 +14,8 @@ package services
 	import flash.net.URLLoader;
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
+	import flash.utils.ByteArray;
+	import flash.utils.CompressionAlgorithm;
 	import flash.utils.Timer;
 	import flash.utils.clearTimeout;
 	import flash.utils.setTimeout;
@@ -70,6 +73,8 @@ package services
 	public class NightscoutService extends EventDispatcher
 	{
 		/* Constants */
+		private static const TIMEZONES_COORDINATES:String = "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";
+		private static const TIMEZONES_OFFSETS:String = "XQAAEAC+BQAAAAAAAAADJl5wc5CUweoZdCVCCguIET9kxd9bQMk22wQ55cUYQ08FDJJhVdTFSS+LVu37oh1jL9tEfzHiRI1YJTNT7gIoN+iYzuPJE812JQ9fCigACLVi3rQNNwdq8E7rj9VGSHw8DBUJwCn7G+zCOZ7Dz8y7WQKE7p+CABsYeSnXawBSQb2AOlazRISsaMTyWiD9z5HwxszUCrpfuR89riNJENYad98LkGiQYUEJLOsPZ1k6HLVmUubSsQip9aD25j5HO6FjQFJBslsC4uW7Gydk3xkwnPWg0OQCB0pfxi3wlJgAkdTv63Es+meIPPB+bLNENoY+I2fx5EKsllXtVhtZV35WIXsr7tObhoORGnSoNCaf911NyC69/oPtfWKXpwDFM9iUoiGuWuhDkUpG7FC/QHHai2GOzBvhzQ==";
 		private static const MODE_GLUCOSE_READING:String = "glucoseReading";
 		private static const MODE_GLUCOSE_READING_GET:String = "glucoseReadingGet";
 		private static const MODE_CALIBRATION:String = "calibration";
@@ -79,6 +84,7 @@ package services
 		private static const MODE_TREATMENT_UPLOAD:String = "treatmentUpload";
 		private static const MODE_TREATMENT_DELETE:String = "treatmentDelete";
 		private static const MODE_PROFILE_GET:String = "profileGet";
+		private static const MODE_TIMEZONE_GET:String = "timezoneGet";
 		private static const MODE_TREATMENTS_GET:String = "treatmentsGet";
 		private static const MODE_BASALS_GET:String = "basalsGet";
 		private static const MODE_PROPERTIES_V2_GET:String = "propertiesV2Get";
@@ -178,6 +184,12 @@ package services
 		private static var syncPumpBasalRates:Boolean = false;
 		private static var basalProfileImport:Boolean = false;
 		public static var basalsAPIServerResponse:String = "";
+		private static var nightscoutTimeZone:String = "";
+		public static var hostTimezoneOffset:Number = 0;
+		private static var geonamesUsers:Array = ["45fee0765c", "4515ca06f9", "46c04718a7", "4f809f5db0", "47e88cdf69", "45b5e4ce7c", "40afd73bbb", "545a08a22f", "5c09ec77d3", "55adfb353c", "5427be48f8", "55e671ead8", "5774eab247", "50fb52f726", "5d9a1289e2", "557d84dcf4", "509cce9b66", "50d3cabf23", "54965367e7", "5e92e1edfc", "5a59133b6b", "5260af3ac3", "5ad27bf439", "58b022bb3d", "5c414bf40b", "54a5141999", "5db6e954d8", "541b121ce4", "58d3e1309b", "513cda6f3b", "563bb21f03", "59df81ccf1", "566652abbf", "659a25e971", "69307f2ed0", "624ac551e8", "69072de083", "62e0c69f57", "6506e31435", "688eeca3d1", "6ac71683b4", "67c2af22ff", "6a91a241e8", "683eba6287", "613d3af72e", "686aae7224", "6f61350b09", "625b1ad6a3", "670a949b34", "6ddc009a52"];
+		private static var hostTimezoneLatitude:Number = Number.NaN;
+		private static var hostTimezoneLongitude:Number = Number.NaN;
+		private static var max_retries_timezone_api:Number = 0;
 		
 		public function NightscoutService()
 		{
@@ -189,6 +201,8 @@ package services
 		{
 			if (serviceStarted)
 				return;
+			
+			trace(ObjectUtil.toString(parseBase64(TIMEZONES_COORDINATES)));
 			
 			Trace.myTrace("NightscoutService.as", "Service started!");
 			
@@ -746,8 +760,6 @@ package services
 				{
 					var profileProperties:Object = SpikeJSON.parse(response);
 					
-					//trace(ObjectUtil.toString(profileProperties));
-					
 					if (profileProperties != null)
 					{
 						if (!basalProfileImport)
@@ -755,6 +767,16 @@ package services
 							//Get Nightscout default unit
 							if (profileProperties[0].units != null && (profileProperties[0].units as String).indexOf("mg") == -1)
 								isNightscoutMgDl = false;
+							
+							//Get Nightscout TimeZone
+							if (profileProperties[0].timezone)
+							{
+								nightscoutTimeZone = profileProperties[0].timezone;
+							}
+							else if (profileProperties[0].store[profileProperties[0].defaultProfile].timezone)
+							{
+								nightscoutTimeZone = profileProperties[0].store[profileProperties[0].defaultProfile].timezone;
+							}
 							
 							var dia:Number = Number.NaN;
 							var carbAbsorptionRate:Number = Number.NaN;
@@ -875,7 +897,160 @@ package services
 				Trace.myTrace("NightscoutService.as", "Unexpected Nightscout response. Will try on next transmitter reading! Response: " + response);
 			}
 			
+			if (nightscoutTimeZone != "" && syncPumpBasalRates)
+			{
+				getHostTimeZoneOffset();
+			}
+			
 			basalProfileImport = false;
+		}
+		
+		private static function getHostTimeZoneOffset():void
+		{
+			var timeZonesOffsets:Object = parseBase64(TIMEZONES_OFFSETS);
+			if (timeZonesOffsets != null && timeZonesOffsets[nightscoutTimeZone] != null && timeZonesOffsets[nightscoutTimeZone].gmtOffset != null)
+			{
+				if (timeZonesOffsets[nightscoutTimeZone].gmtOffset != 0)
+				{
+					hostTimezoneOffset = timeZonesOffsets[nightscoutTimeZone].gmtOffset;
+					TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
+				}
+			}
+			else
+			{
+				var timeZonesCoordinates:Object = parseBase64(TIMEZONES_COORDINATES);
+				if (timeZonesCoordinates != null && timeZonesCoordinates[nightscoutTimeZone] != null && timeZonesCoordinates[nightscoutTimeZone].lat != null && timeZonesCoordinates[nightscoutTimeZone].long != null)
+				{
+					hostTimezoneLatitude = timeZonesCoordinates[nightscoutTimeZone].lat;
+					hostTimezoneLongitude = timeZonesCoordinates[nightscoutTimeZone].long;
+					getNightscoutTimeZoneOffset(hostTimezoneLatitude, hostTimezoneLongitude, geonamesUsers[Math.floor(Math.random() * geonamesUsers.length)]);
+				}
+			}
+		}
+		
+		private static function parseBase64(base64String:String):Object
+		{
+			var finalObject:Object;
+			
+			try
+			{
+				var ba:ByteArray = Base64.decodeToByteArray(base64String);
+				ba.uncompress(CompressionAlgorithm.LZMA);
+				var uncompressed:String = ba.readObject() as String;
+				finalObject = JSON.parse(uncompressed);
+			} 
+			catch(error:Error) 
+			{
+				Trace.myTrace("NightscoutService.as", "Error parsing compressed Base64 string. Error: " + error.message);
+			}
+			
+			return finalObject;
+		}
+		
+		private static function getNightscoutTimeZoneOffset(latitude:Number, longitude:Number, userName:String):void
+		{
+			var geonamesAPI:String = "http://api.geonames.org/timezoneJSON?";
+			var geonamesParameters:URLVariables = new URLVariables();
+			geonamesParameters["lat"] = hostTimezoneLatitude;
+			geonamesParameters["lng"] = hostTimezoneLongitude;
+			geonamesParameters["username"] = userName;
+			
+			NetworkConnector.createNSConnector(geonamesAPI + geonamesParameters, null, URLRequestMethod.GET, null, MODE_TIMEZONE_GET, onGetTimeZoneInfoComplete, onConnectionFailed);
+		}
+		
+		private static function onGetTimeZoneInfoComplete(e:Event):void
+		{
+			Trace.myTrace("NightscoutService.as", "onGetTimeZoneInfoComplete called!");
+			
+			//Validation
+			if (serviceHalted)
+				return;
+			
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(Event.COMPLETE, onGetTimeZoneInfoComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
+			loader = null;
+			
+			if (response.indexOf("gmtOffset") != -1)
+			{
+				try
+				{
+					var parsedTimeZoneResponse:Object = JSON.parse(response);
+					if (parsedTimeZoneResponse != null && parsedTimeZoneResponse.gmtOffset != null)
+					{
+						Trace.myTrace("NightscoutService.as", "Setting host timezone response to " + parsedTimeZoneResponse.gmtOffset);
+						
+						max_retries_timezone_api = 0;
+						
+						if (Number(parsedTimeZoneResponse.gmtOffset) != 0)
+						{
+							hostTimezoneOffset = Number(parsedTimeZoneResponse.gmtOffset);
+							TreatmentsManager.instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
+						}
+					}
+				} 
+				catch(error:Error) 
+				{
+					Trace.myTrace("NightscoutService.as", "An error ocurred when parsing the server's response.");
+					if (max_retries_timezone_api < 5 && !isNaN(hostTimezoneLatitude) && !isNaN(hostTimezoneLongitude))
+					{
+						max_retries_timezone_api++;
+						
+						getNightscoutTimeZoneOffset(hostTimezoneLatitude, hostTimezoneLongitude, geonamesUsers[Math.floor(Math.random() * geonamesUsers.length)]);
+					}
+					else
+					{
+						Trace.myTrace("NightscoutService.as", "Not retrying anymore. Aborting!");
+					}
+				}
+			}
+			else
+			{
+				if (response.indexOf("\"value\": 18") != -1 || response.indexOf("\"value\": 19") != -1 || response.indexOf("\"value\": 20") != -1 || response.indexOf("\"value\": 10") != -1)
+				{
+					Trace.myTrace("NightscoutService.as", "API request limit for this username has been reached.");
+					
+					if (max_retries_timezone_api < 5 && !isNaN(hostTimezoneLatitude) && !isNaN(hostTimezoneLongitude))
+					{
+						Trace.myTrace("NightscoutService.as", "Retrying new timezone API request with a different user.");
+						
+						max_retries_timezone_api++;
+						
+						getNightscoutTimeZoneOffset(hostTimezoneLatitude, hostTimezoneLongitude, geonamesUsers[Math.floor(Math.random() * geonamesUsers.length)]);
+					}
+					else if (max_retries_timezone_api >= 5)
+					{
+						Trace.myTrace("NightscoutService.as", "Already max restries new timezone API request. Aborting");
+					}
+					else
+					{
+						Trace.myTrace("NightscoutService.as", "Aborting! Something is worng with host timezone latitude/longitude.");
+					}
+				}
+				else if (response.indexOf("\"value\": 11") != -1 || response.indexOf("\"value\": 15") != -1)
+				{
+					Trace.myTrace("NightscoutService.as", "Aborting! No record found for this timezone");
+				}
+				else if (response.indexOf("\"value\": 12") != -1 || response.indexOf("\"value\": 13") != -1 || response.indexOf("\"value\": 22") != -1 || response.indexOf("\"value\": 23") != -1)
+				{
+					if (max_retries_timezone_api < 5 && !isNaN(hostTimezoneLatitude) && !isNaN(hostTimezoneLongitude))
+					{
+						Trace.myTrace("NightscoutService.as", "Service is having issues! Retrying in 5 minutes");
+						
+						setTimeout(getNightscoutTimeZoneOffset, TimeSpan.TIME_5_MINUTES, hostTimezoneLatitude, hostTimezoneLongitude, geonamesUsers[Math.floor(Math.random() * geonamesUsers.length)]);
+					}
+					else
+					{
+						Trace.myTrace("NightscoutService.as", "Service is having issues! Not retrying anymore. Aborting!");
+					}
+				}
+			}
 		}
 		
 		/**
@@ -890,7 +1065,7 @@ package services
 			
 			nightscoutFollowAPISecret = Hex.fromArray(hash.hash(Hex.toArray(Hex.fromString(Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET))))));
 			
-			syncPumpBasalRates = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump";
+			syncPumpBasalRates = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump" && CGMBlueToothDevice.isFollower();
 			downloadBasals = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DOWNLOAD_NIGHTSCOUT_BASALS) == "true";
 		}
 		
@@ -3275,7 +3450,7 @@ package services
 			treatmentsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true";
 			nightscoutTreatmentsSyncEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_NIGHTSCOUT_DOWNLOAD_ENABLED) == "true";
 			pumpUserEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true";
-			syncPumpBasalRates = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump";
+			syncPumpBasalRates = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump" && CGMBlueToothDevice.isFollower();
 			downloadBasals = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DOWNLOAD_NIGHTSCOUT_BASALS) == "true";
 		}
 		
@@ -3414,6 +3589,10 @@ package services
 			{
 				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error uploading predictions. Error: " + error.message);
 			}
+			else if (mode == MODE_TIMEZONE_GET)
+			{
+				Trace.myTrace("NightscoutService.as", "in onConnectionFailed. Error getting timezone info. Error: " + error.message);
+			}
 		}
 		
 		private static function onSettingChanged(e:SettingsServiceEvent):void
@@ -3509,7 +3688,7 @@ package services
 			}
 			else if (e.data == CommonSettings.COMMON_SETTING_DOWNLOAD_NIGHTSCOUT_BASALS || e.data == CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI)
 			{
-				syncPumpBasalRates = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump";
+				syncPumpBasalRates = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump" && CGMBlueToothDevice.isFollower();
 				downloadBasals = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DOWNLOAD_NIGHTSCOUT_BASALS) == "true";
 				
 				if (downloadBasals)

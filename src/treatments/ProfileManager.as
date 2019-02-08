@@ -8,6 +8,8 @@ package treatments
 	
 	import model.ModelLocator;
 	
+	import services.NightscoutService;
+	
 	import ui.popups.AlertManager;
 	
 	import utils.Constants;
@@ -461,8 +463,6 @@ package treatments
 		
 		public static function insertBasalRate(basalRate:BasalRate, overwrite:Boolean = false, saveToDatabase:Boolean = true):void
 		{	
-			Trace.myTrace("ProfileManager.as", "insertBasalRate called!");
-			
 			if (basalRatesMapByTime[basalRate.startTime] == null)
 			{
 				//Push to memory
@@ -579,7 +579,7 @@ package treatments
 			return scheduledBasalRate;
 		}
 		
-		public static function getPumpBasalData(time:Number, suggestedIndex:Number = Number.NaN):Object
+		public static function getPumpBasalData(time:Number, isFollower:Boolean, suggestedIndex:Number = Number.NaN):Object
 		{
 			//Common Variables
 			var i:int;
@@ -590,7 +590,8 @@ package treatments
 			
 			if (numberOfScheduleBasalRates > 0)
 			{
-				var scheduledBasalTimeSpan:TimeSpan = TimeSpan.fromMilliseconds(time - (Constants.systemTimeZoneOffset * TimeSpan.TIME_1_HOUR));
+				var scheduledBasalOffset:Number = !isFollower ? (Constants.systemTimeZoneOffset * TimeSpan.TIME_1_HOUR) : (Constants.systemTimeZoneOffset * TimeSpan.TIME_1_HOUR) - ((NightscoutService.hostTimezoneOffset + Constants.systemTimeZoneOffset) * TimeSpan.TIME_1_HOUR);
+				var scheduledBasalTimeSpan:TimeSpan = TimeSpan.fromMilliseconds(time - scheduledBasalOffset);
 				var scheduledBasalTimeSpanHours:int = scheduledBasalTimeSpan.hours;
 				var scheduledBasalTimeSpanMinutes:int = scheduledBasalTimeSpan.minutes;
 				

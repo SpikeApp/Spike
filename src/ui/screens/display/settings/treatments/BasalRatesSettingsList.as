@@ -59,6 +59,7 @@ package ui.screens.display.settings.treatments
 		private var basalRateStepper:NumericStepper;
 		private var inserterContainer:LayoutGroup;
 		private var nsBasalProfileImporterButton:Button;
+		private var hostOffsetNotice:Label;
 		
 		/* Properties */
 		private var userBasalRates:Array;
@@ -157,6 +158,11 @@ package ui.screens.display.settings.treatments
 			basalRateStartTime.minuteStep = 1;
 			basalRateStartTime.addEventListener(Event.CHANGE, onTimeChanged);
 			
+			//Offset Notice
+			hostOffsetNotice = LayoutFactory.createLabel("Spike has detected that the master is in a different time zone. Currently there's a time differentce of {difference_in_hours_do_not_translate} hours between you and the master. This difference will be taken into account when rendering basal rates on the chart.".replace("{difference_in_hours_do_not_translate}", String(NightscoutService.hostTimezoneOffset)), HorizontalAlign.JUSTIFY);
+			hostOffsetNotice.wordWrap = true;
+			hostOffsetNotice.width = width;
+			
 			configureComponents();
 			refreshContent();
 		}
@@ -226,6 +232,11 @@ package ui.screens.display.settings.treatments
 			else
 			{
 				data.push( { label: "", accessory: actionsContainer } );
+			}
+			
+			if (!addMode && !editMode && CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout" && (NightscoutService.followerModeEnabled || NightscoutService.serviceActive) && !isNaN(NightscoutService.hostTimezoneOffset) && NightscoutService.hostTimezoneOffset != 0)
+			{
+				data.push( { label: "", accessory: hostOffsetNotice } );
 			}
 			
 			dataProvider = new ArrayCollection(data);
@@ -491,6 +502,9 @@ package ui.screens.display.settings.treatments
 			if (modeLabel != null)
 				modeLabel.width = width;
 			
+			if (hostOffsetNotice != null)
+				hostOffsetNotice.width = width;
+			
 			setupRenderFactory();
 		}
 		
@@ -575,6 +589,13 @@ package ui.screens.display.settings.treatments
 			{
 				modeLabel.dispose();
 				modeLabel = null;
+			}
+			
+			if (hostOffsetNotice != null)
+			{
+				hostOffsetNotice.removeFromParent();
+				hostOffsetNotice.dispose();
+				hostOffsetNotice = null;
 			}
 			
 			super.dispose();

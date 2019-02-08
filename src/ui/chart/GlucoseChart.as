@@ -2002,11 +2002,12 @@ package ui.chart
 			var prevYAbsoluteValue:Number = Number.NaN;
 			var prevXScheduledValue:Number = Number.NaN;
 			var prevYScheduledValue:Number = Number.NaN;
+			var isUserAFollower:Boolean = CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout";
 			
 			for (var time:Number = toTime; time >= fromTime - TimeSpan.TIME_1_MINUTE; time -= TimeSpan.TIME_1_MINUTE) 
 			{
 				//Gather Basal Data
-				var basalProperties:Object = ProfileManager.getPumpBasalData(time, suggestedAbsoluteBasalIndex);
+				var basalProperties:Object = ProfileManager.getPumpBasalData(time, isUserAFollower, suggestedAbsoluteBasalIndex);
 				
 				//Calculate Coordinates (Area & Basal Amount)
 				var tempBasalAreaValue:Number = basalProperties.tempBasalAreaAmount;
