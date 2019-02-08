@@ -202,8 +202,6 @@ package services
 			if (serviceStarted)
 				return;
 			
-			trace(ObjectUtil.toString(parseBase64(TIMEZONES_COORDINATES)));
-			
 			Trace.myTrace("NightscoutService.as", "Service started!");
 			
 			serviceStarted = true;

@@ -47,6 +47,7 @@ package ui.screens.display
 				item.iconSourceField = "icon";
 				item.accessoryLabelProperties.wordWrap = true;
 				item.defaultLabelProperties.wordWrap = true;
+				item.paddingTop = item.paddingBottom = 10;
 				
 				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				{

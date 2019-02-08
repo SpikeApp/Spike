@@ -678,6 +678,7 @@ package database
 		 public static const COMMON_SETTING_ABSOLUTE_BASAL_AREA_COLOR:int = 287;
 		 public static const COMMON_SETTING_DOWNLOAD_NIGHTSCOUT_BASALS:int = 288;
 		 public static const COMMON_SETTING_SHOW_BASALS_ON_CHART:int = 289;
+		 public static const COMMON_SETTING_BASALS_AREA_SIZE_PERCENTAGE:int = 290;
 
 		 private static var commonSettings:Array = [
 			 "0",//COMMON_SETTING_CURRENT_SENSOR
@@ -969,7 +970,8 @@ package database
 			 "0x0086FF", //COMMON_SETTING_BASAL_RATE_LINE_COLOR
 			 "0x1A344C", //COMMON_SETTING_ABSOLUTE_BASAL_AREA_COLOR
 			 "true", //COMMON_SETTING_DOWNLOAD_NIGHTSCOUT_BASALS
-			 "true" //COMMON_SETTING_SHOW_BASALS_ON_CHART
+			 "true", //COMMON_SETTING_SHOW_BASALS_ON_CHART
+			 "20" //COMMON_SETTING_BASALS_AREA_SIZE_PERCENTAGE
 		 ];
 
 		 public function CommonSettings()

@@ -159,7 +159,7 @@ package ui.screens.display.settings.treatments
 			basalRateStartTime.addEventListener(Event.CHANGE, onTimeChanged);
 			
 			//Offset Notice
-			hostOffsetNotice = LayoutFactory.createLabel("Spike has detected that the master is in a different time zone. Currently there's a time differentce of {difference_in_hours_do_not_translate} hours between you and the master. This difference will be taken into account when rendering basal rates on the chart.".replace("{difference_in_hours_do_not_translate}", String(NightscoutService.hostTimezoneOffset)), HorizontalAlign.JUSTIFY);
+			hostOffsetNotice = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','nightscout_offset_user_notification_label').replace("{difference_in_hours_do_not_translate}", String(NightscoutService.hostTimezoneOffset)), HorizontalAlign.JUSTIFY);
 			hostOffsetNotice.wordWrap = true;
 			hostOffsetNotice.width = width;
 			

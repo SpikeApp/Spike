@@ -472,6 +472,7 @@ package ui.chart
 		private var basalAreaColor:uint;
 		private var activeBasalAreaQuad:Quad;
 		private var localBasalPillAdded:Boolean = false;
+		private var basalAreaSizePercentage:Number = 0.2;
 
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -598,6 +599,7 @@ package ui.chart
 			basalRenderMode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI);
 			displayPumpBasals = basalRenderMode == "pump" && treatmentsActive && displayTreatmentsOnChart && displayBasalsOnChart;
 			displayMDIBasals = basalRenderMode == "mdi" && treatmentsActive && displayTreatmentsOnChart && displayBasalsOnChart;
+			basalAreaSizePercentage = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_AREA_SIZE_PERCENTAGE)) / 100;
 			
 			//Scroller Marker Radius
 			if (Constants.deviceModel == DeviceInfo.IPAD_1_2_3_4_5_AIR1_2_PRO_97 || Constants.deviceModel == DeviceInfo.IPAD_PRO_105 || Constants.deviceModel == DeviceInfo.IPAD_PRO_129)
@@ -1701,7 +1703,7 @@ package ui.chart
 			
 			//Misc
 			var absoluteBasalDataPointsArray:Array = [];
-			var desiredBasalHeight:Number = _graphHeight * 0.2; //20%
+			var desiredBasalHeight:Number = _graphHeight * basalAreaSizePercentage;
 			basalScaler = desiredBasalHeight / highestBasalAmount;
 			var prevTempBasalAreaValue:Number = 0;
 			var startXTempAreaValue:Number = 0;
@@ -1988,7 +1990,7 @@ package ui.chart
 			//Temp Basal Area Calculation & Plotting
 			ProfileManager.totalDeliveredPumpBasalAmount = 0;
 			var absoluteBasalDataPointsArray:Array = [];
-			var desiredBasalHeight:Number = _graphHeight * 0.2; //20%
+			var desiredBasalHeight:Number = _graphHeight * basalAreaSizePercentage;
 			basalScaler = desiredBasalHeight / highestBasalAmount;
 			var prevTempBasalAreaValue:Number = 0;
 			var prevAbsoluteBasalAreaValue:Number = 0;
