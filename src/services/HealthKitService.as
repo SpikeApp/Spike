@@ -20,6 +20,7 @@ package services
 	
 	import model.ModelLocator;
 	
+	import treatments.ProfileManager;
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
@@ -70,6 +71,7 @@ package services
 			DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, bgReadingReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, processInitialBackfillData);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
+			TreatmentsManager.instance.addEventListener(TreatmentsEvent.NEW_BASAL_TREATMENT, onTreatmentAdded);
 			
 			//Init ANE
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "true") {
@@ -89,6 +91,7 @@ package services
 				var treatmentAdded:Boolean = false;
 				var bolusInsulinToStore:Number = Math.round((treatment.type != Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT ? treatment.insulinAmount : treatment.getTotalInsulin()) * 100) / 100;
 				var carbsToStore:Number = treatment.carbs;
+				var basalInsulinToStore:Number = 0;
 				
 				if ((treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT) && treatment.insulinAmount > 0)
 				{
@@ -115,6 +118,36 @@ package services
 						SpikeANE.storeCarbInHealthKitGram(carbsToStore, treatment.timestamp);
 						treatmentAdded = true;
 					}
+				}
+				else if (treatment.type == Treatment.TYPE_TEMP_BASAL)
+				{
+					if (treatment.isBasalAbsolute)
+					{
+						basalInsulinToStore = Math.round(treatment.basalAbsoluteAmount * 1000) / 1000;
+					}
+					else if (treatment.isBasalRelative)
+					{
+						var basalRate:Number = ProfileManager.getBasalRateByTime(treatment.timestamp);
+						basalInsulinToStore = basalRate * (100 + treatment.basalPercentAmount) / 100;
+					}
+					
+					if (isNaN(basalInsulinToStore) || treatment.isTempBasalEnd)
+					{
+						basalInsulinToStore = 0;
+					}
+					
+					SpikeANE.storeInsulin(basalInsulinToStore, false, treatment.timestamp);
+				}
+				else if (treatment.type == Treatment.TYPE_MDI_BASAL)
+				{
+					basalInsulinToStore = Math.round(treatment.basalAbsoluteAmount * 1000) / 1000;
+					
+					if (isNaN(basalInsulinToStore))
+					{
+						basalInsulinToStore = 0;
+					}
+					
+					SpikeANE.storeInsulin(basalInsulinToStore, false, treatment.timestamp);
 				}
 				
 				//Add treatment to memory and database to avoid duplicates on the next run

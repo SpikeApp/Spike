@@ -2585,7 +2585,7 @@ package services
 			}
 			
 			//Validate response
-			if (response.indexOf("created_at") != -1 && response.indexOf("Error") == -1 && response.indexOf("DOCTYPE") == -1)
+			if (response.indexOf("created_at") != -1 && response.indexOf("Error") == -1 && response.indexOf("DOCTYPE") == -1 && response != "[]")
 			{
 				if (response == treatmentsAPIServerResponse)
 				{
@@ -2632,11 +2632,17 @@ package services
 			}
 			else
 			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS)
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && retriesForTreatmentsDownload < MAX_RETRIES_FOR_TREATMENTS && response != "[]")
 				{
 					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new treatment's fetch in 30 seconds. Responder: " + response);
 					setTimeout(getRemoteTreatments, TimeSpan.TIME_30_SECONDS);
 					retriesForTreatmentsDownload++;
+				}
+				
+				if (response == "[]")
+				{
+					//Cache response
+					treatmentsAPIServerResponse = response;
 				}
 			}
 		}
@@ -2739,7 +2745,7 @@ package services
 			}
 			
 			//Validate response
-			if (response.indexOf("created_at") != -1 && response.indexOf("Error") == -1 && response.indexOf("DOCTYPE") == -1)
+			if (response.indexOf("created_at") != -1 && response.indexOf("Error") == -1 && response.indexOf("DOCTYPE") == -1 && response != "[]")
 			{
 				if (response == basalsAPIServerResponse)
 				{
@@ -2782,7 +2788,7 @@ package services
 			}
 			else
 			{
-				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && downloadBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS)
+				if (treatmentsEnabled && nightscoutTreatmentsSyncEnabled && downloadBasals && retriesForBasalsDownload < MAX_RETRIES_FOR_TREATMENTS && response != "[]")
 				{
 					Trace.myTrace("NightscoutService.as", "Server returned an unexpected response. Retrying new basals fetch in 30 seconds. Responder: " + response);
 					setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);

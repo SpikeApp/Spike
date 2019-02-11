@@ -1931,7 +1931,7 @@ package ui.chart
 				mainChartContainer.addChildAt(basalsContainer, 0);
 			}
 			
-			if (false)//(ProfileManager.basalRatesList.length == 0 && TreatmentsManager.basalsList.length == 0)
+			if (ProfileManager.basalRatesList.length == 0 && TreatmentsManager.basalsList.length == 0)
 			{
 				if (mainChart != null)
 				{

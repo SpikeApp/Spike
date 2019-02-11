@@ -562,6 +562,11 @@ package network.httpserver.API
 				var treatmentNote:String = "";
 				var treatmentDuration:Number = 0;
 				var treatmentExerciseIntensity:String = Treatment.EXERCISE_INTENSITY_MODERATE;
+				var basalAmount:Number = 0;
+				var basalDuration:Number = 30;
+				var isBasalAbsolute:Boolean = false;
+				var isBasalRelative:Boolean = false;
+				var isTempBasalEnd:Boolean = false;
 				
 				if (treatmentEventType == "Correction Bolus" || treatmentEventType == "Bolus" || treatmentEventType == "Correction")
 				{
@@ -637,6 +642,38 @@ package network.httpserver.API
 					if (params.exerciseIntensity != null)
 						treatmentExerciseIntensity= String(params.exerciseIntensity);
 				}
+				else if (treatmentEventType == "Temp Basal")
+				{
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump")
+					{
+						treatmentType = Treatment.TYPE_TEMP_BASAL;
+					}
+					else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "mdi")
+					{
+						treatmentType = Treatment.TYPE_MDI_BASAL;
+					}
+					
+					if (params.duration != null)
+						basalDuration = Number(params.duration);
+					
+					if (params.absolute != null)
+					{
+						basalAmount = Number(params.absolute);
+						isBasalAbsolute = true;
+						isBasalRelative = false;
+					}
+					else if (params.percent != null)
+					{
+						basalAmount = Number(params.percent);
+						isBasalRelative = true;
+						isBasalAbsolute = false;
+					}
+					
+					if (!isBasalAbsolute && !isBasalRelative)
+					{
+						isTempBasalEnd = true;
+					}
+				}
 				
 				
 				if (params.notes != null)
@@ -662,6 +699,23 @@ package network.httpserver.API
 					{
 						treatment.duration = treatmentDuration;
 						treatment.exerciseIntensity = treatmentExerciseIntensity;
+					}
+					
+					if (treatmentType == Treatment.TYPE_MDI_BASAL || treatmentType == Treatment.TYPE_TEMP_BASAL)
+					{
+						if (isBasalAbsolute)
+						{
+							treatment.basalAbsoluteAmount = basalAmount;
+						}
+						else if (isBasalRelative)
+						{
+							treatment.basalPercentAmount = basalAmount;
+						}
+						
+						treatment.basalDuration = basalDuration;
+						treatment.isBasalAbsolute = isBasalAbsolute;
+						treatment.isBasalRelative = isBasalRelative;
+						treatment.isTempBasalEnd = isTempBasalEnd;
 					}
 					
 					if (treatmentType == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
@@ -695,6 +749,18 @@ package network.httpserver.API
 						responseObject.duration = treatmentDuration;
 						responseObject.exerciseIntensity = treatmentExerciseIntensity;
 					}
+					if (treatmentType == Treatment.TYPE_MDI_BASAL || treatmentType == Treatment.TYPE_TEMP_BASAL)
+					{
+						if (isBasalAbsolute)
+						{
+							responseObject.absolute = basalAmount;
+						}
+						else if (isBasalRelative)
+						{
+							responseObject.percent = basalAmount;
+						}
+						responseObject.duration = basalDuration;
+					}
 					responseArray.push(responseObject);
 					response = SpikeJSON.stringify(responseArray);
 				}
@@ -706,10 +772,14 @@ package network.httpserver.API
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) != "true")
 					return responseSuccess("[]");
 				
+				//Common Variables
+				var i:int;
 				var treatmentsList:Array = [];
+				
+				//Treatments
 				var spikeTreatmentsList:Array = TreatmentsManager.treatmentsList.concat();
 				spikeTreatmentsList.sortOn(["timestamp"], Array.NUMERIC | Array.DESCENDING);
-				for (var i:int = 0; i < spikeTreatmentsList.length; i++) 
+				for (i = 0; i < spikeTreatmentsList.length; i++) 
 				{
 					var spikeTreatment:Treatment = spikeTreatmentsList[i] as Treatment;
 					if (spikeTreatment != null)
@@ -798,6 +868,7 @@ package network.httpserver.API
 							responseTreatment.exerciseIntensity = spikeTreatment.exerciseIntensity;
 						}
 						
+						responseTreatment.date = spikeTreatment.timestamp;
 						responseTreatment.glucose = spikeTreatment.glucose;
 						responseTreatment.notes = spikeTreatment.note;
 						
@@ -805,6 +876,40 @@ package network.httpserver.API
 					}
 				}
 				
+				//Basals
+				var spikeBasalsList:Array = TreatmentsManager.basalsList.concat();
+				spikeBasalsList.sortOn(["timestamp"], Array.NUMERIC | Array.DESCENDING);
+				for (i = 0; i < spikeBasalsList.length; i++) 
+				{
+					var spikeBasal:Treatment = spikeBasalsList[i] as Treatment;
+					if (spikeBasal != null)
+					{
+						var responseBasalTreatment:Object = {};
+						responseBasalTreatment["_id"] = spikeBasal.ID;
+						responseBasalTreatment["created_at"] = nsFormatter.format(spikeBasal.timestamp).replace("000+0000", "000Z");
+						responseBasalTreatment.eventType = "Temp Basal";
+						responseBasalTreatment.notes = spikeBasal.note;
+						responseBasalTreatment.date = spikeBasal.timestamp;
+						if (spikeBasal.isBasalAbsolute || spikeBasal.type == Treatment.TYPE_MDI_BASAL) responseBasalTreatment.absolute = spikeBasal.basalAbsoluteAmount;
+						if (spikeBasal.isBasalRelative) responseBasalTreatment.percent = spikeBasal.basalPercentAmount;
+						if (spikeBasal.isBasalAbsolute || spikeBasal.isBasalRelative) responseBasalTreatment.duration = spikeBasal.basalDuration;
+						if (spikeBasal.type == Treatment.TYPE_MDI_BASAL || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "mdi")
+						{
+							var usedInsulin:Insulin = ProfileManager.getInsulin(treatment.insulinID);
+							if (usedInsulin != null)
+							{
+								responseBasalTreatment.insulinName = usedInsulin.name;	
+								responseBasalTreatment.insulinType = usedInsulin.type;	
+								responseBasalTreatment.insulinID = usedInsulin.ID;
+								responseBasalTreatment.insulinDIA = usedInsulin.dia;
+							}
+						}
+						
+						treatmentsList.push(responseTreatment);
+					}
+				}
+				
+				treatmentsList.sortOn(["date"], Array.NUMERIC | Array.DESCENDING);
 				response = SpikeJSON.stringify(treatmentsList);
 			}
 			

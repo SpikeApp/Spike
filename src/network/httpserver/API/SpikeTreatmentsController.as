@@ -8,6 +8,7 @@ package network.httpserver.API
 	
 	import network.httpserver.ActionController;
 	
+	import treatments.Insulin;
 	import treatments.ProfileManager;
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
@@ -51,6 +52,11 @@ package network.httpserver.API
 					var treatmentCarbDelayTime:Number = 20;
 					var treatmentDuration:Number = Number.NaN;
 					var treatmentExerciseIntensity:String = Treatment.EXERCISE_INTENSITY_MODERATE;
+					var basalAmount:Number = 0;
+					var basalDuration:Number = 30;
+					var isBasalAbsolute:Boolean = false;
+					var isBasalRelative:Boolean = false;
+					var isTempBasalEnd:Boolean = false;
 					
 					if (treatmentType == Treatment.TYPE_CORRECTION_BOLUS || treatmentType == Treatment.TYPE_BOLUS)
 					{
@@ -125,6 +131,66 @@ package network.httpserver.API
 						if (params.exerciseIntensity != null && String(params.exerciseIntensity) != "")
 							treatmentExerciseIntensity = String(params.exerciseIntensity);
 					}
+					else if (treatmentType == Treatment.TYPE_TEMP_BASAL)
+					{
+						if (params.duration != null && !isNaN(params.duration))
+							basalDuration = Number(params.duration);
+						else
+							response = "ERROR";
+						
+						if (params.amount != null && !isNaN(params.amount))
+							basalAmount = Number(params.amount);
+						else
+							response = "ERROR";
+						
+						if (params.basalType != null && String(params.basalType) != "")
+						{
+							if (String(params.basalType) == "absolute")
+							{
+								isBasalAbsolute = true;
+							}
+							else if (String(params.basalType) == "relative")
+							{
+								isBasalRelative = true;
+							}
+							
+							if (!isBasalAbsolute && !isBasalRelative)
+							{
+								isTempBasalEnd = true;
+							}
+						}
+						else
+							response = "ERROR";
+					}
+					else if (treatmentType == Treatment.TYPE_MDI_BASAL)
+					{
+						var basalInsulin:Insulin = ProfileManager.getBasalInsulin();
+						if (basalInsulin != null)
+						{
+							basalDuration = basalInsulin.dia * 60;
+							
+							if (params.amount != null && !isNaN(params.amount))
+								basalAmount = Number(params.amount);
+							else
+								response = "ERROR";
+							
+							isBasalAbsolute = true;
+							isBasalRelative = false;
+							isTempBasalEnd = false;
+						}
+						else
+						{
+							response = "ERROR";
+						}
+					}
+					else if (treatmentType == Treatment.TYPE_TEMP_BASAL_END)
+					{
+						basalAmount = 0;
+						basalDuration = 30;
+						isBasalAbsolute = false;
+						isBasalRelative = false;
+						isTempBasalEnd = true;
+					}
 					
 					if 
 					(
@@ -148,6 +214,12 @@ package network.httpserver.API
 							treatmentType == Treatment.TYPE_PUMP_BATTERY_CHANGE
 							||
 							treatmentType == Treatment.TYPE_PUMP_SITE_CHANGE
+							||
+							treatmentType == Treatment.TYPE_TEMP_BASAL
+							||
+							treatmentType == Treatment.TYPE_MDI_BASAL
+							||
+							treatmentType == Treatment.TYPE_TEMP_BASAL_END
 						) 
 						&& 
 						response == "OK"
@@ -171,6 +243,30 @@ package network.httpserver.API
 						{
 							treatment.duration = treatmentDuration;
 							treatment.exerciseIntensity = treatmentExerciseIntensity;
+						}
+						
+						if (treatmentType == Treatment.TYPE_TEMP_BASAL || treatmentType == Treatment.TYPE_MDI_BASAL || treatmentType == Treatment.TYPE_TEMP_BASAL_END)
+						{
+							if (isBasalAbsolute)
+							{
+								treatment.basalAbsoluteAmount = basalAmount;
+								treatment.basalPercentAmount = 0;
+							}
+							else if (isBasalRelative)
+							{
+								treatment.basalAbsoluteAmount = 0;
+								treatment.basalPercentAmount = basalAmount;
+							}
+							else if (isTempBasalEnd)
+							{
+								treatment.basalAbsoluteAmount = 0;
+								treatment.basalPercentAmount = 0;
+							}
+							
+							treatment.duration = basalDuration;
+							treatment.isBasalAbsolute = isBasalAbsolute;
+							treatment.isBasalRelative = isBasalRelative;
+							treatment.isTempBasalEnd = isTempBasalEnd;
 						}
 						
 						if (treatmentType == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)

@@ -1891,6 +1891,9 @@ package treatments
 					basalsList.push(treatment);
 					basalsMap[treatment.ID] = treatment;
 					
+					//Notify listeners
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_TREATMENT, false, false, treatment));
+					
 					//Upload to Nightscout
 					if (uploadToNightscout)
 						NightscoutService.uploadTreatment(treatment);
@@ -2793,6 +2796,8 @@ package treatments
 				
 				insulinTextInput.text = insulinTextInput.text.replace(" ", "");
 				var insulinValue:Number = Number((insulinTextInput.text as String).replace(",","."));
+				var tempBasalDuration:Number = Number((basalDurationTextInput.text as String).replace(",","."));
+				
 				if (isNaN(insulinValue) || insulinTextInput.text == "") 
 				{
 					AlertManager.showSimpleAlert
@@ -2803,7 +2808,7 @@ package treatments
 						onAskNewBasal
 					);
 				}
-				else if (basalDurationTextInput.text == "") 
+				else if (isNaN(tempBasalDuration) || basalDurationTextInput.text == "") 
 				{
 					AlertManager.showSimpleAlert
 					(
@@ -2830,16 +2835,16 @@ package treatments
 					
 					if (basalModeGroup.selectedItem == basalAbsoluteRadio)
 					{
-						tempBasalStartTreatment.basalAbsoluteAmount = Math.abs(Number(insulinTextInput.text));
+						tempBasalStartTreatment.basalAbsoluteAmount = Math.abs(insulinValue);
 						tempBasalStartTreatment.isBasalAbsolute = true;
 					}
 					else if (basalModeGroup.selectedItem == basalRelativeRadio)
 					{
-						tempBasalStartTreatment.basalPercentAmount = Number(insulinTextInput.text);
+						tempBasalStartTreatment.basalPercentAmount = insulinValue;
 						tempBasalStartTreatment.isBasalRelative = true;
 					}
 					
-					tempBasalStartTreatment.basalDuration = Number(basalDurationTextInput.text);
+					tempBasalStartTreatment.basalDuration = tempBasalDuration;
 					
 					//Add to list
 					basalsList.push(tempBasalStartTreatment);
@@ -2849,6 +2854,7 @@ package treatments
 					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_TREATMENT, false, false, tempBasalStartTreatment));
 					
 					//Insert in DB
 					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
@@ -2901,6 +2907,7 @@ package treatments
 				
 				//Notify listeners
 				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
+				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_TREATMENT, false, false, tempBasalEndTreatment));
 				
 				//Insert in DB
 				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
@@ -2952,7 +2959,7 @@ package treatments
 						notes.text
 					);
 					
-					penBasalTreatment.basalAbsoluteAmount = Math.abs(Number(insulinTextInput.text));
+					penBasalTreatment.basalAbsoluteAmount = Math.abs(insulinValue);
 					penBasalTreatment.isBasalAbsolute = true;
 					penBasalTreatment.basalDuration = penBasalTreatment.dia * 60;
 					
@@ -2964,6 +2971,7 @@ package treatments
 					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_TREATMENT, false, false, penBasalTreatment));
 					
 					//Insert in DB
 					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)

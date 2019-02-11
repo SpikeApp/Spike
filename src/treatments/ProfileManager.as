@@ -1,5 +1,7 @@
 package treatments
 {
+	import com.adobe.utils.StringUtil;
+	
 	import flash.utils.Dictionary;
 	
 	import database.CGMBlueToothDevice;
@@ -561,7 +563,8 @@ package treatments
 			
 			if (numberOfScheduleBasalRates > 0)
 			{
-				var scheduledBasalTimeSpan:TimeSpan = TimeSpan.fromMilliseconds(time - (Constants.systemTimeZoneOffset * TimeSpan.TIME_1_HOUR));
+				var scheduledBasalOffset:Number = !CGMBlueToothDevice.isFollower() ? (Constants.systemTimeZoneOffset * TimeSpan.TIME_1_HOUR) : (Constants.systemTimeZoneOffset * TimeSpan.TIME_1_HOUR) - ((NightscoutService.hostTimezoneOffset + Constants.systemTimeZoneOffset) * TimeSpan.TIME_1_HOUR);
+				var scheduledBasalTimeSpan:TimeSpan = TimeSpan.fromMilliseconds(time - scheduledBasalOffset);
 				var scheduledBasalTimeSpanHours:int = scheduledBasalTimeSpan.hours;
 				var scheduledBasalTimeSpanMinutes:int = scheduledBasalTimeSpan.minutes;
 				
@@ -874,13 +877,15 @@ package treatments
 			var foundDefault:Boolean = false;
 			var i:int = 0;
 			var insulin:Insulin;
+			var allInsulinTypes:Array = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_types_list').split(",");
+			var longActing:String = StringUtil.trim(allInsulinTypes[4]);
 			
 			insulinsList.sortOn(["name"], Array.CASEINSENSITIVE);
 			
 			for (i = 0; i < insulinsList.length; i++) 
 			{
 				insulin = insulinsList[i];
-				if (insulin.isDefault && !insulin.isHidden)
+				if (insulin.isDefault && !insulin.isHidden && insulin.type != longActing)
 				{
 					insulinID = insulin.ID;
 					foundDefault = true;
@@ -910,6 +915,29 @@ package treatments
 			}
 			
 			return insulinID;
+		}
+		
+		public static function getBasalInsulin():Insulin
+		{
+			Trace.myTrace("ProfileManager.as", "getBasalInsulin called!");
+			
+			var matchedInsulin:Insulin;
+			var allInsulinTypes:Array = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_types_list').split(",");
+			var longActing:String = StringUtil.trim(allInsulinTypes[4]);
+			
+			insulinsList.sortOn(["timestamp"], Array.NUMERIC | Array.DESCENDING);
+			
+			for (var i:int = 0; i < insulinsList.length; i++) 
+			{
+				var insulin:Insulin = insulinsList[i];
+				if (insulin.type == longActing)
+				{
+					matchedInsulin = insulin;
+					break;
+				}
+			}
+			
+			return matchedInsulin;
 		}
 		
 		/**
