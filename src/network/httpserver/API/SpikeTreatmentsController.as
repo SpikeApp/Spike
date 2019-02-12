@@ -2,9 +2,13 @@ package network.httpserver.API
 {
 	import flash.net.URLVariables;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
+	
+	import model.ModelLocator;
 	
 	import network.httpserver.ActionController;
 	
@@ -41,6 +45,9 @@ package network.httpserver.API
 			{
 				if (params != null)
 				{
+					trace("params");
+					trace(ObjectUtil.toString(params));
+					
 					//Define initial treatment properties
 					var treatmentTimestamp:Number = new Date().valueOf();
 					treatmentType = String(params.type);
@@ -128,8 +135,22 @@ package network.httpserver.API
 						else
 							response = "ERROR";
 						
-						if (params.exerciseIntensity != null && String(params.exerciseIntensity) != "")
-							treatmentExerciseIntensity = String(params.exerciseIntensity);
+						if (params.exerciseIntensity != null)
+						{
+							var selectedExerciseIntensity:Number = Number(params.exerciseIntensity);
+							if (selectedExerciseIntensity == 1)
+							{
+								treatmentExerciseIntensity = Treatment.EXERCISE_INTENSITY_LOW;
+							}
+							else if (selectedExerciseIntensity == 2)
+							{
+								treatmentExerciseIntensity = Treatment.EXERCISE_INTENSITY_MODERATE;
+							}
+							else if (selectedExerciseIntensity == 3)
+							{
+								treatmentExerciseIntensity = Treatment.EXERCISE_INTENSITY_HIGH;
+							}
+						}
 					}
 					else if (treatmentType == Treatment.TYPE_TEMP_BASAL)
 					{
@@ -146,18 +167,12 @@ package network.httpserver.API
 						if (params.basalType != null && String(params.basalType) != "")
 						{
 							if (String(params.basalType) == "absolute")
-							{
 								isBasalAbsolute = true;
-							}
 							else if (String(params.basalType) == "relative")
-							{
 								isBasalRelative = true;
-							}
 							
 							if (!isBasalAbsolute && !isBasalRelative)
-							{
 								isTempBasalEnd = true;
-							}
 						}
 						else
 							response = "ERROR";
@@ -167,6 +182,7 @@ package network.httpserver.API
 						var basalInsulin:Insulin = ProfileManager.getBasalInsulin();
 						if (basalInsulin != null)
 						{
+							treatmentInsulinID = basalInsulin.ID;
 							basalDuration = basalInsulin.dia * 60;
 							
 							if (params.amount != null && !isNaN(params.amount))
@@ -190,6 +206,8 @@ package network.httpserver.API
 						isBasalAbsolute = false;
 						isBasalRelative = false;
 						isTempBasalEnd = true;
+						
+						treatmentType = Treatment.TYPE_TEMP_BASAL;
 					}
 					
 					if 
@@ -263,7 +281,7 @@ package network.httpserver.API
 								treatment.basalPercentAmount = 0;
 							}
 							
-							treatment.duration = basalDuration;
+							treatment.basalDuration = basalDuration;
 							treatment.isBasalAbsolute = isBasalAbsolute;
 							treatment.isBasalRelative = isBasalRelative;
 							treatment.isTempBasalEnd = isTempBasalEnd;

@@ -473,6 +473,7 @@ package ui.chart
 		private var activeBasalAreaQuad:Quad;
 		private var localBasalPillAdded:Boolean = false;
 		private var basalAreaSizePercentage:Number = 0.2;
+		private var lastNumberOfRenderedBasals:uint = 0;
 
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -1645,7 +1646,8 @@ package ui.chart
 			}
 			
 			//Validation
-			if (TreatmentsManager.basalsList.length == 0)
+			var numberOfBasals:uint = TreatmentsManager.basalsList.length;
+			if (numberOfBasals == 0)
 			{
 				if (mainChart != null)
 				{
@@ -1690,7 +1692,7 @@ package ui.chart
 			
 			//Sorting
 			TreatmentsManager.basalsList.sortOn(["basalAbsoluteAmount"], Array.NUMERIC);
-			var highestBasalAmount:Number = TreatmentsManager.basalsList[TreatmentsManager.basalsList.length - 1].basalAbsoluteAmount;
+			var highestBasalAmount:Number = TreatmentsManager.basalsList[numberOfBasals - 1].basalAbsoluteAmount;
 			
 			//Misc
 			var absoluteBasalDataPointsArray:Array = [];
@@ -1702,6 +1704,7 @@ package ui.chart
 			var prevXAbsoluteValue:Number = Number.NaN;
 			var prevYAbsoluteValue:Number = Number.NaN;
 			var previousTempBasalAreaProps:Object;
+			lastNumberOfRenderedBasals = numberOfBasals;
 			
 			for (time = toTime; time >= fromTime - TimeSpan.TIME_1_MINUTE; time -= TimeSpan.TIME_1_MINUTE) 
 			{
@@ -1922,7 +1925,8 @@ package ui.chart
 				mainChartContainer.addChildAt(basalsContainer, 0);
 			}
 			
-			if (ProfileManager.basalRatesList.length == 0 && TreatmentsManager.basalsList.length == 0)
+			var numberOfBasals:uint = TreatmentsManager.basalsList.length;
+			if (ProfileManager.basalRatesList.length == 0 && numberOfBasals == 0)
 			{
 				if (mainChart != null)
 				{
@@ -1996,6 +2000,7 @@ package ui.chart
 			var prevXScheduledValue:Number = Number.NaN;
 			var prevYScheduledValue:Number = Number.NaN;
 			var isUserAFollower:Boolean = CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout";
+			lastNumberOfRenderedBasals = numberOfBasals;
 			
 			for (var time:Number = toTime; time >= fromTime - TimeSpan.TIME_1_MINUTE; time -= TimeSpan.TIME_1_MINUTE) 
 			{
@@ -8939,6 +8944,8 @@ package ui.chart
 					if ((displayPumpBasals && lastAvailableReading != null && lastAvailableReading._timestamp > lastTimePumpBasalWasRendered)
 						||
 						(displayMDIBasals && lastAvailableReading != null && lastAvailableReading._timestamp > lastTimeMDIBasalWasRendered)
+						||
+						(lastNumberOfRenderedBasals != TreatmentsManager.basalsList.length)
 					)
 					{
 						renderBasals();

@@ -4358,21 +4358,32 @@ package treatments
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_SITE_CHANGE, String(treatment.timestamp), true, false);
 			}
 			
+			var sourceList:Array = treatment.type == Treatment.TYPE_MDI_BASAL || treatment.type == Treatment.TYPE_TEMP_BASAL || treatment.type == Treatment.TYPE_TEMP_BASAL_END ? basalsList : treatmentsList;
+			var sourceMap:Dictionary = treatment.type == Treatment.TYPE_MDI_BASAL || treatment.type == Treatment.TYPE_TEMP_BASAL || treatment.type == Treatment.TYPE_TEMP_BASAL_END ? basalsMap : treatmentsMap;
+			
 			//Insert in DB
 			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
-				if (treatmentsMap[treatment.ID] == null) //new treatment
+				if (sourceMap[treatment.ID] == null) //new treatment
 					Database.insertTreatmentSynchronous(treatment);
 			}
 			
-			if (treatmentsMap[treatment.ID] == null) //new treatment
+			if (sourceMap[treatment.ID] == null) //new treatment
 			{
 				//Add to list
-				treatmentsList.push(treatment);
-				treatmentsMap[treatment.ID] = treatment;
+				sourceList.push(treatment);
+				sourceMap[treatment.ID] = treatment;
 				
 				//Notify listeners
-				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+				if (treatment.type == Treatment.TYPE_MDI_BASAL || treatment.type == Treatment.TYPE_TEMP_BASAL || treatment.type == Treatment.TYPE_TEMP_BASAL_END)
+				{
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_TREATMENT, false, false, treatment));
+				}
+				else
+				{
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_ADDED, false, false, treatment));
+				}
 				
 				//Upload to Nightscou
 				if (syncToNightscout)
