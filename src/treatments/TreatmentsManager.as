@@ -402,6 +402,7 @@ package treatments
 						treatment.ID = dbTreatment.id;
 						treatment.isBasalAbsolute = dbTreatment.isbasalabsolute != null && dbTreatment.isbasalabsolute == "true";
 						treatment.isBasalRelative = dbTreatment.isbasalrelative != null && dbTreatment.isbasalrelative == "true";
+						treatment.basalDuration = dbTreatment.basalduration != null && !isNaN(dbTreatment.basalduration) ? dbTreatment.basalduration : 0;
 						treatment.isTempBasalEnd = dbTreatment.istempbasalend != null && dbTreatment.istempbasalend == "true";
 						treatment.basalAbsoluteAmount = dbTreatment.basalabsoluteamount != null && !isNaN(dbTreatment.basalabsoluteamount) ? dbTreatment.basalabsoluteamount : 0;
 						treatment.basalPercentAmount = dbTreatment.basalpercentamount != null && !isNaN(dbTreatment.basalpercentamount) ? dbTreatment.basalpercentamount : 0;
@@ -427,7 +428,7 @@ package treatments
 							treatment.exerciseIntensity = String(dbTreatment.intensity);
 						}
 						
-						if (treatment.type != Treatment.TYPE_TEMP_BASAL)
+						if (treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_MDI_BASAL)
 						{
 							treatmentsList.push(treatment);
 							treatmentsMap[treatment.ID] = treatment;
@@ -2934,7 +2935,7 @@ package treatments
 				
 				insulinTextInput.text = insulinTextInput.text.replace(" ", "");
 				var insulinValue:Number = Number((insulinTextInput.text as String).replace(",","."));
-				if (isNaN(insulinValue) || insulinTextInput.text == "") 
+				if (isNaN(insulinValue) || insulinTextInput.text == "" || insulinValue == 0) 
 				{
 					AlertManager.showSimpleAlert
 						(

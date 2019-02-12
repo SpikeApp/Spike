@@ -701,7 +701,7 @@ package services
 				return;
 			}
 			
-			lastRemoteProfileSync = now;
+			//lastRemoteProfileSync = now;
 			basalProfileImport = isBasalProfileImport;
 			
 			if (!isNSProfileSet || isBasalProfileImport)
@@ -841,7 +841,7 @@ package services
 											Number(nsBasalTimes[1])
 										);
 										
-										ProfileManager.insertBasalRate(spikeBasal, false, basalProfileImport);
+										ProfileManager.insertBasalRate(spikeBasal, true, basalProfileImport);
 										numBasalRateAdded++;
 									}
 								}

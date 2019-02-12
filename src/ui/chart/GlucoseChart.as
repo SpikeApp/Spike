@@ -1685,21 +1685,12 @@ package ui.chart
 				}
 			}
 			
-			
 			if (isNaN(toTime)) toTime = now;
 			var time:Number;
 			
 			//Sorting
-			var basalHolder:Array = [];
-			
-			for (time = toTime; time >= fromTime - TimeSpan.TIME_1_MINUTE; time -= TimeSpan.TIME_1_MINUTE) 
-			{
-				var basalPropertiesForSorting:Object = ProfileManager.getMDIBasalData(time);
-				basalHolder.push(basalPropertiesForSorting);
-			}
-			
-			basalHolder.sortOn(["mdiBasalAmount"], Array.NUMERIC);
-			var highestBasalAmount:Number = basalHolder[basalHolder.length - 1].mdiBasalAmount;
+			TreatmentsManager.basalsList.sortOn(["basalAbsoluteAmount"], Array.NUMERIC);
+			var highestBasalAmount:Number = TreatmentsManager.basalsList[TreatmentsManager.basalsList.length - 1].basalAbsoluteAmount;
 			
 			//Misc
 			var absoluteBasalDataPointsArray:Array = [];
@@ -2291,7 +2282,7 @@ package ui.chart
 						//Visual Filter
 						activeBasalAreaQuad.removeFromParent();
 						basalsContainer.addChild(activeBasalAreaQuad);
-						activeBasalAreaQuad.filter = new GlowFilter(0xFFFFFF, 2, 4, 1);
+						activeBasalAreaQuad.filter = new GlowFilter(0xEEEEEE, 2, 4, 1);
 						
 						//Reposition Basal Label
 						if (displayMDIBasals)

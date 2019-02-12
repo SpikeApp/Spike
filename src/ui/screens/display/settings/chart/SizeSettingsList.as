@@ -73,7 +73,7 @@ package ui.screens.display.settings.chart
 			glucoseLineThickness = LayoutFactory.createNumericStepper(1, 3, 1);
 			glucoseLineThickness.validate();
 			
-			basalsSizePercentage = LayoutFactory.createNumericStepper(10, 50, 20);
+			basalsSizePercentage = LayoutFactory.createNumericStepper(5, 50, 20);
 			basalsSizePercentage.validate();
 			
 			glucoseDisplayFontSize = new Slider();

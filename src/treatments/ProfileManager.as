@@ -873,6 +873,7 @@ package treatments
 		{
 			Trace.myTrace("ProfileManager.as", "getDefaultInsulinID called!");
 			
+			var isFollower:Boolean = CGMBlueToothDevice.isFollower();
 			var insulinID:String = "";
 			var foundDefault:Boolean = false;
 			var i:int = 0;
@@ -885,7 +886,7 @@ package treatments
 			for (i = 0; i < insulinsList.length; i++) 
 			{
 				insulin = insulinsList[i];
-				if (insulin.isDefault && !insulin.isHidden && insulin.type != longActing)
+				if (insulin.isDefault && insulin.type != longActing && (isFollower || (!isFollower && !insulin.isHidden)))
 				{
 					insulinID = insulin.ID;
 					foundDefault = true;
