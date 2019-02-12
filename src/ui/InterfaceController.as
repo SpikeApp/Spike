@@ -2,6 +2,8 @@ package ui
 {
 	import com.adobe.touch3D.Touch3D;
 	import com.adobe.touch3D.Touch3DEvent;
+	import com.coltware.airxzip.ZipEntry;
+	import com.coltware.airxzip.ZipFileReader;
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.notifications.Notifications;
@@ -25,6 +27,8 @@ package ui
 	import flash.text.engine.SpaceJustifier;
 	import flash.utils.ByteArray;
 	
+	import mx.utils.ObjectUtil;
+	
 	import spark.formatters.DateTimeFormatter;
 	
 	import cryptography.Keys;
@@ -34,6 +38,8 @@ package ui
 	import database.Database;
 	import database.LocalSettings;
 	import database.Sensor;
+	
+	import deng.fzip.FZip;
 	
 	import events.BlueToothServiceEvent;
 	import events.DatabaseEvent;
@@ -47,6 +53,9 @@ package ui
 	import feathers.layout.HorizontalAlign;
 	
 	import model.ModelLocator;
+	
+	import org.aszip.compression.CompressionMethod;
+	import org.aszip.zip.ASZip;
 	
 	import services.CalibrationService;
 	import services.NotificationService;
@@ -516,10 +525,17 @@ package ui
 			
 			if ( items.length > 0 ) 
 			{
+				var isZip:Boolean = false;
+				
 				var file:File = new File( event.arguments[0] );
-				if (file.type == ".db" && file.extension == "db" && file.name.indexOf("spike") != -1 && file.size > 0)
+				if (((file.type == ".db" && file.extension == "db") || (file.type == ".zip" && file.extension == "zip")) && file.name.indexOf("spike") != -1 && file.size > 0)
 				{
 					lastInvoke = now;
+					
+					if (file.type == ".zip" && file.extension == "zip")
+					{
+						isZip = true;
+					}
 					
 					var alert:Alert = Alert.show
 						(
@@ -545,26 +561,54 @@ package ui
 					
 					function restoreDatabase(e:starling.events.Event):void
 					{
-						//Read file into memory
-						var databaseStream:FileStream = new FileStream();
-						databaseStream.open(file, FileMode.READ);
+						var canProceed:Boolean = false;
 						
-						//Read database raw bytes into memory
-						backupDatabaseData = new ByteArray();
-						databaseStream.readBytes(backupDatabaseData);
-						databaseStream.close();
+						if (!isZip)
+						{
+							//Read file into memory
+							var databaseStream:FileStream = new FileStream();
+							databaseStream.open(file, FileMode.READ);
+							
+							//Read database raw bytes into memory
+							backupDatabaseData = new ByteArray();
+							databaseStream.readBytes(backupDatabaseData);
+							databaseStream.close();
+							
+							canProceed = true;
+						}
+						else
+						{
+							var zipArchive:ZipFileReader = new ZipFileReader();
+							zipArchive.open(file);
+							
+							var list:Array = zipArchive.getEntries();
+							for each(var entry:ZipEntry in list)
+							{
+								if(!entry.isDirectory())
+								{
+									if(entry.getFilename() == "spike.db")
+									{
+										backupDatabaseData = zipArchive.unzip(entry);
+										canProceed = true;
+									}
+								}
+							}
+						}
 						
 						//Delete file
 						if (file != null)
 							file.deleteFile();
 						
-						//Notify ANE
-						SpikeANE.setDatabaseResetStatus(true);
-						
-						//Halt Spike
-						Trace.myTrace("Spike.as", "Halting Spike...");
-						Database.instance.addEventListener(DatabaseEvent.DATABASE_CLOSED_EVENT, onLocalDatabaseClosed);
-						Spike.haltApp();
+						if (canProceed && backupDatabaseData != null)
+						{
+							//Notify ANE
+							SpikeANE.setDatabaseResetStatus(true);
+							
+							//Halt Spike
+							Trace.myTrace("Spike.as", "Halting Spike...");
+							Database.instance.addEventListener(DatabaseEvent.DATABASE_CLOSED_EVENT, onLocalDatabaseClosed);
+							Spike.haltApp();
+						}
 					}
 					
 					function ignoreRestore(e:starling.events.Event):void
