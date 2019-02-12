@@ -53,6 +53,8 @@ package ui.screens
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	import utils.TimeSpan;
+	import utils.Trace;
 	
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("chartscreen")]
@@ -65,6 +67,7 @@ package ui.screens
 		//Objects
 		private var chartData:Array = [];
 		private var chartTreatments:Array = [];
+		private var chartBasals:Array = [];
 		private var timeRangeGroup:ToggleGroup;
 		
 		//Visual variables
@@ -293,31 +296,36 @@ package ui.screens
 		
 		private function getHistoricalTreatments():void
 		{
+			var i:int;
+			
 			chartTreatments.length = 0;
+			chartBasals.length = 0;
 			
 			var dbTreatments:Array = Database.getTreatmentsSynchronous(startTimestamp, endTimestamp);
 			if (dbTreatments != null && dbTreatments.length > 0)
 			{
-				for (var i:int = 0; i < dbTreatments.length; i++) 
+				for (i = 0; i < dbTreatments.length; i++) 
 				{
 					var dbTreatment:Object = dbTreatments[i] as Object;
 					if (dbTreatment == null)
 						continue;
 					
 					var treatment:Treatment = new Treatment
-						(
-							dbTreatment.type,
-							dbTreatment.lastmodifiedtimestamp,
-							dbTreatment.insulinamount,
-							dbTreatment.insulinid,
-							dbTreatment.carbs,
-							dbTreatment.glucose,
-							dbTreatment.glucoseestimated,
-							dbTreatment.note,
-							null,
-							dbTreatment.carbdelay
-						);
+					(
+						dbTreatment.type,
+						dbTreatment.lastmodifiedtimestamp,
+						dbTreatment.insulinamount,
+						dbTreatment.insulinid,
+						dbTreatment.carbs,
+						dbTreatment.glucose,
+						dbTreatment.glucoseestimated,
+						dbTreatment.note,
+						null,
+						dbTreatment.carbdelay
+					);
+					
 					treatment.ID = dbTreatment.id;
+					
 					if (dbTreatment.needsadjustment != null && dbTreatment.needsadjustment == "true")
 					{
 						treatment.needsAdjustment = true;
@@ -326,8 +334,62 @@ package ui.screens
 					{
 						treatment.parseChildren(String(dbTreatment.children));
 					}
+					if (dbTreatment.prebolus != null && !isNaN(dbTreatment.prebolus))
+					{
+						treatment.preBolus = Number(dbTreatment.prebolus);
+					}
+					if (dbTreatment.duration != null && !isNaN(dbTreatment.duration))
+					{
+						treatment.duration = Number(dbTreatment.duration);
+					}
+					if (dbTreatment.intensity != null && String(dbTreatment.intensity) != "")
+					{
+						treatment.exerciseIntensity = String(dbTreatment.intensity);
+					}
 					
 					chartTreatments.push(treatment);
+					
+					//Sort Treatments
+					chartTreatments.sortOn(["timestamp"], Array.NUMERIC);
+				}
+			}
+			
+			//Basals
+			var dbBasals:Array = Database.getBasalsSynchronous(startTimestamp, endTimestamp);
+			if (dbBasals != null && dbBasals.length > 0)
+			{
+				for (i = 0; i < dbBasals.length; i++) 
+				{
+					var dbBasal:Object = dbBasals[i] as Object;
+					if (dbBasal == null)
+						continue;
+					
+					var basal:Treatment = new Treatment
+					(
+						dbBasal.type,
+						dbBasal.lastmodifiedtimestamp,
+						dbBasal.insulinamount,
+						dbBasal.insulinid,
+						dbBasal.carbs,
+						dbBasal.glucose,
+						dbBasal.glucoseestimated,
+						dbBasal.note,
+						null,
+						dbBasal.carbdelay
+					);
+					
+					basal.ID = dbBasal.id;
+					basal.isBasalAbsolute = dbBasal.isbasalabsolute != null && dbBasal.isbasalabsolute == "true";
+					basal.isBasalRelative = dbBasal.isbasalrelative != null && dbBasal.isbasalrelative == "true";
+					basal.basalDuration = dbBasal.basalduration != null && !isNaN(dbBasal.basalduration) ? dbBasal.basalduration : 0;
+					basal.isTempBasalEnd = dbBasal.istempbasalend != null && dbBasal.istempbasalend == "true";
+					basal.basalAbsoluteAmount = dbBasal.basalabsoluteamount != null && !isNaN(dbBasal.basalabsoluteamount) ? dbBasal.basalabsoluteamount : 0;
+					basal.basalPercentAmount = dbBasal.basalpercentamount != null && !isNaN(dbBasal.basalpercentamount) ? dbBasal.basalpercentamount : 0;
+					
+					chartBasals.push(basal);
+					
+					//Sort Treatments
+					chartBasals.sortOn(["timestamp"], Array.NUMERIC);
 				}
 			}
 		}
@@ -345,6 +407,7 @@ package ui.screens
 			//Clear Chart Data
 			if (chartData != null) chartData.length = 0;
 			if (chartTreatments != null) chartTreatments.length = 0;
+			if (chartBasals != null) chartBasals.length = 0;
 			
 			//Define start and end date
 			calculateTimerangeDates(datePicker.value.valueOf());
@@ -381,6 +444,7 @@ package ui.screens
 			//Clear Chart Data
 			if (chartData != null) chartData.length = 0;
 			if (chartTreatments != null) chartTreatments.length = 0;
+			if (chartBasals != null) chartBasals.length = 0;
 			
 			datePicker.value = new Date(selectorDateTimestamp);
 			
@@ -418,6 +482,7 @@ package ui.screens
 			//Clear Chart Data
 			if (chartData != null) chartData.length = 0;
 			if (chartTreatments != null) chartTreatments.length = 0;
+			if (chartBasals != null) chartBasals.length = 0;
 			
 			datePicker.value = new Date(selectorDateTimestamp);
 			
@@ -506,6 +571,7 @@ package ui.screens
 			glucoseChart.displayLine = drawLineChart;
 			glucoseChart.drawGraph();
 			glucoseChart.addAllHistoricalTreatments(chartTreatments);
+			glucoseChart.renderBasals(chartBasals);
 			renderingLabelContainer.removeFromParent();
 			addChild(glucoseChart);
 			
@@ -553,6 +619,7 @@ package ui.screens
 				glucoseChart.displayLine = drawLineChart;
 				glucoseChart.drawGraph();
 				glucoseChart.addAllHistoricalTreatments(chartTreatments);
+				glucoseChart.renderBasals(chartBasals);
 				addChild(glucoseChart);
 			}
 			else
@@ -1053,6 +1120,12 @@ package ui.screens
 			{
 				chartTreatments.length = 0;
 				chartTreatments = null;
+			}
+			
+			if (chartBasals != null)
+			{
+				chartBasals.length = 0;
+				chartBasals = null;
 			}
 			
 			super.dispose();

@@ -374,12 +374,15 @@ package treatments
 				Trace.myTrace("TreatmentsManager.as", "Fetching treatments from database...");
 				
 				var now:Number = new Date().valueOf();
+				var i:int;
+				
+				//Treatments
 				treatmentsList.length = 0;
 				var dbTreatments:Array = Database.getTreatmentsSynchronous(now - TimeSpan.TIME_24_HOURS, now + TimeSpan.TIME_24_HOURS);
 				
 				if (dbTreatments != null && dbTreatments.length > 0)
 				{
-					for (var i:int = 0; i < dbTreatments.length; i++) 
+					for (i = 0; i < dbTreatments.length; i++) 
 					{
 						var dbTreatment:Object = dbTreatments[i] as Object;
 						if (dbTreatment == null)
@@ -400,12 +403,6 @@ package treatments
 						);
 						
 						treatment.ID = dbTreatment.id;
-						treatment.isBasalAbsolute = dbTreatment.isbasalabsolute != null && dbTreatment.isbasalabsolute == "true";
-						treatment.isBasalRelative = dbTreatment.isbasalrelative != null && dbTreatment.isbasalrelative == "true";
-						treatment.basalDuration = dbTreatment.basalduration != null && !isNaN(dbTreatment.basalduration) ? dbTreatment.basalduration : 0;
-						treatment.isTempBasalEnd = dbTreatment.istempbasalend != null && dbTreatment.istempbasalend == "true";
-						treatment.basalAbsoluteAmount = dbTreatment.basalabsoluteamount != null && !isNaN(dbTreatment.basalabsoluteamount) ? dbTreatment.basalabsoluteamount : 0;
-						treatment.basalPercentAmount = dbTreatment.basalpercentamount != null && !isNaN(dbTreatment.basalpercentamount) ? dbTreatment.basalpercentamount : 0;
 						
 						if (dbTreatment.needsadjustment != null && dbTreatment.needsadjustment == "true")
 						{
@@ -428,25 +425,59 @@ package treatments
 							treatment.exerciseIntensity = String(dbTreatment.intensity);
 						}
 						
-						if (treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_MDI_BASAL)
-						{
-							treatmentsList.push(treatment);
-							treatmentsMap[treatment.ID] = treatment;
-						}
-						else
-						{
-							basalsList.push(treatment);
-							basalsMap[treatment.ID] = treatment;
-						}
+						treatmentsList.push(treatment);
+						treatmentsMap[treatment.ID] = treatment;
 						
 						//Sort Treatments
 						treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
-						basalsList.sortOn(["timestamp"], Array.NUMERIC);
 					}
+					
+					Trace.myTrace("TreatmentsManager.as", "Fetched " + treatmentsList.length + " treatment(s)");
 				}
 				
-				Trace.myTrace("TreatmentsManager.as", "Fetched " + treatmentsList.length + " treatment(s)");
-				Trace.myTrace("TreatmentsManager.as", "Fetched " + basalsList.length + " basal(s)");
+				//Basals
+				basalsList.length = 0;
+				var dbBasals:Array = Database.getBasalsSynchronous(now - TimeSpan.TIME_24_HOURS, now + TimeSpan.TIME_24_HOURS);
+				
+				if (dbBasals != null && dbBasals.length > 0)
+				{
+					for (i = 0; i < dbBasals.length; i++) 
+					{
+						var dbBasal:Object = dbBasals[i] as Object;
+						if (dbBasal == null)
+							continue;
+						
+						var basal:Treatment = new Treatment
+						(
+							dbBasal.type,
+							dbBasal.lastmodifiedtimestamp,
+							dbBasal.insulinamount,
+							dbBasal.insulinid,
+							dbBasal.carbs,
+							dbBasal.glucose,
+							dbBasal.glucoseestimated,
+							dbBasal.note,
+							null,
+							dbBasal.carbdelay
+						);
+						
+						basal.ID = dbBasal.id;
+						basal.isBasalAbsolute = dbBasal.isbasalabsolute != null && dbBasal.isbasalabsolute == "true";
+						basal.isBasalRelative = dbBasal.isbasalrelative != null && dbBasal.isbasalrelative == "true";
+						basal.basalDuration = dbBasal.basalduration != null && !isNaN(dbBasal.basalduration) ? dbBasal.basalduration : 0;
+						basal.isTempBasalEnd = dbBasal.istempbasalend != null && dbBasal.istempbasalend == "true";
+						basal.basalAbsoluteAmount = dbBasal.basalabsoluteamount != null && !isNaN(dbBasal.basalabsoluteamount) ? dbBasal.basalabsoluteamount : 0;
+						basal.basalPercentAmount = dbBasal.basalpercentamount != null && !isNaN(dbBasal.basalpercentamount) ? dbBasal.basalpercentamount : 0;
+						
+						basalsList.push(basal);
+						basalsMap[basal.ID] = basal;
+						
+						//Sort Treatments
+						basalsList.sortOn(["timestamp"], Array.NUMERIC);
+					}
+					
+					Trace.myTrace("TreatmentsManager.as", "Fetched " + basalsList.length + " basal(s)");
+				}
 			}
 		}
 		
@@ -5503,21 +5534,23 @@ package treatments
 			return Math.round(basalAmount * 100) / 100;
 		}
 		
-		public static function getHighestBasal(type:String):Number
+		public static function getHighestBasal(type:String, sourceForBasals:Array = null):Number
 		{
+			var basalsSource:Array = sourceForBasals != null ? sourceForBasals : basalsList;
+			
 			var highestTempBasalAmount:Number = 0;
 			var twentyFourHoursAgo:Number = new Date().valueOf() - TimeSpan.TIME_24_HOURS;
 			
-			for (var i:int = basalsList.length - 1 ; i >= 0; i--)
+			for (var i:int = basalsSource.length - 1 ; i >= 0; i--)
 			{
-				var tempBasal:Treatment = basalsList[i];
+				var tempBasal:Treatment = basalsSource[i];
 				if (tempBasal != null && tempBasal.type == type && (tempBasal.basalAbsoluteAmount > 0 || tempBasal.basalPercentAmount > 0))
 				{
 					//CleanUp
 					if (tempBasal.timestamp < twentyFourHoursAgo)
 					{
 						//Treatment has expired. Dispose it.
-						basalsList.removeAt(i);
+						basalsSource.removeAt(i);
 						basalsMap[tempBasal.ID] = null;
 						delete basalsMap[tempBasal.ID];
 						tempBasal = null;

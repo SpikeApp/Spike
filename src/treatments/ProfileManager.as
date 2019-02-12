@@ -582,10 +582,11 @@ package treatments
 			return scheduledBasalRate;
 		}
 		
-		public static function getPumpBasalData(time:Number, isFollower:Boolean, suggestedIndex:Number = Number.NaN):Object
+		public static function getPumpBasalData(time:Number, isFollower:Boolean, suggestedIndex:Number = Number.NaN, basalsSource:Array = null):Object
 		{
 			//Common Variables
 			var i:int;
+			var sourceForBasals:Array = basalsSource != null ? basalsSource : TreatmentsManager.basalsList;
 			
 			//Basal Rate
 			var scheduledBasalRate:Number = 0;
@@ -620,14 +621,14 @@ package treatments
 			var tempBasalTreatment:Treatment = null;
 			var tempBasalIndex:Number = suggestedIndex;
 			var tempBasalTime:Number = time;
-			var numberOfBasals:Number = TreatmentsManager.basalsList.length;
+			var numberOfBasals:Number = sourceForBasals.length;
 			
 			if (numberOfBasals > 0)
 			{
 				var loopStart:int = isNaN(suggestedIndex) ? numberOfBasals - 1 : suggestedIndex;
 				for (i = loopStart ; i >= 0; i--)
 				{
-					var tempBasalInternalTreatment:Treatment = TreatmentsManager.basalsList[i];
+					var tempBasalInternalTreatment:Treatment = sourceForBasals[i];
 					if (tempBasalInternalTreatment != null 
 						&& 
 						tempBasalInternalTreatment.type == Treatment.TYPE_TEMP_BASAL
@@ -682,8 +683,13 @@ package treatments
 			};
 		}
 		
-		public static function getMDIBasalData(time:Number):Object
+		public static function getMDIBasalData(time:Number, sourceForBasals:Array = null):Object
 		{
+			if (sourceForBasals == null)
+			{
+				sourceForBasals = TreatmentsManager.basalsList;
+			}
+			
 			//Temp Basal
 			var mdiBasalAmount:Number = 0;
 			var mdiBasalDuration:Number = 0;
@@ -691,13 +697,13 @@ package treatments
 			var mdiBasalTreatmentsList:Array = [];
 			var mdiBasalTime:Number = time;
 			var hasOverlap:Boolean = false;
-			var numberOfBasals:Number = TreatmentsManager.basalsList.length;
+			var numberOfBasals:Number = sourceForBasals.length;
 			
 			if (numberOfBasals > 0)
 			{
 				for (var i:int = numberOfBasals ; i >= 0; i--)
 				{
-					var mdiBasalInternalTreatment:Treatment = TreatmentsManager.basalsList[i];
+					var mdiBasalInternalTreatment:Treatment = sourceForBasals[i];
 					if (mdiBasalInternalTreatment != null 
 						&&
 						mdiBasalInternalTreatment.type == Treatment.TYPE_MDI_BASAL

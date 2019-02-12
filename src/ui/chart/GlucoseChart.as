@@ -1612,24 +1612,26 @@ package ui.chart
 			}
 		}
 		
-		public function renderBasals():void
+		public function renderBasals(basalsSource:Array = null):void
 		{
 			if (basalRenderMode == "pump")
 			{
-				renderPumpBasals();
+				renderPumpBasals(basalsSource);
 			}
 			else if (basalRenderMode == "mdi")
 			{
-				renderPenBasals();
+				renderPenBasals(basalsSource);
 			}
 		}
 		
-		private function renderPenBasals():void
+		private function renderPenBasals(basalsSource:Array = null):void
 		{
 			if (!displayMDIBasals || !SystemUtil.isApplicationActive || firstBGReadingTimeStamp == 0)
 			{
 				return
 			}
+			
+			var sourceForBasals:Array = basalsSource != null ? basalsSource : TreatmentsManager.basalsList;
 			
 			//Dispose previous basals
 			disposeBasalCallout();
@@ -1646,7 +1648,7 @@ package ui.chart
 			}
 			
 			//Validation
-			var numberOfBasals:uint = TreatmentsManager.basalsList.length;
+			var numberOfBasals:uint = sourceForBasals.length;
 			if (numberOfBasals == 0)
 			{
 				if (mainChart != null)
@@ -1691,8 +1693,8 @@ package ui.chart
 			var time:Number;
 			
 			//Sorting
-			TreatmentsManager.basalsList.sortOn(["basalAbsoluteAmount"], Array.NUMERIC);
-			var highestBasalAmount:Number = TreatmentsManager.basalsList[numberOfBasals - 1].basalAbsoluteAmount;
+			sourceForBasals.sortOn(["basalAbsoluteAmount"], Array.NUMERIC);
+			var highestBasalAmount:Number = sourceForBasals[numberOfBasals - 1].basalAbsoluteAmount;
 			
 			//Misc
 			var absoluteBasalDataPointsArray:Array = [];
@@ -1709,7 +1711,7 @@ package ui.chart
 			for (time = toTime; time >= fromTime - TimeSpan.TIME_1_MINUTE; time -= TimeSpan.TIME_1_MINUTE) 
 			{
 				//Gather Basal Data
-				var basalProperties:Object = ProfileManager.getMDIBasalData(time);
+				var basalProperties:Object = ProfileManager.getMDIBasalData(time, sourceForBasals);
 				
 				//Calculate Coordinates (Area & Basal Amount)
 				var tempBasalAreaValue:Number = basalProperties.mdiBasalAmount;
@@ -1903,13 +1905,15 @@ package ui.chart
 			}
 		}
 		
-		private function renderPumpBasals():void
+		private function renderPumpBasals(basalsSource:Array = null):void
 		{
 			//Validation
 			if (!displayPumpBasals || !SystemUtil.isApplicationActive || firstBGReadingTimeStamp == 0)
 			{
 				return;
 			}
+			
+			var sourceForBasals:Array = basalsSource != null ? basalsSource : TreatmentsManager.basalsList;
 			
 			//Dispose previous basals
 			disposeBasalCallout();
@@ -1925,7 +1929,7 @@ package ui.chart
 				mainChartContainer.addChildAt(basalsContainer, 0);
 			}
 			
-			var numberOfBasals:uint = TreatmentsManager.basalsList.length;
+			var numberOfBasals:uint = sourceForBasals.length;
 			if (ProfileManager.basalRatesList.length == 0 && numberOfBasals == 0)
 			{
 				if (mainChart != null)
@@ -1979,8 +1983,8 @@ package ui.chart
 			}
 			
 			//Temp Basals Sorting
-			TreatmentsManager.basalsList.sortOn(["timestamp"], Array.NUMERIC);
-			var highestBasalAmount:Number = Math.max(TreatmentsManager.getHighestBasal(Treatment.TYPE_TEMP_BASAL), scheduledHighestBasal);
+			sourceForBasals.sortOn(["timestamp"], Array.NUMERIC);
+			var highestBasalAmount:Number = Math.max(TreatmentsManager.getHighestBasal(Treatment.TYPE_TEMP_BASAL, sourceForBasals), scheduledHighestBasal);
 			
 			//Temp Basal Area Calculation & Plotting
 			ProfileManager.totalDeliveredPumpBasalAmount = 0;

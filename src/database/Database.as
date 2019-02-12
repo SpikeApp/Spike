@@ -2542,7 +2542,7 @@ package database
 		}
 		
 		/**
-		 * Get treatments synchronously
+		 * Get treatments synchronously. Basals NOT included.
 		 * From: Starting timestamp.
 		 * Until: Ending timestamp.
 		 * Columns: Data columns to be retrieved from database.
@@ -2557,9 +2557,55 @@ package database
 				var getRequest:SQLStatement = new SQLStatement();
 				getRequest.sqlConnection = conn;
 				if (maxCount == 1)
-					getRequest.text =  "SELECT " + columns + " FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + from + " AND " + until + " ORDER BY lastmodifiedtimestamp DESC";
+				{
+					//getRequest.text =  "SELECT " + columns + " FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + from + " AND " + until + " ORDER BY lastmodifiedtimestamp DESC";
+					getRequest.text =  "SELECT " + columns + " FROM treatments WHERE (lastmodifiedtimestamp BETWEEN " + from + " AND " + until + ") AND (type != '" + Treatment.TYPE_MDI_BASAL + "' AND type != '" + Treatment.TYPE_TEMP_BASAL + "' AND type != '" + Treatment.TYPE_TEMP_BASAL_END + "') ORDER BY lastmodifiedtimestamp DESC";
+				}
 				else
-					getRequest.text =  "SELECT " + columns + " FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + from + " AND " + until +  " ORDER BY lastmodifiedtimestamp ASC LIMIT " + maxCount;
+				{
+					//getRequest.text =  "SELECT " + columns + " FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + from + " AND " + until +  " ORDER BY lastmodifiedtimestamp ASC LIMIT " + maxCount;
+					getRequest.text =  "SELECT " + columns + " FROM treatments WHERE (lastmodifiedtimestamp BETWEEN " + from + " AND " + until +  ") AND (type != '" + Treatment.TYPE_MDI_BASAL + "' AND type != '" + Treatment.TYPE_TEMP_BASAL + "' AND type != '" + Treatment.TYPE_TEMP_BASAL_END + "') ORDER BY lastmodifiedtimestamp ASC LIMIT " + maxCount;
+				}
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+					returnValue = result.data;
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_treatments', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_treatments',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnValue;
+			}
+		}
+		
+		/**
+		 * Get basals synchronously. Treatments NOT included.
+		 * From: Starting timestamp.
+		 * Until: Ending timestamp.
+		 * Columns: Data columns to be retrieved from database.
+		 * MaxCount: Maximum of records returned from database (if applicable). 1 means all.
+		 */
+		public static function getBasalsSynchronous(from:Number, until:Number, columns:String = "*", maxCount:int = 1):Array {
+			var returnValue:Array = new Array();
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				if (maxCount == 1)
+				{
+					getRequest.text = "SELECT " + columns + " FROM treatments WHERE ((lastmodifiedtimestamp + (basalduration * 60 * 1000)) >= " + from + ") AND (lastmodifiedtimestamp <= " + until + ") AND (type == '" + Treatment.TYPE_MDI_BASAL + "' OR type == '" + Treatment.TYPE_TEMP_BASAL + "' OR type == '" + Treatment.TYPE_TEMP_BASAL_END + "') ORDER BY lastmodifiedtimestamp DESC";
+				}
+				else
+				{
+					getRequest.text = "SELECT " + columns + " FROM treatments WHERE ((lastmodifiedtimestamp + (basalduration * 60 * 1000)) >= " + from + ") AND (lastmodifiedtimestamp <= " + until + ") AND (type == '" + Treatment.TYPE_MDI_BASAL + "' OR type == '" + Treatment.TYPE_TEMP_BASAL + "' OR type == '" + Treatment.TYPE_TEMP_BASAL_END + "') ORDER BY lastmodifiedtimestamp ASC LIMIT " + maxCount;
+				}
 				getRequest.execute();
 				var result:SQLResult = getRequest.getResult();
 				conn.close();
