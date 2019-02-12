@@ -1,4 +1,6 @@
 3.5.4
+ENHANCEMENT: When sending SPike's database to an email address (settings > maintenance), if database is bigger than 15mb, zip it first before sending. (Miguel)
+ENHANCEMENT: Support for importing databases into Spike that reside inside a zip file. (Miguel)
 FIX: More bug fixes for low/in range/high percentage calculations for the lower glucose distribution stats. (Miguel)
 
 3.5.3
