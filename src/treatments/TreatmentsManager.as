@@ -12,6 +12,8 @@ package treatments
 	import flash.utils.Dictionary;
 	import flash.utils.setTimeout;
 	
+	import mx.utils.ObjectUtil;
+	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.Calibration;
@@ -427,10 +429,10 @@ package treatments
 						
 						treatmentsList.push(treatment);
 						treatmentsMap[treatment.ID] = treatment;
-						
-						//Sort Treatments
-						treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
 					}
+					
+					//Sort Treatments
+					treatmentsList.sortOn(["timestamp"], Array.NUMERIC);
 					
 					Trace.myTrace("TreatmentsManager.as", "Fetched " + treatmentsList.length + " treatment(s)");
 				}
@@ -471,10 +473,10 @@ package treatments
 						
 						basalsList.push(basal);
 						basalsMap[basal.ID] = basal;
-						
-						//Sort Treatments
-						basalsList.sortOn(["timestamp"], Array.NUMERIC);
 					}
+					
+					//Sort Treatments
+					basalsList.sortOn(["timestamp"], Array.NUMERIC);
 					
 					Trace.myTrace("TreatmentsManager.as", "Fetched " + basalsList.length + " basal(s)");
 				}
@@ -5534,7 +5536,7 @@ package treatments
 			return Math.round(basalAmount * 100) / 100;
 		}
 		
-		public static function getHighestBasal(type:String, sourceForBasals:Array = null):Number
+		public static function getHighestBasal(type:String, sourceForBasals:Array = null, isHistoricalData:Boolean = false):Number
 		{
 			var basalsSource:Array = sourceForBasals != null ? sourceForBasals : basalsList;
 			
@@ -5547,7 +5549,7 @@ package treatments
 				if (tempBasal != null && tempBasal.type == type && (tempBasal.basalAbsoluteAmount > 0 || tempBasal.basalPercentAmount > 0))
 				{
 					//CleanUp
-					if (tempBasal.timestamp < twentyFourHoursAgo)
+					if (tempBasal.timestamp < twentyFourHoursAgo && !isHistoricalData)
 					{
 						//Treatment has expired. Dispose it.
 						basalsSource.removeAt(i);
@@ -5579,6 +5581,31 @@ package treatments
 			}
 			
 			return highestTempBasalAmount;
+		}
+		
+		public static function cleanUpOldBasals():void
+		{
+			basalsList.sortOn(["timestamp"], Array.NUMERIC | Array.DESCENDING);
+			
+			var allowedStartTime:Number = new Date().valueOf() - TimeSpan.TIME_24_HOURS;
+			
+			for (var i:int = basalsList.length - 1 ; i >= 0; i--)
+			{
+				var basal:Treatment = basalsList[i];
+				if (basal.timestamp + basal.basalDuration < allowedStartTime)
+				{
+					basalsList.removeAt(i);
+					basalsMap[basal.ID] = null;
+					delete basalsMap[basal.ID];
+					basal = null;
+				}
+				else
+				{
+					break;
+				}
+			}
+			
+			basalsList.sortOn(["timestamp"], Array.NUMERIC);
 		}
 		
 		public static function clearAllBasals():void

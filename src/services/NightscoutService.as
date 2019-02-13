@@ -2737,7 +2737,7 @@ package services
 				else if (activeVisualCalibrations.length > 0 && !syncVisualCalibrationsActive)
 					syncVisualCalibrations();
 				
-				setTimeout(getRemoteBasals, TimeSpan.TIME_30_SECONDS);
+				setTimeout(getRemoteBasals, TimeSpan.TIME_10_SECONDS);
 				
 				retriesForBasalsDownload++;
 				

@@ -348,10 +348,10 @@ package ui.screens
 					}
 					
 					chartTreatments.push(treatment);
-					
-					//Sort Treatments
-					chartTreatments.sortOn(["timestamp"], Array.NUMERIC);
 				}
+				
+				//Sort Treatments
+				chartTreatments.sortOn(["timestamp"], Array.NUMERIC);
 			}
 			
 			//Basals
@@ -387,10 +387,10 @@ package ui.screens
 					basal.basalPercentAmount = dbBasal.basalpercentamount != null && !isNaN(dbBasal.basalpercentamount) ? dbBasal.basalpercentamount : 0;
 					
 					chartBasals.push(basal);
-					
-					//Sort Treatments
-					chartBasals.sortOn(["timestamp"], Array.NUMERIC);
 				}
+				
+				//Sort Basals
+				chartBasals.sortOn(["timestamp"], Array.NUMERIC);
 			}
 		}
 		

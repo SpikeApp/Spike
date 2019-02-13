@@ -1667,6 +1667,9 @@ package ui.chart
 				return;
 			}
 			
+			//Clean previous basals
+			TreatmentsManager.cleanUpOldBasals();
+			
 			//Common variables
 			var timer:int = getTimer();
 			var now:Number = new Date().valueOf();
@@ -1677,10 +1680,10 @@ package ui.chart
 			
 			//Data variables
 			var fromTime:Number = firstBGReadingTimeStamp != 0 ? firstBGReadingTimeStamp : now - TimeSpan.TIME_24_HOURS;
-			var toTime:Number = !displayLatestBGValue ? now + (mainChartGlucoseMarkerRadius/mainChartXFactor) : firstBGReadingTimeStamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin - (predictionsEnabled && predictionsDelimiter != null ? glucoseDelimiter.x - predictionsDelimiter.x : 0))) / mainChartXFactor);
+			var toTime:Number = !displayLatestBGValue && !isHistoricalData ? now + (mainChartGlucoseMarkerRadius/mainChartXFactor) : firstBGReadingTimeStamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin - (predictionsEnabled && predictionsDelimiter != null ? glucoseDelimiter.x - predictionsDelimiter.x : 0))) / mainChartXFactor);
 			
 			var numberOfPredictions:uint = predictionsMainGlucoseDataPoints.length;
-			if (predictionsEnabled && numberOfPredictions > 0)
+			if (predictionsEnabled && numberOfPredictions > 0 && !isHistoricalData)
 			{
 				var lastPredictionMarker:GlucoseMarker = predictionsMainGlucoseDataPoints[numberOfPredictions - 1];
 				if (lastPredictionMarker != null)
@@ -1956,10 +1959,10 @@ package ui.chart
 			
 			//Data variables
 			var fromTime:Number = firstBGReadingTimeStamp != 0 ? firstBGReadingTimeStamp : now - TimeSpan.TIME_24_HOURS;
-			var toTime:Number = !displayLatestBGValue ? now + (mainChartGlucoseMarkerRadius/mainChartXFactor) : firstBGReadingTimeStamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin - (predictionsEnabled && predictionsDelimiter != null ? glucoseDelimiter.x - predictionsDelimiter.x : 0))) / mainChartXFactor);
+			var toTime:Number = !displayLatestBGValue && !isHistoricalData ? now + (mainChartGlucoseMarkerRadius/mainChartXFactor) : firstBGReadingTimeStamp + (Math.abs(mainChart.x - (_graphWidth - yAxisMargin - (predictionsEnabled && predictionsDelimiter != null ? glucoseDelimiter.x - predictionsDelimiter.x : 0))) / mainChartXFactor);
 			
 			var numberOfPredictions:uint = predictionsMainGlucoseDataPoints.length;
-			if (predictionsEnabled && numberOfPredictions > 0)
+			if (predictionsEnabled && numberOfPredictions > 0 && !isHistoricalData)
 			{
 				var lastPredictionMarker:GlucoseMarker = predictionsMainGlucoseDataPoints[numberOfPredictions - 1];
 				if (lastPredictionMarker != null)
@@ -1984,7 +1987,7 @@ package ui.chart
 			
 			//Temp Basals Sorting
 			sourceForBasals.sortOn(["timestamp"], Array.NUMERIC);
-			var highestBasalAmount:Number = Math.max(TreatmentsManager.getHighestBasal(Treatment.TYPE_TEMP_BASAL, sourceForBasals), scheduledHighestBasal);
+			var highestBasalAmount:Number = Math.max(TreatmentsManager.getHighestBasal(Treatment.TYPE_TEMP_BASAL, sourceForBasals, isHistoricalData), scheduledHighestBasal);
 			
 			//Temp Basal Area Calculation & Plotting
 			ProfileManager.totalDeliveredPumpBasalAmount = 0;
