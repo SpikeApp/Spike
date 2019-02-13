@@ -52,6 +52,7 @@ package ui
 	import ui.screens.TreatmentsSettingsScreen;
 	import ui.screens.WatchSettingsScreen;
 	import ui.screens.WidgetSettingsScreen;
+	import ui.screens.WorkflowSettingsScreen;
 	import ui.screens.data.AlarmNavigatorData;
 	import ui.screens.display.menu.MenuList;
 	
@@ -253,6 +254,11 @@ package ui
 			var IFTTTSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( IFTTTSettingsScreen );
 			IFTTTSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_IFTTT, IFTTTSettingsScreenItem );
+			
+			/* Workflow Settings Screen */
+			var workflowSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( WorkflowSettingsScreen );
+			workflowSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_WORKFLOW, workflowSettingsScreenItem );
 			
 			/* Help Screen */
 			var helpScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( HelpScreen );
