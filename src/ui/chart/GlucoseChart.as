@@ -1668,7 +1668,8 @@ package ui.chart
 			}
 			
 			//Clean previous basals
-			TreatmentsManager.cleanUpOldBasals();
+			if (!isHistoricalData)
+				TreatmentsManager.cleanUpOldBasals();
 			
 			//Common variables
 			var timer:int = getTimer();

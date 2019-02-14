@@ -5588,7 +5588,7 @@ package treatments
 			for (var i:int = basalsList.length - 1 ; i >= 0; i--)
 			{
 				var basal:Treatment = basalsList[i];
-				if (basal.timestamp + basal.basalDuration < allowedStartTime)
+				if (basal.timestamp + (basal.basalDuration * TimeSpan.TIME_1_MINUTE) < allowedStartTime)
 				{
 					basalsList.removeAt(i);
 					basalsMap[basal.ID] = null;
