@@ -1887,12 +1887,6 @@ package treatments
 			//Insert in Database
 			if (treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_MDI_BASAL)
 			{
-				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
-				{
-					if (treatmentsMap[treatment.ID] == null) //new treatment
-						Database.insertTreatmentSynchronous(treatment);
-				}
-				
 				if (treatmentsMap[treatment.ID] == null) //new treatment
 				{
 					Trace.myTrace("TreatmentsManager.as", "Adding treatment to Spike...");
@@ -1907,16 +1901,14 @@ package treatments
 					//Upload to Nightscout
 					if (uploadToNightscout)
 						NightscoutService.uploadTreatment(treatment);
+					
+					//Save to database
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+						Database.insertTreatmentSynchronous(treatment);
 				}
 			}
 			else
 			{
-				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
-				{
-					if (basalsMap[treatment.ID] == null) //new treatment
-						Database.insertTreatmentSynchronous(treatment);
-				}
-				
 				if (basalsMap[treatment.ID] == null) //new treatment
 				{
 					Trace.myTrace("TreatmentsManager.as", "Adding treatment to Spike...");
@@ -1931,6 +1923,10 @@ package treatments
 					//Upload to Nightscout
 					if (uploadToNightscout)
 						NightscoutService.uploadTreatment(treatment);
+					
+					//Save to database
+					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+						Database.insertTreatmentSynchronous(treatment);
 				}
 			}
 		}

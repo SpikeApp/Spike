@@ -1696,6 +1696,11 @@ package ui.chart
 			var time:Number;
 			
 			//Sorting
+			if (sourceForBasals == null || sourceForBasals.length == 0 || sourceForBasals[numberOfBasals - 1] == null)
+			{
+				return;
+			}
+			
 			sourceForBasals.sortOn(["basalAbsoluteAmount"], Array.NUMERIC);
 			var highestBasalAmount:Number = sourceForBasals[numberOfBasals - 1].basalAbsoluteAmount;
 			

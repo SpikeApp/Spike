@@ -21,6 +21,7 @@ MuteChecker * _muteChecker;
 PlaySound * _soundPlayer;
 CLLocationManager * _locationManager;
 NSUserDefaults * _userDefaults;
+UIDocumentInteractionController * _documentController;
 
 FREObject traceNSLog( FREContext ctx, void* funcData, uint32_t argc, FREObject argv[] ) {
    NSLog(@"%@", FPANE_FREObjectToNSString(argv[0]));
@@ -343,6 +344,67 @@ FREObject setStatusBarToWhite(FREContext ctx, void* funcData, uint32_t argc, FRE
     return nil;
 }
 
+FREObject openWithDefaultApplication(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
+{
+    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m openWithDefaultApplication called!");
+    
+    // Get main controller
+    UIWindow *keyWindow = [[UIApplication sharedApplication] keyWindow];
+    UIViewController *mainController = [keyWindow rootViewController];
+    
+    // Which path?
+    NSString *fileName = [FPANE_FREObjectToNSString(argv[0]) mutableCopy];
+    NSString *basePath = [FPANE_FREObjectToNSString(argv[1]) mutableCopy];
+    
+    NSArray *paths;
+    NSString *selectedDirectory;
+    NSString *fileURI;
+    
+    if ([basePath isEqualToString:@"application"])
+    {
+        // Get application path
+        NSString *bundlePath = [[NSBundle mainBundle] resourcePath];
+        fileURI = [bundlePath stringByAppendingPathComponent:fileName];
+    }
+    else  if ([basePath isEqualToString:@"cache"])
+    {
+        // Get cach path
+        paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    }
+    else  if ([basePath isEqualToString:@"documents"])
+    {
+        // Get doc path
+        paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    }
+    else  if ([basePath isEqualToString:@"storage"])
+    {
+        // Get storage path
+        paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+    }
+    
+    if (paths != nil)
+    {
+        selectedDirectory = [paths objectAtIndex:0];
+        fileURI = [selectedDirectory stringByAppendingPathComponent:fileName];
+    }
+    
+    if (fileURI != nil && [fileURI length] > 0)
+    {
+        FPANE_Log([NSString stringWithFormat:@"spiketrace ANE NativeExtensioniOS.m trying to open file : %@", fileURI]);
+        
+        // Get URL from file path
+        NSURL *url = [NSURL fileURLWithPath:fileURI];
+        
+        // Try to open with...
+        _documentController = [UIDocumentInteractionController interactionControllerWithURL:url];
+        
+        // Show me the view
+        [_documentController presentOptionsMenuFromRect:CGRectZero inView:mainController.view animated:YES];
+    }
+    
+    return nil;
+}
+
 /**********
  ** DEVICE
  **********/
@@ -494,7 +556,7 @@ void NativeExtensionInitializer( void** extDataToSet, FREContextInitializer* ctx
 
 void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FREContext ctx, uint32_t* numFunctionsToTest, const FRENamedFunction** functionsToSet) {
     
-    *numFunctionsToTest = 53;
+    *numFunctionsToTest = 54;
     
     FRENamedFunction * func = (FRENamedFunction *) malloc(sizeof(FRENamedFunction) * *numFunctionsToTest);
 
@@ -631,112 +693,116 @@ void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FR
     func[28].name = (const uint8_t*) "setStatusBarToWhite";
     func[28].functionData = NULL;
     func[28].function = &setStatusBarToWhite;
+    
+    func[29].name = (const uint8_t*) "openWithDefaultApplication";
+    func[29].functionData = NULL;
+    func[29].function = &openWithDefaultApplication;
 
     /**********
      ** DEVICE
      **********/
-    func[29].name = (const uint8_t*) "checkMute";
-    func[29].functionData = NULL;
-    func[29].function = &checkMute;
-    
-    func[30].name = (const uint8_t*) "vibrate";
+    func[30].name = (const uint8_t*) "checkMute";
     func[30].functionData = NULL;
-    func[30].function = &vibrate;
+    func[30].function = &checkMute;
     
-    func[31].name = (const uint8_t*) "getBatteryLevel";
+    func[31].name = (const uint8_t*) "vibrate";
     func[31].functionData = NULL;
-    func[31].function = &getBatteryLevel;
+    func[31].function = &vibrate;
     
-    func[32].name = (const uint8_t*) "getBatteryStatus";
+    func[32].name = (const uint8_t*) "getBatteryLevel";
     func[32].functionData = NULL;
-    func[32].function = &getBatteryStatus;
+    func[32].function = &getBatteryLevel;
+    
+    func[33].name = (const uint8_t*) "getBatteryStatus";
+    func[33].functionData = NULL;
+    func[33].function = &getBatteryStatus;
 
     /************
      ** UTILITIES
      ************/
-    func[33].name = (const uint8_t*) "generateHMAC_SHA1";
-    func[33].functionData = NULL;
-    func[33].function = &generateHMAC_SHA1;
-    
-    func[34].name = (const uint8_t*) "AESEncryptWithKey";
+    func[34].name = (const uint8_t*) "generateHMAC_SHA1";
     func[34].functionData = NULL;
-    func[34].function = &AESEncryptWithKey;
+    func[34].function = &generateHMAC_SHA1;
     
-    func[35].name = (const uint8_t*) "startMonitoringAndRangingBeaconsInRegion";
+    func[35].name = (const uint8_t*) "AESEncryptWithKey";
     func[35].functionData = NULL;
-    func[35].function = &startMonitoringAndRangingBeaconsInRegion;
+    func[35].function = &AESEncryptWithKey;
     
-    func[36].name = (const uint8_t*) "stopMonitoringAndRangingBeaconsInRegion";
+    func[36].name = (const uint8_t*) "startMonitoringAndRangingBeaconsInRegion";
     func[36].functionData = NULL;
-    func[36].function = &stopMonitoringAndRangingBeaconsInRegion;
-
-    func[37].name = (const uint8_t*) "writeTraceToFile";
+    func[36].function = &startMonitoringAndRangingBeaconsInRegion;
+    
+    func[37].name = (const uint8_t*) "stopMonitoringAndRangingBeaconsInRegion";
     func[37].functionData = NULL;
-    func[37].function = &writeTraceToFile;
+    func[37].function = &stopMonitoringAndRangingBeaconsInRegion;
 
-    func[38].name = (const uint8_t*) "resetTraceFilePath";
+    func[38].name = (const uint8_t*) "writeTraceToFile";
     func[38].functionData = NULL;
-    func[38].function = &resetTraceFilePath;
+    func[38].function = &writeTraceToFile;
+
+    func[39].name = (const uint8_t*) "resetTraceFilePath";
+    func[39].functionData = NULL;
+    func[39].function = &resetTraceFilePath;
 
     /**********************
      **  G5 FUNCTIONS
      *********************/
-    func[39].name = (const uint8_t*) "ScanAndConnectToG5Device";
-    func[39].functionData = NULL;
-    func[39].function = &ScanAndConnectToG5Device;
-    
-    func[40].name = (const uint8_t*) "setG5MAC";
+    func[40].name = (const uint8_t*) "ScanAndConnectToG5Device";
     func[40].functionData = NULL;
-    func[40].function = &setG5MAC;
-   
-    func[41].name = (const uint8_t*) "resetG5Mac";
+    func[40].function = &ScanAndConnectToG5Device;
+    
+    func[41].name = (const uint8_t*) "setG5MAC";
     func[41].functionData = NULL;
-    func[41].function = &resetG5Mac;
-    
-    func[42].name = (const uint8_t*) "cancelG5ConnectionWithMAC";
+    func[41].function = &setG5MAC;
+   
+    func[42].name = (const uint8_t*) "resetG5Mac";
     func[42].functionData = NULL;
-    func[42].function = &cancelG5ConnectionWithMAC;
+    func[42].function = &resetG5Mac;
     
-    func[43].name = (const uint8_t*) "stopScanningG5";
+    func[43].name = (const uint8_t*) "cancelG5ConnectionWithMAC";
     func[43].functionData = NULL;
-    func[43].function = &stopScanningG5;
+    func[43].function = &cancelG5ConnectionWithMAC;
     
-    func[44].name = (const uint8_t*) "forgetG5";
+    func[44].name = (const uint8_t*) "stopScanningG5";
     func[44].functionData = NULL;
-    func[44].function = &forgetG5;
+    func[44].function = &stopScanningG5;
     
-    func[45].name = (const uint8_t*) "startScanDeviceG5";
+    func[45].name = (const uint8_t*) "forgetG5";
     func[45].functionData = NULL;
-    func[45].function = &startScanDeviceG5;
+    func[45].function = &forgetG5;
     
-    func[46].name = (const uint8_t*) "stopScanDeviceG5";
+    func[46].name = (const uint8_t*) "startScanDeviceG5";
     func[46].functionData = NULL;
-    func[46].function = &stopScanDeviceG5;
+    func[46].function = &startScanDeviceG5;
     
-    func[47].name = (const uint8_t*) "setTransmitterIdG5";
+    func[47].name = (const uint8_t*) "stopScanDeviceG5";
     func[47].functionData = NULL;
-    func[47].function = &setTransmitterIdG5;
+    func[47].function = &stopScanDeviceG5;
     
-    func[48].name = (const uint8_t*) "setTestData";
+    func[48].name = (const uint8_t*) "setTransmitterIdG5";
     func[48].functionData = NULL;
-    func[48].function = &setTestData;
+    func[48].function = &setTransmitterIdG5;
     
-    func[49].name = (const uint8_t*) "setG5Reset";
+    func[49].name = (const uint8_t*) "setTestData";
     func[49].functionData = NULL;
-    func[49].function = &setG5Reset;
+    func[49].function = &setTestData;
     
-    func[50].name = (const uint8_t*) "doG5FirmwareVersionRequest";
+    func[50].name = (const uint8_t*) "setG5Reset";
     func[50].functionData = NULL;
-    func[50].function = &doG5FirmwareVersionRequest;
-   
-    func[51].name = (const uint8_t*) "doG5BatteryInfoRequest";
-    func[51].functionData = NULL;
-    func[51].function = &doG5BatteryInfoRequest;
+    func[50].function = &setG5Reset;
     
-    func[52].name = (const uint8_t*) "disconnectG5";
-    func[52].functionData = NULL;
-    func[52].function = &disconnectG5;
+    func[51].name = (const uint8_t*) "doG5FirmwareVersionRequest";
+    func[51].functionData = NULL;
+    func[51].function = &doG5FirmwareVersionRequest;
    
+    func[52].name = (const uint8_t*) "doG5BatteryInfoRequest";
+    func[52].functionData = NULL;
+    func[52].function = &doG5BatteryInfoRequest;
+    
+    func[53].name = (const uint8_t*) "disconnectG5";
+    func[53].functionData = NULL;
+    func[53].function = &disconnectG5;
+    
     *functionsToSet = func;
 }
 
@@ -749,4 +815,3 @@ void NativeExtensionFinalizer( FREContext ctx )
 {
     return;
 }
-

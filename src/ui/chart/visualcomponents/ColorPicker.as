@@ -139,9 +139,18 @@ package  ui.chart.visualcomponents
 			
 			//Palette vertical align
 			if (vAlign == VerticalAlign.TOP) 
+			{
 				palette.y = globalPoint.y - palette.height - baseButton.height + _parent.verticalScrollPosition - 8;
+			}
 			else if (vAlign == VerticalAlign.BOTTOM) 
+			{
 				palette.y = globalPoint.y + _parent.verticalScrollPosition;
+			}
+			
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
+			{
+				palette.y -= 30;
+			}
 		}
 		
 		private function getColor(_x:int,_y:int):void 

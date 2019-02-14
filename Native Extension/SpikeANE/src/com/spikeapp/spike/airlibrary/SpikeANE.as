@@ -9,6 +9,11 @@ package com.spikeapp.spike.airlibrary
 	
 	public class SpikeANE extends EventDispatcher
 	{
+		public static const APPLICATION_DIR:String = "application";
+		public static const CACHE_DIR:String = "cache";
+		public static const DOCUMENTS_DIR:String = "documents";
+		public static const STORAGE_DIR:String = "storage";
+		
 		private static var context:ExtensionContext; 
 		private static var _instance:SpikeANE = new SpikeANE();
 		
@@ -259,6 +264,11 @@ package com.spikeapp.spike.airlibrary
 		
 		public static function setStatusBarToWhite():void {
 			context.call("setStatusBarToWhite");
+		}
+		
+		public static function openWithDefaultApplication(filePath:String, basePath:String = APPLICATION_DIR):void
+		{
+			context.call('openWithDefaultApplication', filePath, basePath);
 		}
 		
 		/**********

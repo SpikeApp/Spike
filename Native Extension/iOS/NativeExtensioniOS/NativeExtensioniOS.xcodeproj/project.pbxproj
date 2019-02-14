@@ -458,6 +458,7 @@
 		F86D5C4920B7275A009F0BD6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 8DKSZ5HNLB;
 				OTHER_LDFLAGS = "-ObjC";
@@ -470,6 +471,7 @@
 		F86D5C4A20B7275A009F0BD6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 8DKSZ5HNLB;
 				OTHER_LDFLAGS = "-ObjC";

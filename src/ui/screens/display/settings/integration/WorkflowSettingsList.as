@@ -1,23 +1,39 @@
 package ui.screens.display.settings.integration
-{
-	import com.debokeh.anes.utils.DeviceFileUtil;
+{	
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
-	import flash.filesystem.File;
+	import flash.display.StageOrientation;
+	
+	import database.CGMBlueToothDevice;
+	import database.CommonSettings;
 	
 	import feathers.controls.Button;
 	import feathers.controls.GroupedList;
+	import feathers.controls.Label;
+	import feathers.controls.renderers.DefaultGroupedListHeaderOrFooterRenderer;
 	import feathers.controls.renderers.DefaultGroupedListItemRenderer;
+	import feathers.controls.renderers.IGroupedListHeaderRenderer;
 	import feathers.controls.renderers.IGroupedListItemRenderer;
 	import feathers.data.HierarchicalCollection;
+	import feathers.layout.HorizontalAlign;
+	import feathers.layout.VerticalAlign;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
+	import model.ModelLocator;
+	
+	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.events.ResizeEvent;
 	
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
+	import utils.DeviceInfo;
 	
-	[ResourceBundle("chartsettingsscreen")]
+	[ResourceBundle("workflowsettingsscreen")]
+	[ResourceBundle("alarmsettingsscreen")]
+	[ResourceBundle("transmittersettingsscreen")]
+	[ResourceBundle("treatments")]
 
 	public class WorkflowSettingsList extends GroupedList 
 	{
@@ -37,12 +53,15 @@ package ui.screens.display.settings.integration
 		private var insulinCartridgeButton:Button;
 		private var pumpSiteButton:Button;
 		private var pumpBatteryButton:Button;
+
+		private var instructionsLabel:Label;
 		
 		public function WorkflowSettingsList()
 		{
 			super();
 			
 			setupProperties();
+			setupEventListeners();
 			setupContent();
 		}
 		
@@ -60,55 +79,68 @@ package ui.screens.display.settings.integration
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
 		}
 		
+		private function setupEventListeners():void
+		{
+			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+		}
+		
 		private function setupContent():void
 		{
 			//Alarms
-			alarmsSnoozerButton = LayoutFactory.createButton("Get");
-			alarmsSnoozerButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			alarmsSnoozerButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			alarmsSnoozerButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
 			
-			alarmsUnsnoozerButton = LayoutFactory.createButton("Get");
-			alarmsUnsnoozerButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			alarmsUnsnoozerButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			alarmsUnsnoozerButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
 			
 			//Transmitter
-			readingsOnDemandButton = LayoutFactory.createButton("Get");
-			readingsOnDemandButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			readingsOnDemandButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			readingsOnDemandButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
 			
 			//Treatments
-			bolusButton = LayoutFactory.createButton("Get");
-			bolusButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			bolusButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			bolusButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
 			
-			carbsButton = LayoutFactory.createButton("Get");
-			carbsButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			carbsButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			carbsButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
 			
-			mealButton = LayoutFactory.createButton("Get");
-			mealButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			mealButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			mealButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
 			
-			tempBasalStartButton = LayoutFactory.createButton("Get");
-			tempBasalStartButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			tempBasalStartButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			tempBasalStartButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
 			
-			tempBasalEndButton = LayoutFactory.createButton("Get");
-			tempBasalEndButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			tempBasalEndButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			tempBasalEndButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
 			
-			basalButton = LayoutFactory.createButton("Get");
-			basalButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			basalButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			basalButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
 			
-			bgCheckButton = LayoutFactory.createButton("Get");
-			bgCheckButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			bgCheckButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			bgCheckButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
 			
-			noteButton = LayoutFactory.createButton("Get");
-			noteButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			noteButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			noteButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
 			
-			exerciseButton = LayoutFactory.createButton("Get");
-			exerciseButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			exerciseButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			exerciseButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
 			
-			insulinCartridgeButton = LayoutFactory.createButton("Get");
-			insulinCartridgeButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			insulinCartridgeButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			insulinCartridgeButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
 			
-			pumpSiteButton = LayoutFactory.createButton("Get");
-			pumpSiteButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			pumpSiteButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			pumpSiteButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
 			
-			pumpBatteryButton = LayoutFactory.createButton("Get");
-			pumpBatteryButton.addEventListener(Event.TRIGGERED, onGetWorkflow);
+			pumpBatteryButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","import_workflow"));
+			pumpBatteryButton.addEventListener(Event.TRIGGERED, onActivateWorkflow);
+			
+			instructionsLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","workflow_instruction_body") + "\n\n" + ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","workflow_instruction_apple_watch_disclaimer"), HorizontalAlign.JUSTIFY, VerticalAlign.TOP);
+			instructionsLabel.wordWrap = true;
+			instructionsLabel.width = width - 20;
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+			{
+				instructionsLabel.width -= 20;
+			}
 			
 			refreshContent();
 		}
@@ -119,83 +151,231 @@ package ui.screens.display.settings.integration
 			
 			//Alarms
 			var alarmsSection:Object = {};
-			alarmsSection.header = { label: "Alarms" };
+			alarmsSection.header = { label: ModelLocator.resourceManagerInstance.getString("alarmsettingsscreen","screen_title") };
 			
 			var alarmsSectionChildren:Array = [];
-			alarmsSectionChildren.push( { label: "Alarms Snoozer", accessory: alarmsSnoozerButton } );
-			alarmsSectionChildren.push( { label: "Alarms Un-Snoozer", accessory: alarmsUnsnoozerButton } );
+			alarmsSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","alarms_snoozer_workflow"), accessory: alarmsSnoozerButton } );
+			alarmsSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","alarms_unsnoozer_workflow"), accessory: alarmsUnsnoozerButton } );
 			
 			alarmsSection.children = alarmsSectionChildren;
 			screenDataContent.push(alarmsSection);
 			
 			//Transmitter
-			var transmitterSection:Object = {};
-			transmitterSection.header = { label: "Transmitter" };
-			
-			var transmitterSectionChildren:Array = [];
-			transmitterSectionChildren.push( { label: "Readings On-Demand", accessory: readingsOnDemandButton } );
-			
-			transmitterSection.children = transmitterSectionChildren;
-			screenDataContent.push(transmitterSection);
+			if (CGMBlueToothDevice.isMiaoMiao())
+			{
+				var transmitterSection:Object = {};
+				transmitterSection.header = { label: ModelLocator.resourceManagerInstance.getString("transmittersettingsscreen","transmitter_settings_title") };
+				
+				var transmitterSectionChildren:Array = [];
+				transmitterSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","readings_on_demand_workflow"), accessory: readingsOnDemandButton } );
+				
+				transmitterSection.children = transmitterSectionChildren;
+				screenDataContent.push(transmitterSection);
+			}
 			
 			//Treatments
-			var treatmentsSection:Object = {};
-			treatmentsSection.header = { label: "Treatments" };
+			if ((CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true" && (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout")))) 
+			{
+				var treatmentsSection:Object = {};
+				treatmentsSection.header = { label: ModelLocator.resourceManagerInstance.getString("treatments","treatments_screen_title") };
+				
+				var treatmentsSectionChildren:Array = [];
+				treatmentsSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_bolus"), accessory: bolusButton } );
+				treatmentsSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_carbs"), accessory: carbsButton } );
+				treatmentsSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_meal"), accessory: mealButton } );
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump")
+				{
+					treatmentsSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_temp_basal_start"), accessory: tempBasalStartButton } );
+					treatmentsSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_temp_basal_end"), accessory: tempBasalEndButton } );
+				}
+				else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "mdi")
+				{
+					treatmentsSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_basal"), accessory: basalButton } );
+				}
+				treatmentsSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_bg_check"), accessory: bgCheckButton } );
+				treatmentsSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_note"), accessory: noteButton } );
+				treatmentsSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_exercise"), accessory: exerciseButton } );
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump")
+				{
+					treatmentsSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_insulin_cartridge_change"), accessory: insulinCartridgeButton } );
+					treatmentsSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_pump_site_change"), accessory: pumpSiteButton } );
+					treatmentsSectionChildren.push( { label: ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_pump_battery_change"), accessory: pumpBatteryButton } );
+				}
+				
+				treatmentsSection.children = treatmentsSectionChildren;
+				screenDataContent.push(treatmentsSection);
 			
-			var treatmentsSectionChildren:Array = [];
-			treatmentsSectionChildren.push( { label: "Bolus", accessory: bolusButton } );
-			treatmentsSectionChildren.push( { label: "Carbs", accessory: carbsButton } );
-			treatmentsSectionChildren.push( { label: "Meal", accessory: mealButton } );
-			treatmentsSectionChildren.push( { label: "Temp Basal Start", accessory: tempBasalStartButton } );
-			treatmentsSectionChildren.push( { label: "Temp Basal End", accessory: tempBasalEndButton } );
-			treatmentsSectionChildren.push( { label: "Basal", accessory: basalButton } );
-			treatmentsSectionChildren.push( { label: "BG Check", accessory: bgCheckButton } );
-			treatmentsSectionChildren.push( { label: "Note", accessory: noteButton } );
-			treatmentsSectionChildren.push( { label: "Exercise", accessory: exerciseButton } );
-			treatmentsSectionChildren.push( { label: "Insulin Cartridge", accessory: insulinCartridgeButton } );
-			treatmentsSectionChildren.push( { label: "Pump Site", accessory: pumpSiteButton } );
-			treatmentsSectionChildren.push( { label: "Pump Battery", accessory: pumpBatteryButton } );
+			}
 			
-			treatmentsSection.children = treatmentsSectionChildren;
-			screenDataContent.push(treatmentsSection);
+			//Instructions
+			var instructionsSection:Object = {};
+			instructionsSection.header = { label: ModelLocator.resourceManagerInstance.getString("workflowsettingsscreen","workflow_instructions_title") };
+			
+			var instructionsSectionChildren:Array = [];
+			instructionsSectionChildren.push( { label: "", accessory: instructionsLabel } );
+			
+			instructionsSection.children = instructionsSectionChildren;
+			screenDataContent.push(instructionsSection);
 			
 			dataProvider = new HierarchicalCollection(screenDataContent);
-			
+			setupRenderFactory();
+		}
+		
+		private function setupRenderFactory():void
+		{
 			itemRendererFactory = function():IGroupedListItemRenderer
 			{
 				var itemRenderer:DefaultGroupedListItemRenderer = new DefaultGroupedListItemRenderer();
 				itemRenderer.labelField = "label";
 				itemRenderer.iconSourceField = "accessory";
 				itemRenderer.paddingLeft = -5;
+				itemRenderer.paddingTop = itemRenderer.paddingBottom = 10;
+				itemRenderer.accessoryLabelProperties.wordWrap = true;
+				itemRenderer.defaultLabelProperties.wordWrap = true;
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						itemRenderer.paddingLeft = 25;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+					{
+						itemRenderer.paddingRight = 30;
+					}
+				}
 				
 				return itemRenderer;
+			};
+			
+			headerRendererFactory = function():IGroupedListHeaderRenderer
+			{
+				var headerRenderer:DefaultGroupedListHeaderOrFooterRenderer = new DefaultGroupedListHeaderOrFooterRenderer();
+				headerRenderer.contentLabelField = "label";
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						headerRenderer.paddingLeft = 30;
+					}
+				}
+				
+				return headerRenderer;
 			};
 		}
 		
 		/**
 		 * Event Listeners
 		 */
-		private function onGetWorkflow(e:Event):void
+		private function onActivateWorkflow(e:Event):void
 		{
-			var selectedWorkflow:String = "";
-			
-			if (e.currentTarget != null && e.currentTarget == bolusButton)
+			if (e.currentTarget == null)
 			{
-				trace("É BOLUS");
-				selectedWorkflow = "SpikeBolus.wflow";
+				return;
 			}
 			
-			if (selectedWorkflow != "")
+			var selectedWorkflow:String;
+			
+			switch (e.currentTarget)
 			{
-				var workflowFile:File = File.applicationDirectory.resolvePath("assets/workflows/" + selectedWorkflow);
-				var tempFile:File = File.documentsDirectory.resolvePath("tempWorkflow.wflow");
-				workflowFile.copyTo(tempFile, true);
-				
-				trace("SIIIIIIGA");
-				DeviceFileUtil.openWith("tempWorkflow.wflow");
-				
-				//tempFile.openWithDefaultApplication();
+				case alarmsSnoozerButton:
+				{
+					selectedWorkflow = "Snooze Alarms.wflow";
+					break;
+				}
+				case alarmsUnsnoozerButton:
+				{
+					selectedWorkflow = "Un-Snooze Alarms.wflow";
+					break;
+				}
+				case readingsOnDemandButton:
+				{
+					selectedWorkflow = "On-Demand.wflow";
+					break;
+				}
+				case bolusButton:
+				{
+					selectedWorkflow = "Spike Bolus.wflow";
+					break;
+				}
+				case carbsButton:
+				{
+					selectedWorkflow = "Spike Carbs.wflow";
+					break;
+				}
+				case mealButton:
+				{
+					selectedWorkflow = "Spike Meal.wflow";
+					break;
+				}
+				case tempBasalStartButton:
+				{
+					selectedWorkflow = "Spike TBasal Start.wflow";
+					break;
+				}
+				case tempBasalEndButton:
+				{
+					selectedWorkflow = "Spike TBasal End.wflow";
+					break;
+				}
+				case basalButton:
+				{
+					selectedWorkflow = "Spike Basal.wflow";
+					break;
+				}
+				case bgCheckButton:
+				{
+					selectedWorkflow = "Spike BG Check.wflow";
+					break;
+				}
+				case noteButton:
+				{
+					selectedWorkflow = "Spike Note.wflow";
+					break;
+				}
+				case exerciseButton:
+				{
+					selectedWorkflow = "Spike Exercise.wflow";
+					break;
+				}
+				case insulinCartridgeButton:
+				{
+					selectedWorkflow = "Spike ICartridge.wflow";
+					break;
+				}
+				case pumpSiteButton:
+				{
+					selectedWorkflow = "Spike PSite.wflow";
+					break;
+				}
+				case pumpBatteryButton:
+				{
+					selectedWorkflow = "Spike PBattery.wflow";
+					break;
+				}
 			}
+			
+			if (selectedWorkflow != null)
+			{
+				SpikeANE.openWithDefaultApplication("assets/workflows/" + selectedWorkflow, SpikeANE.APPLICATION_DIR);
+			}
+		}
+		
+		protected function onStarlingResize(event:ResizeEvent):void 
+		{
+			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			if (instructionsLabel != null)
+			{
+				instructionsLabel.width = width - 20;
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+				{
+					instructionsLabel.width -= 20;
+				}
+			}
+			
+			setupRenderFactory();
 		}
 		
 		/**
@@ -203,9 +383,11 @@ package ui.screens.display.settings.integration
 		 */
 		override public function dispose():void
 		{
+			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			
 			if (alarmsSnoozerButton != null)
 			{
-				alarmsSnoozerButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				alarmsSnoozerButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				alarmsSnoozerButton.removeFromParent();
 				alarmsSnoozerButton.dispose();
 				alarmsSnoozerButton = null;
@@ -213,7 +395,7 @@ package ui.screens.display.settings.integration
 			
 			if (alarmsUnsnoozerButton != null)
 			{
-				alarmsUnsnoozerButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				alarmsUnsnoozerButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				alarmsUnsnoozerButton.removeFromParent();
 				alarmsUnsnoozerButton.dispose();
 				alarmsUnsnoozerButton = null;
@@ -221,7 +403,7 @@ package ui.screens.display.settings.integration
 			
 			if (readingsOnDemandButton != null)
 			{
-				readingsOnDemandButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				readingsOnDemandButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				readingsOnDemandButton.removeFromParent();
 				readingsOnDemandButton.dispose();
 				readingsOnDemandButton = null;
@@ -229,7 +411,7 @@ package ui.screens.display.settings.integration
 			
 			if (bolusButton != null)
 			{
-				bolusButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				bolusButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				bolusButton.removeFromParent();
 				bolusButton.dispose();
 				bolusButton = null;
@@ -237,7 +419,7 @@ package ui.screens.display.settings.integration
 			
 			if (carbsButton != null)
 			{
-				carbsButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				carbsButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				carbsButton.removeFromParent();
 				carbsButton.dispose();
 				carbsButton = null;
@@ -245,7 +427,7 @@ package ui.screens.display.settings.integration
 			
 			if (mealButton != null)
 			{
-				mealButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				mealButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				mealButton.removeFromParent();
 				mealButton.dispose();
 				mealButton = null;
@@ -253,7 +435,7 @@ package ui.screens.display.settings.integration
 			
 			if (tempBasalStartButton != null)
 			{
-				tempBasalStartButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				tempBasalStartButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				tempBasalStartButton.removeFromParent();
 				tempBasalStartButton.dispose();
 				tempBasalStartButton = null;
@@ -261,7 +443,7 @@ package ui.screens.display.settings.integration
 			
 			if (tempBasalEndButton != null)
 			{
-				tempBasalEndButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				tempBasalEndButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				tempBasalEndButton.removeFromParent();
 				tempBasalEndButton.dispose();
 				tempBasalEndButton = null;
@@ -269,7 +451,7 @@ package ui.screens.display.settings.integration
 			
 			if (basalButton != null)
 			{
-				basalButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				basalButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				basalButton.removeFromParent();
 				basalButton.dispose();
 				basalButton = null;
@@ -277,7 +459,7 @@ package ui.screens.display.settings.integration
 			
 			if (bgCheckButton != null)
 			{
-				bgCheckButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				bgCheckButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				bgCheckButton.removeFromParent();
 				bgCheckButton.dispose();
 				bgCheckButton = null;
@@ -285,7 +467,7 @@ package ui.screens.display.settings.integration
 			
 			if (noteButton != null)
 			{
-				noteButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				noteButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				noteButton.removeFromParent();
 				noteButton.dispose();
 				noteButton = null;
@@ -293,7 +475,7 @@ package ui.screens.display.settings.integration
 			
 			if (exerciseButton != null)
 			{
-				exerciseButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				exerciseButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				exerciseButton.removeFromParent();
 				exerciseButton.dispose();
 				exerciseButton = null;
@@ -301,7 +483,7 @@ package ui.screens.display.settings.integration
 			
 			if (insulinCartridgeButton != null)
 			{
-				insulinCartridgeButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				insulinCartridgeButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				insulinCartridgeButton.removeFromParent();
 				insulinCartridgeButton.dispose();
 				insulinCartridgeButton = null;
@@ -309,7 +491,7 @@ package ui.screens.display.settings.integration
 			
 			if (pumpSiteButton != null)
 			{
-				pumpSiteButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				pumpSiteButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				pumpSiteButton.removeFromParent();
 				pumpSiteButton.dispose();
 				pumpSiteButton = null;
@@ -317,7 +499,7 @@ package ui.screens.display.settings.integration
 			
 			if (pumpBatteryButton != null)
 			{
-				pumpBatteryButton.removeEventListener(Event.TRIGGERED, onGetWorkflow);
+				pumpBatteryButton.removeEventListener(Event.TRIGGERED, onActivateWorkflow);
 				pumpBatteryButton.removeFromParent();
 				pumpBatteryButton.dispose();
 				pumpBatteryButton = null;
