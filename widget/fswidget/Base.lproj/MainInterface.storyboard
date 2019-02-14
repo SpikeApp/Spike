@@ -81,11 +81,11 @@
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="GZn-9R-ICs" secondAttribute="trailing" constant="18" id="87r-l5-6wU"/>
                             <constraint firstAttribute="trailing" secondItem="bzA-gj-RS8" secondAttribute="trailing" constant="18" id="AFE-6t-myI"/>
-                            <constraint firstItem="aWz-C1-cub" firstAttribute="top" secondItem="fJ9-D8-I5P" secondAttribute="bottom" constant="30" id="BzV-jV-cLr"/>
+                            <constraint firstItem="aWz-C1-cub" firstAttribute="top" secondItem="S3S-Oj-5AN" secondAttribute="top" constant="30" id="BzV-jV-cLr"/>
                             <constraint firstItem="bzA-gj-RS8" firstAttribute="top" secondItem="S3S-Oj-5AN" secondAttribute="top" constant="36" id="MjT-31-cgh"/>
                             <constraint firstItem="Ncz-p6-keM" firstAttribute="leading" secondItem="S3S-Oj-5AN" secondAttribute="leadingMargin" id="TF0-P0-3ly"/>
                             <constraint firstItem="aWz-C1-cub" firstAttribute="leading" secondItem="S3S-Oj-5AN" secondAttribute="leadingMargin" id="dib-Z1-fKC"/>
-                            <constraint firstItem="Ncz-p6-keM" firstAttribute="top" secondItem="fJ9-D8-I5P" secondAttribute="bottom" constant="60" id="up5-De-syE"/>
+                            <constraint firstItem="Ncz-p6-keM" firstAttribute="top" secondItem="S3S-Oj-5AN" secondAttribute="top" constant="60" id="up5-De-syE"/>
                             <constraint firstItem="GZn-9R-ICs" firstAttribute="top" secondItem="S3S-Oj-5AN" secondAttribute="top" constant="63" id="zNp-ai-ubd"/>
                         </constraints>
                     </view>

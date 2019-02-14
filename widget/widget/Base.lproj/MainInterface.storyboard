@@ -78,7 +78,7 @@
                             <constraint firstItem="bzA-gj-RS8" firstAttribute="trailing" secondItem="S3S-Oj-5AN" secondAttribute="trailingMargin" id="5Nj-o2-HXR"/>
                             <constraint firstItem="GZn-9R-ICs" firstAttribute="leading" secondItem="S3S-Oj-5AN" secondAttribute="leadingMargin" id="87r-l5-6wU"/>
                             <constraint firstAttribute="trailing" secondItem="bzA-gj-RS8" secondAttribute="trailing" constant="20" symbolic="YES" id="AFE-6t-myI"/>
-                            <constraint firstItem="aWz-C1-cub" firstAttribute="top" secondItem="fJ9-D8-I5P" secondAttribute="bottom" constant="59" id="BzV-jV-cLr"/>
+                            <constraint firstItem="aWz-C1-cub" firstAttribute="top" secondItem="S3S-Oj-5AN" secondAttribute="top" constant="59" id="BzV-jV-cLr"/>
                             <constraint firstAttribute="trailing" secondItem="bud-ho-sxk" secondAttribute="trailing" constant="16" id="I0z-Eu-fly"/>
                             <constraint firstItem="88w-7H-Sp0" firstAttribute="top" secondItem="S3S-Oj-5AN" secondAttribute="top" constant="5" id="ITe-uP-BGa"/>
                             <constraint firstItem="bzA-gj-RS8" firstAttribute="top" secondItem="S3S-Oj-5AN" secondAttribute="top" constant="29" id="MjT-31-cgh"/>
@@ -86,8 +86,8 @@
                             <constraint firstItem="aWz-C1-cub" firstAttribute="leading" secondItem="S3S-Oj-5AN" secondAttribute="leadingMargin" id="dib-Z1-fKC"/>
                             <constraint firstItem="bzA-gj-RS8" firstAttribute="leading" secondItem="S3S-Oj-5AN" secondAttribute="leadingMargin" id="jOU-i6-tmc"/>
                             <constraint firstAttribute="trailing" secondItem="88w-7H-Sp0" secondAttribute="trailing" constant="16" id="kTn-al-kUi"/>
-                            <constraint firstItem="bud-ho-sxk" firstAttribute="top" secondItem="fJ9-D8-I5P" secondAttribute="bottom" constant="50" id="lE5-RK-ecp"/>
-                            <constraint firstItem="Ncz-p6-keM" firstAttribute="top" secondItem="fJ9-D8-I5P" secondAttribute="bottom" constant="80" id="up5-De-syE"/>
+                            <constraint firstItem="bud-ho-sxk" firstAttribute="top" secondItem="S3S-Oj-5AN" secondAttribute="top" constant="50" id="lE5-RK-ecp"/>
+                            <constraint firstItem="Ncz-p6-keM" firstAttribute="top" secondItem="S3S-Oj-5AN" secondAttribute="top" constant="80" id="up5-De-syE"/>
                             <constraint firstItem="GZn-9R-ICs" firstAttribute="top" secondItem="S3S-Oj-5AN" secondAttribute="top" constant="-1" id="zNp-ai-ubd"/>
                         </constraints>
                     </view>
