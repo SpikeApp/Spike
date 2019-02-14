@@ -22,6 +22,7 @@ package ui.screens
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.settings.integration.HTTPServerSettingsList;
 	import ui.screens.display.settings.integration.IFTTTSettingsChooser;
+	import ui.screens.display.settings.integration.PebbleSettingsChooser;
 	import ui.screens.display.settings.integration.SiDiarySettingsList;
 	import ui.screens.display.settings.integration.WorkflowSettingsChooser;
 	
@@ -42,6 +43,8 @@ package ui.screens
 		private var iFTTTSettingsChooser:IFTTTSettingsChooser;
 		private var workflowLabel:Label;
 		private var workflowSettingsChooser:WorkflowSettingsChooser;
+		private var pebbleLabel:Label;
+		private var pebbleSettingsChooser:PebbleSettingsChooser;
 		
 		public function IntegrationSettingsScreen() 
 		{
@@ -92,6 +95,14 @@ package ui.screens
 			//Workflow Settings
 			workflowSettingsChooser = new WorkflowSettingsChooser();
 			screenRenderer.addChild(workflowSettingsChooser);
+			
+			//Pebble Section Label
+			pebbleLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','pebble_label'));
+			screenRenderer.addChild(pebbleLabel);
+			
+			//Workflow Settings
+			pebbleSettingsChooser = new PebbleSettingsChooser();
+			screenRenderer.addChild(pebbleSettingsChooser);
 			
 			if (!CGMBlueToothDevice.isFollower())
 			{
@@ -150,6 +161,7 @@ package ui.screens
 			{
 				if (iFTTTLabel != null) iFTTTLabel.paddingLeft = 30;
 				if (workflowLabel != null) workflowLabel.paddingLeft = 30;
+				if (pebbleLabel != null) pebbleLabel.paddingLeft = 30;
 				if (siDiaryLabel != null) siDiaryLabel.paddingLeft = 30;
 				if (httpServerSectionLabel != null) httpServerSectionLabel.paddingLeft = 30;
 				if (httpServerSectionSubLabel != null) httpServerSectionSubLabel.paddingLeft = 30;
@@ -158,6 +170,7 @@ package ui.screens
 			{
 				if (iFTTTLabel != null) iFTTTLabel.paddingLeft = 0;
 				if (workflowLabel != null) workflowLabel.paddingLeft = 0;
+				if (pebbleLabel != null) pebbleLabel.paddingLeft = 0;
 				if (siDiaryLabel != null) siDiaryLabel.paddingLeft = 0;
 				if (httpServerSectionLabel != null) httpServerSectionLabel.paddingLeft = 0;
 				if (httpServerSectionSubLabel != null) httpServerSectionSubLabel.paddingLeft = 0;
@@ -225,6 +238,20 @@ package ui.screens
 				workflowSettingsChooser.removeFromParent();
 				workflowSettingsChooser.dispose();
 				workflowSettingsChooser = null;
+			}
+			
+			if (pebbleLabel != null)
+			{
+				pebbleLabel.removeFromParent();
+				pebbleLabel.dispose();
+				pebbleLabel = null;
+			}
+			
+			if (pebbleSettingsChooser != null)
+			{
+				pebbleSettingsChooser.removeFromParent();
+				pebbleSettingsChooser.dispose();
+				pebbleSettingsChooser = null;
 			}
 			
 			super.dispose();

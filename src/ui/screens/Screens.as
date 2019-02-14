@@ -26,6 +26,7 @@ package ui.screens
 		public static const SETTINGS_APPLE_WATCH:String = "appleWatchSettings";
 		public static const SETTINGS_IFTTT:String = "IFTTTSettings";
 		public static const SETTINGS_WORKFLOW:String = "WorkflowSettings";
+		public static const SETTINGS_PEBBLE:String = "pebbleSettings";
 		public static const SETTINGS_PROFILE:String = "profileSettings";
 		public static const SETTINGS_TREATMENTS:String = "treatmentsSettings";
 		public static const SETTINGS_BOLUS_WIZARD:String = "bolusWizardSettings";
