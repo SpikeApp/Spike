@@ -190,6 +190,7 @@ package services
 		private static var hostTimezoneLatitude:Number = Number.NaN;
 		private static var hostTimezoneLongitude:Number = Number.NaN;
 		private static var max_retries_timezone_api:Number = 0;
+private static var basalProfileForceRefresh:Boolean = false;
 		
 		public function NightscoutService()
 		{
@@ -683,7 +684,7 @@ package services
 		/**
 		 * PROFILE
 		 */
-		public static function getNightscoutProfile(isBasalProfileImport:Boolean = false):void
+		public static function getNightscoutProfile(isBasalProfileImport:Boolean = false, forceRefresh:Boolean = false):void
 		{
 			Trace.myTrace("NightscoutService.as", "getNightscoutProfile called!");
 			
@@ -695,7 +696,7 @@ package services
 			
 			var now:Number = new Date().valueOf();
 			
-			if (now - lastRemoteProfileSync < TimeSpan.TIME_30_SECONDS && !isBasalProfileImport)
+			if (now - lastRemoteProfileSync < TimeSpan.TIME_30_SECONDS && !isBasalProfileImport && !forceRefresh)
 			{
 				Trace.myTrace("NightscoutService.as", "Fetched profile less than 30 seconds ago. Ignoring!");
 				return;
@@ -703,8 +704,9 @@ package services
 			
 			//lastRemoteProfileSync = now;
 			basalProfileImport = isBasalProfileImport;
+			basalProfileForceRefresh = forceRefresh;
 			
-			if (!isNSProfileSet || isBasalProfileImport)
+			if (!isNSProfileSet || isBasalProfileImport || forceRefresh)
 			{
 				if (!NetworkInfo.networkInfo.isReachable())
 				{
@@ -811,7 +813,7 @@ package services
 							Trace.myTrace("NightscoutService.as", "Profile retrieved and parsed successfully!" + " Unit: " + (isNightscoutMgDl ? "mg/dL" : "mmol/L")  + " DIA: " + dia + " CAR: " + carbAbsorptionRate);
 						}
 							
-						if ((downloadBasals && syncPumpBasalRates && CGMBlueToothDevice.isFollower()) || basalProfileImport)
+						if ((downloadBasals && syncPumpBasalRates && CGMBlueToothDevice.isFollower()) || basalProfileImport || basalProfileForceRefresh)
 						{
 							var nightscoutBasalsList:Array;
 							
@@ -901,6 +903,7 @@ package services
 			}
 			
 			basalProfileImport = false;
+			basalProfileForceRefresh = false;
 		}
 		
 		private static function getHostTimeZoneOffset():void
@@ -3673,10 +3676,26 @@ package services
 					CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != ""
 				)
 				{
+					syncPumpBasalRates = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump" && CGMBlueToothDevice.isFollower();
+					downloadBasals = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DOWNLOAD_NIGHTSCOUT_BASALS) == "true";
+					
+					if (downloadBasals)
+					{
+						lastRemoteBasalsSync = 0;
+						basalsAPIServerResponse = "";
+						TreatmentsManager.clearAllBasals();
+					}
+					
 					deactivateFollower();
 					setupNightscoutProperties();
 					setupFollowerProperties();
 					activateFollower();
+					
+					if (downloadBasals && syncPumpBasalRates)
+					{
+						ProfileManager.clearAllBasalRates();
+						getNightscoutProfile(true);
+					}
 				}
 				else
 					if(followerModeEnabled)
@@ -3712,10 +3731,13 @@ package services
 				{
 					if (syncPumpBasalRates)
 					{
+						ProfileManager.clearAllBasalRates();
 						getNightscoutProfile(true);
 					}
 					
+					lastRemoteBasalsSync = 0;
 					basalsAPIServerResponse = "";
+					TreatmentsManager.clearAllBasals();
 					getRemoteBasals();
 				}
 			}
