@@ -24,6 +24,7 @@ package services
 	import network.NetworkConnector;
 	import network.httpserver.HttpServer;
 	
+	import treatments.ProfileManager;
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
@@ -103,6 +104,15 @@ package services
 		private static var isIFTTTpumpBatteryTreatmentAddedEnabled:Boolean;
 		private static var isIFTTTpumpBatteryTreatmentUpdatedEnabled:Boolean;
 		private static var isIFTTTpumpBatteryTreatmentDeletedEnabled:Boolean;
+		private static var isIFTTTtempBasalStartAddedEnabled:Boolean;
+		private static var isIFTTTtempBasalStartUpdatedEnabled:Boolean;
+		private static var isIFTTTtempBasalStartDeletedEnabled:Boolean;
+		private static var isIFTTTtempBasalEndAddedEnabled:Boolean;
+		private static var isIFTTTtempBasalEndUpdatedEnabled:Boolean;
+		private static var isIFTTTtempBasalEndDeletedEnabled:Boolean;
+		private static var isIFTTTmdiBasalAddedEnabled:Boolean;
+		private static var isIFTTTmdiBasalUpdatedEnabled:Boolean;
+		private static var isIFTTTmdiBasalDeletedEnabled:Boolean;
 		
 		public function IFTTTService()
 		{
@@ -179,7 +189,16 @@ package services
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_DELETED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_ADDED_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_UPDATED_ON ||
-				e.data == LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_DELETED_ON
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_DELETED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_ADDED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_UPDATED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_DELETED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_ADDED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_UPDATED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_DELETED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_ADDED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_UPDATED_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_DELETED_ON
 			)
 			{
 				getInitialProperties();
@@ -246,6 +265,15 @@ package services
 			isIFTTTpumpBatteryTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_ADDED_ON) == "true";
 			isIFTTTpumpBatteryTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_UPDATED_ON) == "true";
 			isIFTTTpumpBatteryTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_DELETED_ON) == "true";
+			isIFTTTtempBasalStartAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_ADDED_ON) == "true";
+			isIFTTTtempBasalStartUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_UPDATED_ON) == "true";
+			isIFTTTtempBasalStartDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_DELETED_ON) == "true";
+			isIFTTTtempBasalEndAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_ADDED_ON) == "true";
+			isIFTTTtempBasalEndUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_UPDATED_ON) == "true";
+			isIFTTTtempBasalEndDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_DELETED_ON) == "true";
+			isIFTTTmdiBasalAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_ADDED_ON) == "true";
+			isIFTTTmdiBasalUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_UPDATED_ON) == "true";
+			isIFTTTmdiBasalDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_DELETED_ON) == "true";
 		}
 		
 		private static function configureService():void
@@ -387,6 +415,21 @@ package services
 				TreatmentsManager.instance.addEventListener(TreatmentsEvent.IOB_COB_UPDATED, onIOBCOBUpdated);
 			else
 				TreatmentsManager.instance.removeEventListener(TreatmentsEvent.IOB_COB_UPDATED, onIOBCOBUpdated);
+			
+			if ((isIFTTTtempBasalStartAddedEnabled || isIFTTTtempBasalEndAddedEnabled || isIFTTTmdiBasalAddedEnabled) && isIFTTTEnabled && makerKeyValue != "")
+				TreatmentsManager.instance.addEventListener(TreatmentsEvent.BASAL_TREATMENT_ADDED, onTreatmentAdded);
+			else
+				TreatmentsManager.instance.removeEventListener(TreatmentsEvent.BASAL_TREATMENT_ADDED, onTreatmentAdded);
+			
+			if ((isIFTTTtempBasalStartUpdatedEnabled || isIFTTTtempBasalEndUpdatedEnabled || isIFTTTmdiBasalUpdatedEnabled) && isIFTTTEnabled && makerKeyValue != "")
+				TreatmentsManager.instance.addEventListener(TreatmentsEvent.BASAL_TREATMENT_UPDATED, onTreatmentUpdated);
+			else
+				TreatmentsManager.instance.removeEventListener(TreatmentsEvent.BASAL_TREATMENT_UPDATED, onTreatmentUpdated);
+			
+			if ((isIFTTTtempBasalStartDeletedEnabled || isIFTTTtempBasalEndDeletedEnabled || isIFTTTmdiBasalDeletedEnabled) && isIFTTTEnabled && makerKeyValue != "")
+				TreatmentsManager.instance.addEventListener(TreatmentsEvent.BASAL_TREATMENT_DELETED, onTreatmentDeleted);
+			else
+				TreatmentsManager.instance.removeEventListener(TreatmentsEvent.BASAL_TREATMENT_DELETED, onTreatmentDeleted);
 		}
 		
 		private static function onTreatmentAdded(e:TreatmentsEvent):void
@@ -405,7 +448,10 @@ package services
 				(treatment.type == Treatment.TYPE_EXERCISE && isIFTTTexerciseTreatmentAddedEnabled) ||
 				(treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE && isIFTTTinsulinCartridgeTreatmentAddedEnabled) ||
 				(treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE && isIFTTTpumpSiteTreatmentAddedEnabled) ||
-				(treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE && isIFTTTpumpBatteryTreatmentAddedEnabled)
+				(treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE && isIFTTTpumpBatteryTreatmentAddedEnabled) ||
+				(treatment.type == Treatment.TYPE_TEMP_BASAL && isIFTTTtempBasalStartAddedEnabled) ||
+				(treatment.type == Treatment.TYPE_TEMP_BASAL_END && isIFTTTtempBasalEndAddedEnabled) ||
+				(treatment.type == Treatment.TYPE_MDI_BASAL && isIFTTTmdiBasalAddedEnabled)
 			)
 				triggerTreatment(treatment, "added");
 			
@@ -433,7 +479,10 @@ package services
 				(treatment.type == Treatment.TYPE_EXERCISE && isIFTTTexerciseTreatmentDeletedEnabled) ||
 				(treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE && isIFTTTinsulinCartridgeTreatmentDeletedEnabled) ||
 				(treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE && isIFTTTpumpSiteTreatmentDeletedEnabled) ||
-				(treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE && isIFTTTpumpBatteryTreatmentDeletedEnabled)
+				(treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE && isIFTTTpumpBatteryTreatmentDeletedEnabled) ||
+				(treatment.type == Treatment.TYPE_TEMP_BASAL && isIFTTTtempBasalStartDeletedEnabled) ||
+				(treatment.type == Treatment.TYPE_TEMP_BASAL_END && isIFTTTtempBasalEndDeletedEnabled) ||
+				(treatment.type == Treatment.TYPE_MDI_BASAL && isIFTTTmdiBasalDeletedEnabled)
 			)
 				triggerTreatment(treatment, "deleted");
 			
@@ -461,7 +510,10 @@ package services
 				(treatment.type == Treatment.TYPE_EXERCISE && isIFTTTexerciseTreatmentUpdatedEnabled) ||
 				(treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE && isIFTTTinsulinCartridgeTreatmentUpdatedEnabled) ||
 				(treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE && isIFTTTpumpSiteTreatmentUpdatedEnabled) ||
-				(treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE && isIFTTTpumpBatteryTreatmentUpdatedEnabled)
+				(treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE && isIFTTTpumpBatteryTreatmentUpdatedEnabled) ||
+				(treatment.type == Treatment.TYPE_TEMP_BASAL && isIFTTTtempBasalStartUpdatedEnabled) ||
+				(treatment.type == Treatment.TYPE_TEMP_BASAL_END && isIFTTTtempBasalEndUpdatedEnabled) ||
+				(treatment.type == Treatment.TYPE_MDI_BASAL && isIFTTTmdiBasalUpdatedEnabled)
 			)
 				triggerTreatment(treatment, "updated");
 			
@@ -544,6 +596,34 @@ package services
 				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_pump_battery_change");
 				treatmentValue = treatment.note;
 			}
+			else if (treatment.type == Treatment.TYPE_MDI_BASAL)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_basal");
+				treatmentValue = GlucoseFactory.formatIOB(treatment.basalAbsoluteAmount);
+			}
+			else if (treatment.type == Treatment.TYPE_TEMP_BASAL_END)
+			{
+				treatmentType = ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_temp_basal_end");
+				treatmentValue = GlucoseFactory.formatIOB(0);
+			}
+			else if (treatment.type == Treatment.TYPE_TEMP_BASAL)
+			{
+				treatmentType = treatment.isTempBasalEnd ? ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_temp_basal_end") : ModelLocator.resourceManagerInstance.getString("treatments","treatment_name_temp_basal_start");
+				
+				if (treatment.isTempBasalEnd)
+				{
+					treatmentValue = GlucoseFactory.formatIOB(0);
+				}
+				else if (treatment.isBasalAbsolute)
+				{
+					treatmentValue = GlucoseFactory.formatIOB(treatment.basalAbsoluteAmount);
+				}
+				else if (treatment.isBasalRelative)
+				{
+					var currentBasalRate:Number = ProfileManager.getBasalRateByTime(treatment.timestamp);
+					treatmentValue = GlucoseFactory.formatIOB(currentBasalRate * (100 + treatment.basalPercentAmount) / 100);
+				}
+			}
 			
 			//JSON Object
 			var info:Object = {};
@@ -552,12 +632,24 @@ package services
 			info.value3 = treatmentTime;
 			
 			var triggerName:String;
-			if (mode == "added")
-				triggerName = "spike-treatment-added";
-			else if (mode == "deleted")
-				triggerName = "spike-treatment-deleted";
-			else if (mode == "updated")
-				triggerName = "spike-treatment-updated";
+			if (treatment.type == Treatment.TYPE_TEMP_BASAL || treatment.type == Treatment.TYPE_TEMP_BASAL_END || treatment.type == Treatment.TYPE_MDI_BASAL)
+			{
+				if (mode == "added")
+					triggerName = "spike-basal-added";
+				else if (mode == "deleted")
+					triggerName = "spike-basal-deleted";
+				else if (mode == "updated")
+					triggerName = "spike-basal-updated";
+			}
+			else
+			{
+				if (mode == "added")
+					triggerName = "spike-treatment-added";
+				else if (mode == "deleted")
+					triggerName = "spike-treatment-deleted";
+				else if (mode == "updated")
+					triggerName = "spike-treatment-updated";
+			}
 			
 			for (var i:int = 0; i < makerKeyList.length; i++) 
 			{
@@ -658,10 +750,16 @@ package services
 					}
 					else if (isIFTTTGlucoseReadingsEnabled) //Trigger glucose reading... this is when the user selected to trigger all glucose readings
 					{
-						var trigger:String = "spike-bgreading";
+						for (i = 0; i < makerKeyList.length; i++) 
+						{
+							key = makerKeyList[i] as String;
+							NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", "spike-bgreading").replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
+						}
 						
 						if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_DIVIDE_BG_EVENTS_BY_THRESHOLD_ON) == "true" && !isNaN(lastReading.calculatedValue))
 						{
+							var trigger:String = "";
+							
 							if (lastReading.calculatedValue >= Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK)))
 							{
 								trigger = "spike-bgreading-urgent-high";
@@ -682,12 +780,15 @@ package services
 							{
 								trigger = "spike-bgreading-urgent-low";
 							}
-						}
-						
-						for (i = 0; i < makerKeyList.length; i++) 
-						{
-							key = makerKeyList[i] as String;
-							NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", trigger).replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
+							
+							if (trigger != "")
+							{
+								for (i = 0; i < makerKeyList.length; i++) 
+								{
+									key = makerKeyList[i] as String;
+									NetworkConnector.createIFTTTConnector(IFTTT_URL.replace("{trigger}", trigger).replace("{key}", key), URLRequestMethod.POST, SpikeJSON.stringify(info));
+								}
+							}
 						}
 					}
 					

@@ -1781,7 +1781,10 @@ package treatments
 								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_DELETED, false, false, spikeTreatment));
 							
 							if (spikeTreatment.type == Treatment.TYPE_TEMP_BASAL || spikeTreatment.type == Treatment.TYPE_MDI_BASAL)
+							{
 								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
+								_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.BASAL_TREATMENT_DELETED, false, false, spikeTreatment));
+							}
 						}
 						
 						if (notiyExternally)
@@ -1846,7 +1849,10 @@ package treatments
 			if (treatment.type != Treatment.TYPE_TEMP_BASAL && treatment.type != Treatment.TYPE_MDI_BASAL)
 				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.TREATMENT_UPDATED, false, false, treatment));
 			else
+			{
 				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
+				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.BASAL_TREATMENT_UPDATED, false, false, treatment));
+			}
 			
 			//Update in Database
 			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
@@ -1918,7 +1924,7 @@ package treatments
 					basalsMap[treatment.ID] = treatment;
 					
 					//Notify listeners
-					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_TREATMENT, false, false, treatment));
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.BASAL_TREATMENT_ADDED, false, false, treatment));
 					
 					//Upload to Nightscout
 					if (uploadToNightscout)
@@ -2884,7 +2890,7 @@ package treatments
 					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
-					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_TREATMENT, false, false, tempBasalStartTreatment));
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.BASAL_TREATMENT_ADDED, false, false, tempBasalStartTreatment));
 					
 					//Insert in DB
 					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
@@ -2937,7 +2943,7 @@ package treatments
 				
 				//Notify listeners
 				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
-				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_TREATMENT, false, false, tempBasalEndTreatment));
+				_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.BASAL_TREATMENT_ADDED, false, false, tempBasalEndTreatment));
 				
 				//Insert in DB
 				if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
@@ -3001,7 +3007,7 @@ package treatments
 					
 					//Notify listeners
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
-					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_TREATMENT, false, false, penBasalTreatment));
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.BASAL_TREATMENT_ADDED, false, false, penBasalTreatment));
 					
 					//Insert in DB
 					if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
@@ -4407,7 +4413,7 @@ package treatments
 				if (treatment.type == Treatment.TYPE_MDI_BASAL || treatment.type == Treatment.TYPE_TEMP_BASAL || treatment.type == Treatment.TYPE_TEMP_BASAL_END)
 				{
 					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_DATA));
-					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.NEW_BASAL_TREATMENT, false, false, treatment));
+					_instance.dispatchEvent(new TreatmentsEvent(TreatmentsEvent.BASAL_TREATMENT_ADDED, false, false, treatment));
 				}
 				else
 				{
@@ -4492,6 +4498,7 @@ package treatments
 		
 		public static function processNightscoutBasals(nsTreatments:Array):void
 		{
+			var nightscoutBasalsMap:Dictionary = new Dictionary();
 			var newBasalData:Boolean = false;
 			var firstReadingTimestamp:Number;
 			var lastReadingTimestamp:Number;
@@ -4513,8 +4520,13 @@ package treatments
 			{
 				var nsBasal:Object = nsTreatments[i];
 				var basalTimestamp:Number = DateUtil.parseW3CDTF(nsBasal.created_at).valueOf();
-				if (basalTimestamp < firstReadingTimestamp) continue; //Treatment is outside timespan of first bg reading in spike. Let's ignore it
+				if (basalTimestamp < firstReadingTimestamp && !isMDIUser)
+				{
+					//Treatment is outside timespan of first bg reading in spike and user is of type pump. Let's ignore it
+					continue; 
+				}
 				var basalID:String = nsBasal._id != null ? nsBasal._id : UniqueId.createEventId();
+				nightscoutBasalsMap[basalID] = nsBasal;
 				
 				var basalNote:String = "";
 				if (nsBasal.reason != null && nsBasal.reason != "")
@@ -4628,7 +4640,7 @@ package treatments
 						wasBasalModified = true;
 					}
 					
-					if (!isNaN(basalPercentAmount) && spikeBasal.basalPercentAmount != basalAbsoluteAmount)
+					if (!isNaN(basalPercentAmount) && spikeBasal.basalPercentAmount != basalPercentAmount)
 					{
 						spikeBasal.basalPercentAmount = basalPercentAmount;
 						wasBasalModified = true;
@@ -4664,6 +4676,24 @@ package treatments
 				}
 			}
 			
+			//Check for deleted basals in Nightscout
+			if (isMDIUser)
+			{
+				var numSpikeBasals:int = basalsList.length;
+				for (var j:int = 0; j <numSpikeBasals; j++) 
+				{
+					var internalBasal:Treatment = basalsList[j];
+					if (nightscoutBasalsMap[internalBasal.ID] == null)
+					{
+						Trace.myTrace("TreatmentsManager.as", "User deleted MDI basal in Nightscout. Deleting in Spike as well.");
+						
+						//Treatment is not present in Nightscout. User has deleted it.
+						var removeFromDB:Boolean = now - internalBasal.timestamp < TimeSpan.TIME_48_HOURS && (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING);
+						deleteTreatment(internalBasal, false, true, removeFromDB, true, false);
+					}
+				}
+			}
+			
 			if (newBasalData)
 			{
 				//Notify listeners
@@ -4692,7 +4722,7 @@ package treatments
 				return
 			}
 				
-			for (var i:int = nsTreatments.length - 1 ; i >= 0; i--)
+			for (var i:int = numNightscoutTreatments - 1 ; i >= 0; i--)
 			{
 				//Define initial treatment properties
 				var nsTreatment:Object = nsTreatments[i];
@@ -5583,7 +5613,7 @@ package treatments
 		{
 			basalsList.sortOn(["timestamp"], Array.NUMERIC | Array.DESCENDING);
 			
-			var allowedStartTime:Number = new Date().valueOf() - TimeSpan.TIME_24_HOURS;
+			var allowedStartTime:Number = new Date().valueOf() - TimeSpan.TIME_48_HOURS;
 			
 			for (var i:int = basalsList.length - 1 ; i >= 0; i--)
 			{

@@ -1671,12 +1671,15 @@ package services
 		{
 			Trace.myTrace("NightscoutService.as", "in getInitialTreatments");
 			
-			for (var i:int = 0; i < TreatmentsManager.treatmentsList.length; i++) 
+			var i:int;
+			
+			for (i = 0; i < TreatmentsManager.treatmentsList.length; i++) 
 			{
 				//Add treatment to queue
 				var treatment:Treatment = TreatmentsManager.treatmentsList[i] as Treatment;
 				if 
 				(
+					treatment == null ||
 					treatment.note.indexOf("Exercise (NS)") != -1 ||
 					treatment.note.indexOf("OpenAPS Offline") != -1 ||
 					treatment.note.indexOf("Pump Site Change") != -1 ||
@@ -1693,6 +1696,16 @@ package services
 				}
 				
 				activeTreatmentsUpload.push(createTreatmentObject(treatment));
+			}
+			
+			for (i = 0; i < TreatmentsManager.basalsList.length; i++) 
+			{
+				//Add basal to queue
+				var basal:Treatment = TreatmentsManager.basalsList[i] as Treatment;
+				if (basal != null)
+				{
+					activeTreatmentsUpload.push(createTreatmentObject(basal));
+				}
 			}
 			
 			//Sync uploads
@@ -2680,7 +2693,7 @@ package services
 			//Define request parameters
 			var lastBasalTimestamp:Number = TreatmentsManager.getLastBasalTimestamp();
 			var parameters:URLVariables = new URLVariables();
-			parameters["find[created_at][$gte]"] = formatter.format(lastBasalTimestamp != 0 ? lastBasalTimestamp : now - TimeSpan.TIME_24_HOURS);
+			parameters["find[created_at][$gte]"] = formatter.format(lastBasalTimestamp != 0 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump" ? lastBasalTimestamp : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump" ? now - TimeSpan.TIME_24_HOURS : now - TimeSpan.TIME_48_HOURS);
 			parameters["find[eventType][$in][0]"] = "Temp Basal";
 			
 			//API Secret

@@ -13,7 +13,9 @@ package events
 		[Event(name="treatmentExternallyDeleted",type="events.TreatmentsEvent")]
 		[Event(name="IOBCOBUpdated",type="events.TreatmentsEvent")]
 		[Event(name="newBasalData",type="events.TreatmentsEvent")]
-		[Event(name="newBasalTreatment",type="events.TreatmentsEvent")]
+		[Event(name="basalTreatmentAdded",type="events.TreatmentsEvent")]
+		[Event(name="basalTreatmentUpdated",type="events.TreatmentsEvent")]
+		[Event(name="basalTreatmentDeleted",type="events.TreatmentsEvent")]
 		[Event(name="nightscoutBasalProfileImported",type="events.TreatmentsEvent")]
 		
 		public static const TREATMENT_ADDED:String = "treatmentAdded";
@@ -23,7 +25,9 @@ package events
 		public static const TREATMENT_EXTERNALLY_DELETED:String = "treatmentExternallyDeleted";
 		public static const IOB_COB_UPDATED:String = "IOBCOBUpdated";
 		public static const NEW_BASAL_DATA:String = "newBasalData";
-		public static const NEW_BASAL_TREATMENT:String = "newBasalTreatment";
+		public static const BASAL_TREATMENT_ADDED:String = "basalTreatmentAdded";
+		public static const BASAL_TREATMENT_UPDATED:String = "basalTreatmentUpdated";
+		public static const BASAL_TREATMENT_DELETED:String = "basalTreatmentDeleted";
 		public static const NIGHTSCOUT_BASAL_PROFILE_IMPORTED:String = "nightscoutBasalProfileImported";
 		
 		public var treatment:Treatment;

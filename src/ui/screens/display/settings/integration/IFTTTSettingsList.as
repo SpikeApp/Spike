@@ -107,6 +107,15 @@ package ui.screens.display.settings.integration
 		private var treatmentPumpBatteryUpdatedCheck:Check;
 		private var treatmentPumpBatteryDeletedCheck:Check;
 		private var glucoseDivideByThresholdCheck:Check;
+		private var basalTempStartAddedCheck:Check;
+		private var basalTempStartUpdatedCheck:Check;
+		private var basalTempStartDeletedCheck:Check;
+		private var basalTempEndAddedCheck:Check;
+		private var basalTempEndUpdatedCheck:Check;
+		private var basalTempEndDeletedCheck:Check;
+		private var basalMDIAddedCheck:Check;
+		private var basalMDIUpdatedCheck:Check;
+		private var basalMDIDeletedCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -168,11 +177,21 @@ package ui.screens.display.settings.integration
 		private var isIFTTTpumpBatteryTreatmentUpdatedEnabled:Boolean;
 		private var isIFTTTpumpBatteryTreatmentDeletedEnabled:Boolean;
 		private var isIFTTGlucoseEventsDividedByThreshold:Boolean;
+		private var isIFTTTtempBasalStartAddedEnabled:Boolean;
+		private var isIFTTTtempBasalStartUpdatedEnabled:Boolean;
+		private var isIFTTTtempBasalStartDeletedEnabled:Boolean;
+		private var isIFTTTtempBasalEndAddedEnabled:Boolean;
+		private var isIFTTTtempBasalEndUpdatedEnabled:Boolean;
+		private var isIFTTTtempBasalEndDeletedEnabled:Boolean;
+		private var isIFTTTmdiBasalAddedEnabled:Boolean;
+		private var isIFTTTmdiBasalUpdatedEnabled:Boolean;
+		private var isIFTTTmdiBasalDeletedEnabled:Boolean;
 
 		public function IFTTTSettingsList()
 		{
 			super();
 		}
+		
 		override protected function initialize():void 
 		{
 			super.initialize();
@@ -260,6 +279,15 @@ package ui.screens.display.settings.integration
 			isIFTTTpumpBatteryTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_ADDED_ON) == "true";
 			isIFTTTpumpBatteryTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_UPDATED_ON) == "true";
 			isIFTTTpumpBatteryTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_DELETED_ON) == "true";
+			isIFTTTtempBasalStartAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_ADDED_ON) == "true";
+			isIFTTTtempBasalStartUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_UPDATED_ON) == "true";
+			isIFTTTtempBasalStartDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_DELETED_ON) == "true";
+			isIFTTTtempBasalEndAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_ADDED_ON) == "true";
+			isIFTTTtempBasalEndUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_UPDATED_ON) == "true";
+			isIFTTTtempBasalEndDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_DELETED_ON) == "true";
+			isIFTTTmdiBasalAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_ADDED_ON) == "true";
+			isIFTTTmdiBasalUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_UPDATED_ON) == "true";
+			isIFTTTmdiBasalDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_DELETED_ON) == "true";
 		}
 		
 		private function setupContent():void
@@ -465,6 +493,42 @@ package ui.screens.display.settings.integration
 			treatmentMealDeletedCheck = LayoutFactory.createCheckMark(isIFTTTmealTreatmentDeletedEnabled);
 			treatmentMealDeletedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 			
+			//Treatment Temp Basal Start Added
+			basalTempStartAddedCheck = LayoutFactory.createCheckMark(isIFTTTtempBasalStartAddedEnabled);
+			basalTempStartAddedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Temp Basal Start Updated
+			basalTempStartUpdatedCheck = LayoutFactory.createCheckMark(isIFTTTtempBasalStartUpdatedEnabled);
+			basalTempStartUpdatedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Temp Basal Start Deleted
+			basalTempStartDeletedCheck = LayoutFactory.createCheckMark(isIFTTTtempBasalStartDeletedEnabled);
+			basalTempStartDeletedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Temp Basal End Added
+			basalTempEndAddedCheck = LayoutFactory.createCheckMark(isIFTTTtempBasalEndAddedEnabled);
+			basalTempEndAddedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Temp Basal End Updated
+			basalTempEndUpdatedCheck = LayoutFactory.createCheckMark(isIFTTTtempBasalEndUpdatedEnabled);
+			basalTempEndUpdatedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Temp Basal End Deleted
+			basalTempEndDeletedCheck = LayoutFactory.createCheckMark(isIFTTTtempBasalEndDeletedEnabled);
+			basalTempEndDeletedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment MDI Basal Added
+			basalMDIAddedCheck = LayoutFactory.createCheckMark(isIFTTTmdiBasalAddedEnabled);
+			basalMDIAddedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment MDI Basal Updated
+			basalMDIUpdatedCheck = LayoutFactory.createCheckMark(isIFTTTmdiBasalUpdatedEnabled);
+			basalMDIUpdatedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment MDI Basal Deleted
+			basalMDIDeletedCheck = LayoutFactory.createCheckMark(isIFTTTmdiBasalDeletedEnabled);
+			basalMDIDeletedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
 			//Treatment BGCheck Added
 			treatmentBGCheckAddedCheck = LayoutFactory.createCheckMark(isIFTTTbgCheckTreatmentAddedEnabled);
 			treatmentBGCheckAddedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
@@ -604,6 +668,23 @@ package ui.screens.display.settings.integration
 					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_added_label"), accessory: treatmentMealAddedCheck } );
 					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_updated_label"), accessory: treatmentMealUpdatedCheck } );
 					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_deleted_label"), accessory: treatmentMealDeletedCheck } );
+					
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump")
+					{
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","temp_basal_start_added_label"), accessory: basalTempStartAddedCheck } );
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","temp_basal_start_updated_label"), accessory: basalTempStartUpdatedCheck } );
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","temp_basal_start_deleted_label"), accessory: basalTempStartDeletedCheck } );
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","temp_basal_end_added_label"), accessory: basalTempEndAddedCheck } );
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","temp_basal_end_updated_label"), accessory: basalTempEndUpdatedCheck } );
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","temp_basal_end_deleted_label"), accessory: basalTempEndDeletedCheck } );
+					}
+					else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "mdi")
+					{
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","mdi_basal_added_label"), accessory: basalMDIAddedCheck } );
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","mdi_basal_updated_label"), accessory: basalMDIUpdatedCheck } );
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","mdi_basal_deleted_label"), accessory: basalMDIDeletedCheck } );
+					}
+					
 					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_added_label"), accessory: treatmentBGCheckAddedCheck } );
 					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_updated_label"), accessory: treatmentBGCheckUpdatedCheck } );
 					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_deleted_label"), accessory: treatmentBGCheckDeletedCheck } );
@@ -755,6 +836,33 @@ package ui.screens.display.settings.integration
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MEAL_DELETED_ON) != String(isIFTTTmealTreatmentDeletedEnabled))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MEAL_DELETED_ON, String(isIFTTTmealTreatmentDeletedEnabled));
 			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_ADDED_ON) != String(isIFTTTtempBasalStartAddedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_ADDED_ON, String(isIFTTTtempBasalStartAddedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_UPDATED_ON) != String(isIFTTTtempBasalStartUpdatedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_UPDATED_ON, String(isIFTTTtempBasalStartUpdatedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_DELETED_ON) != String(isIFTTTtempBasalStartDeletedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_DELETED_ON, String(isIFTTTtempBasalStartDeletedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_ADDED_ON) != String(isIFTTTtempBasalEndAddedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_ADDED_ON, String(isIFTTTtempBasalEndAddedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_UPDATED_ON) != String(isIFTTTtempBasalEndUpdatedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_UPDATED_ON, String(isIFTTTtempBasalEndUpdatedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_DELETED_ON) != String(isIFTTTtempBasalEndDeletedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_DELETED_ON, String(isIFTTTtempBasalEndDeletedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_ADDED_ON) != String(isIFTTTmdiBasalAddedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_ADDED_ON, String(isIFTTTmdiBasalAddedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_UPDATED_ON) != String(isIFTTTmdiBasalUpdatedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_UPDATED_ON, String(isIFTTTmdiBasalUpdatedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_DELETED_ON) != String(isIFTTTmdiBasalDeletedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_DELETED_ON, String(isIFTTTmdiBasalDeletedEnabled));
+			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_BGCHECK_ADDED_ON) != String(isIFTTTbgCheckTreatmentAddedEnabled))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_BGCHECK_ADDED_ON, String(isIFTTTbgCheckTreatmentAddedEnabled));
 			
@@ -858,6 +966,15 @@ package ui.screens.display.settings.integration
 			isIFTTTmealTreatmentAddedEnabled = treatmentMealAddedCheck.isSelected;
 			isIFTTTmealTreatmentUpdatedEnabled = treatmentMealUpdatedCheck.isSelected;
 			isIFTTTmealTreatmentDeletedEnabled = treatmentMealDeletedCheck.isSelected;
+			isIFTTTtempBasalStartAddedEnabled = basalTempStartAddedCheck.isSelected;
+			isIFTTTtempBasalStartUpdatedEnabled = basalTempStartUpdatedCheck.isSelected;
+			isIFTTTtempBasalStartDeletedEnabled = basalTempStartDeletedCheck.isSelected;
+			isIFTTTtempBasalEndAddedEnabled = basalTempEndAddedCheck.isSelected;
+			isIFTTTtempBasalEndUpdatedEnabled = basalTempEndUpdatedCheck.isSelected;
+			isIFTTTtempBasalEndDeletedEnabled = basalTempEndDeletedCheck.isSelected;
+			isIFTTTmdiBasalAddedEnabled = basalMDIAddedCheck.isSelected;
+			isIFTTTmdiBasalUpdatedEnabled = basalMDIUpdatedCheck.isSelected;
+			isIFTTTmdiBasalDeletedEnabled = basalMDIDeletedCheck.isSelected;
 			isIFTTTbgCheckTreatmentAddedEnabled = treatmentBGCheckAddedCheck.isSelected;
 			isIFTTTbgCheckTreatmentUpdatedEnabled = treatmentBGCheckUpdatedCheck.isSelected;
 			isIFTTTbgCheckTreatmentDeletedEnabled = treatmentBGCheckDeletedCheck.isSelected;
@@ -1400,6 +1517,69 @@ package ui.screens.display.settings.integration
 				treatmentPumpBatteryDeletedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
 				treatmentPumpBatteryDeletedCheck.dispose();
 				treatmentPumpBatteryDeletedCheck = null;
+			}
+			
+			if(basalTempStartAddedCheck != null)
+			{
+				basalTempStartAddedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalTempStartAddedCheck.dispose();
+				basalTempStartAddedCheck = null;
+			}
+			
+			if(basalTempStartUpdatedCheck != null)
+			{
+				basalTempStartUpdatedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalTempStartUpdatedCheck.dispose();
+				basalTempStartUpdatedCheck = null;
+			}
+			
+			if(basalTempStartDeletedCheck != null)
+			{
+				basalTempStartDeletedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalTempStartDeletedCheck.dispose();
+				basalTempStartDeletedCheck = null;
+			}
+			
+			if(basalTempEndAddedCheck != null)
+			{
+				basalTempEndAddedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalTempEndAddedCheck.dispose();
+				basalTempEndAddedCheck = null;
+			}
+			
+			if(basalTempEndUpdatedCheck != null)
+			{
+				basalTempEndUpdatedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalTempEndUpdatedCheck.dispose();
+				basalTempEndUpdatedCheck = null;
+			}
+			
+			if(basalTempEndDeletedCheck != null)
+			{
+				basalTempEndDeletedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalTempEndDeletedCheck.dispose();
+				basalTempEndDeletedCheck = null;
+			}
+			
+			if(basalMDIAddedCheck != null)
+			{
+				basalMDIAddedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalMDIAddedCheck.dispose();
+				basalMDIAddedCheck = null;
+			}
+			
+			if(basalMDIUpdatedCheck != null)
+			{
+				basalMDIUpdatedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalMDIUpdatedCheck.dispose();
+				basalMDIUpdatedCheck = null;
+			}
+			
+			if(basalMDIDeletedCheck != null)
+			{
+				basalMDIDeletedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalMDIDeletedCheck.dispose();
+				basalMDIDeletedCheck = null;
 			}
 			
 			super.dispose();

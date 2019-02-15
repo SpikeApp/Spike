@@ -21,8 +21,9 @@ package utils
 		/**
 		 * Constants that hold time in milliseconds
 		 */
+		public static const TIME_48_HOURS:int = 172800000;
 		public static const TIME_24_HOURS_6_MINUTES:int = 86760000;
-		public static const TIME_24_HOURS:int = 86400000
+		public static const TIME_24_HOURS:int = 86400000;
 		public static const TIME_23_HOURS_59_MINUTES:int = 86340000;
 		public static const TIME_23_HOURS_57_MINUTES:int = 82620000;
 		public static const TIME_8_HOURS:int = 28800000;

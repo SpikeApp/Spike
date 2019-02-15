@@ -3,6 +3,7 @@ FEATURE: New Workflow/Shortcuts screen. (Miguel)
 FEATURE: New Pebble screen. (Miguel)
 ENHANCEMENT: When sending Spike's database to an email address (settings > maintenance), if database is bigger than 15mb, zip it first before sending. (Miguel)
 ENHANCEMENT: Support for importing databases into Spike that reside inside a zip file. (Miguel)
+ENHANCEMENT: When the IFFFT option "Separate IFTTT Events For Each Glucose Threshold" is enabled, besides firing the correspondent threshold event Spike will also always fire the "spike-bgreading" event. (Miguel)
 FIX: More bug fixes for low/in range/high percentage calculations for the lower glucose distribution stats. (Miguel)
 FIX: Addresses a layout issue on the Today Widgets that sometimes would show some labels out of place. (Miguel)
 
