@@ -1,6 +1,7 @@
-3.5.4
+3.6.0
 FEATURE: New Workflow/Shortcuts screen. (Miguel)
 FEATURE: New Pebble screen. (Miguel)
+FEATURE: Complication support for Apple Watch Series 4 / WatchOS 5. You can now select the Spike complication directly from the Watch app on your home screen or by force touching your Apple Watch and selecting customize.It supports all watch faces (Infograph Modular, Infograph, etc). The Spike complication is a shortcut to the Spike Watch app. (Miguel)
 ENHANCEMENT: When sending Spike's database to an email address (settings > maintenance), if database is bigger than 15mb, zip it first before sending. (Miguel)
 ENHANCEMENT: Support for importing databases into Spike that reside inside a zip file. (Miguel)
 ENHANCEMENT: When the IFFFT option "Separate IFTTT Events For Each Glucose Threshold" is enabled, besides firing the correspondent threshold event Spike will also always fire the "spike-bgreading" event. (Miguel)
