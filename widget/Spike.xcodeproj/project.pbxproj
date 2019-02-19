@@ -39,6 +39,7 @@
 		9654C7FD2087C35F0021B684 /* fswidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9654C7F22087C35F0021B684 /* fswidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9654C8012087C8790021B684 /* Pods_widget.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9654C8022087C8790021B684 /* Pods_widget.framework */; };
 		9654C8042087C8DB0021B684 /* UIColor+colorFromHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB729D62029FD3500965219 /* UIColor+colorFromHex.swift */; };
+		965DE933221C50FA001307A5 /* ClockKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 965DE932221C50FA001307A5 /* ClockKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		96728E612096D27700ADFFDE /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96728E602096D27700ADFFDE /* ComplicationController.swift */; };
 		9691F2C321F92D9600E85B1F /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9691F2C221F92D9600E85B1F /* HealthKit.framework */; };
 		9691F2C421F92DA200E85B1F /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9691F2C221F92D9600E85B1F /* HealthKit.framework */; };
@@ -187,6 +188,7 @@
 		9654C7FA2087C35F0021B684 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9654C8022087C8790021B684 /* Pods_widget.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Pods_widget.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9654C8052087CED70021B684 /* fswidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = fswidget.entitlements; sourceTree = "<group>"; };
+		965DE932221C50FA001307A5 /* ClockKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ClockKit.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS5.1.sdk/System/Library/Frameworks/ClockKit.framework; sourceTree = DEVELOPER_DIR; };
 		96728E602096D27700ADFFDE /* ComplicationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationController.swift; sourceTree = "<group>"; };
 		9691F2C221F92D9600E85B1F /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		96A54792212C8AFB00FDE960 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
@@ -236,6 +238,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				965DE933221C50FA001307A5 /* ClockKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -333,6 +336,7 @@
 		1C510154202806D600872D37 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				965DE932221C50FA001307A5 /* ClockKit.framework */,
 				9691F2C221F92D9600E85B1F /* HealthKit.framework */,
 				96A54792212C8AFB00FDE960 /* CloudKit.framework */,
 				9654C8022087C8790021B684 /* Pods_widget.framework */,
