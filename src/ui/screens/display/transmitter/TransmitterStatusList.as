@@ -68,7 +68,6 @@ package ui.screens.display.transmitter
 	import ui.AppInterface;
 	import ui.InterfaceController;
 	import ui.popups.AlertManager;
-	import ui.popups.WorkflowConfigSender;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	
@@ -114,7 +113,6 @@ package ui.screens.display.transmitter
 		private var otherFirmwareLabel:Label;
 		private var bluetoothFirmwareLabel:Label;
 		private var transmitterMACAddressLabel:Label;
-		private var miaomiaoWidgetWatchConfigSender:Button;
 		
 		/* Properties */
 		private var transmitterNameValue:String;
@@ -620,15 +618,8 @@ package ui.screens.display.transmitter
 					actionControls.addChild(forgetButton);
 				}
 				
-				if (CGMBlueToothDevice.isMiaoMiao())
-				{
-					miaomiaoWidgetWatchConfigSender = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"email_configurations_label"));
-					miaomiaoWidgetWatchConfigSender.addEventListener(Event.TRIGGERED, onSendMiaoMiaoConfigurationFiles);
-				}
-				
 				var actionsData:Array = [];
 				actionsData.push( { label: "", accessory: actionControls } );
-				if (CGMBlueToothDevice.isMiaoMiao()) actionsData.push( { label: "", accessory: miaomiaoWidgetWatchConfigSender } );
 				
 				actionsSection.children = actionsData;
 				
@@ -903,11 +894,6 @@ package ui.screens.display.transmitter
 			}
 		}
 		
-		private function onSendMiaoMiaoConfigurationFiles(e:Event):void
-		{
-			WorkflowConfigSender.displayWorkflowConfigSender(WorkflowConfigSender.WORKFLOW_MIAOMIAO_ON_DEMAND);
-		}
-		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
 			SystemUtil.executeWhenApplicationIsActive( AppInterface.instance.navigator.replaceScreen, Screens.TRANSMITTER, noTransition);
@@ -1108,13 +1094,6 @@ package ui.screens.display.transmitter
 			{
 				transmitterMACAddressLabel.dispose();
 				transmitterMACAddressLabel = null;
-			}
-			
-			if (miaomiaoWidgetWatchConfigSender != null)
-			{
-				miaomiaoWidgetWatchConfigSender.removeEventListener(Event.TRIGGERED, onSendMiaoMiaoConfigurationFiles);
-				miaomiaoWidgetWatchConfigSender.dispose();
-				miaomiaoWidgetWatchConfigSender = null;
 			}
 			
 			super.dispose();

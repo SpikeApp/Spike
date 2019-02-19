@@ -6,7 +6,6 @@ package ui.screens.display.settings.alarms
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
-	import feathers.controls.Button;
 	import feathers.controls.Label;
 	import feathers.controls.LayoutGroup;
 	import feathers.controls.Slider;
@@ -16,7 +15,6 @@ package ui.screens.display.settings.alarms
 	import feathers.data.ListCollection;
 	import feathers.layout.AnchorLayoutData;
 	import feathers.layout.HorizontalAlign;
-	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -59,8 +57,6 @@ package ui.screens.display.settings.alarms
 		private var urgentHighIconImage:Image;
 		private var fastRiseIconImage:Image;
 		private var fastDropIconImage:Image;
-		private var widgetWatchConfigSender:Button;
-		private var actionsContainer:LayoutGroup;
 		private var controlSystemVolumeToggle:ToggleSwitch;
 		private var systemVolumeSlider:Slider;
 		private var customSystemValueLabel:Label;
@@ -150,14 +146,6 @@ package ui.screens.display.settings.alarms
 			urgentHighIconImage = new Image(chevronTexture);
 			fastRiseIconImage = new Image(chevronTexture);
 			fastDropIconImage = new Image(chevronTexture);
-			var actionsLayout:HorizontalLayout = new HorizontalLayout();
-			actionsLayout.horizontalAlign = HorizontalAlign.CENTER;
-			actionsContainer = new LayoutGroup();
-			actionsContainer.layout = actionsLayout;
-			actionsContainer.width = width - 20;
-			widgetWatchConfigSender = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"email_configurations_label"));
-			widgetWatchConfigSender.addEventListener(Event.TRIGGERED, onSendConfigurationFiles);
-			actionsContainer.addChild(widgetWatchConfigSender);
 			
 			/* Renderer */
 			itemRendererFactory = function():IListItemRenderer 
@@ -198,7 +186,6 @@ package ui.screens.display.settings.alarms
 			dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"phone_muted_label"), accessory: phoneMutedIconImage, alarmID: CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED });
 			if (!CGMBlueToothDevice.isLimitter() && !CGMBlueToothDevice.isFollower())
 				dataSectionsContainer.push({ screen: Screens.SETTINGS_ALARMS_CUSTOMIZER, label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"transmitter_low_battery_label"), accessory: batteryLowIconImage, alarmID: CommonSettings.COMMON_SETTING_BATTERY_ALERT, alarmType: AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY });
-			dataSectionsContainer.push({ screen: null, label: "", accessory: actionsContainer, selectable:false });
 			
 			var dataContainer:ListCollection = new ListCollection(dataSectionsContainer);
 			dataProvider = dataContainer;
@@ -280,16 +267,9 @@ package ui.screens.display.settings.alarms
 			}
 		}
 		
-		private function onSendConfigurationFiles(e:Event):void
-		{
-			WorkflowConfigSender.displayWorkflowConfigSender(WorkflowConfigSender.WORKFLOW_ALARMS);
-		}
-		
 		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
-			
-			if (actionsContainer != null) actionsContainer.width = width - 20;
 			
 			setupRenderFactory();
 		}
@@ -392,18 +372,6 @@ package ui.screens.display.settings.alarms
 					fastDropIconImage.texture.dispose();
 				fastDropIconImage.dispose();
 				fastDropIconImage = null;
-			}
-			if(widgetWatchConfigSender != null)
-			{
-				widgetWatchConfigSender.removeEventListener(Event.TRIGGERED, onSendConfigurationFiles);
-				widgetWatchConfigSender.removeFromParent();
-				widgetWatchConfigSender.dispose();
-				widgetWatchConfigSender = null;
-			}
-			if(actionsContainer != null)
-			{
-				actionsContainer.dispose();
-				actionsContainer = null;
 			}
 			
 			if (controlSystemVolumeToggle != null)

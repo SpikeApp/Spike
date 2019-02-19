@@ -29,7 +29,6 @@ package ui.screens.display.settings.treatments
 	
 	import ui.AppInterface;
 	import ui.chart.visualcomponents.ColorPicker;
-	import ui.popups.WorkflowConfigSender;
 	import ui.screens.Screens;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
@@ -58,7 +57,6 @@ package ui.screens.display.settings.treatments
 		private var newSensorColorPicker:ColorPicker;
 		private var _parent:PanelScreen;
 		private var resetColors:Button;
-		private var emailConfigurationFiles:Button;
 		private var loadInstructions:Button;
 		private var pumpUserEnabled:Check;
 		private var bolusWizardIconImage:Image;
@@ -225,11 +223,6 @@ package ui.screens.display.settings.treatments
 			loadInstructions.pivotX = -3;
 			loadInstructions.addEventListener(Event.TRIGGERED, onLoadInstructions);
 			
-			//Email configuration files
-			emailConfigurationFiles = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"email_configurations_label"));
-			emailConfigurationFiles.pivotX = -3;
-			emailConfigurationFiles.addEventListener(Event.TRIGGERED, onSendConfigurationFiles);
-			
 			layoutData = new AnchorLayoutData( 0, 0, 0, 0 );
 			addEventListener( Event.CHANGE, onMenuChanged );
 			
@@ -269,9 +262,6 @@ package ui.screens.display.settings.treatments
 					data.push({ label: "", accessory: resetColors, selectable: false });
 					data.push({ label: "", accessory: loadInstructions, selectable: false });
 				}
-
-				if (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
-					data.push({ label: "", accessory: emailConfigurationFiles, selectable: false });
 			}
 			
 			dataProvider = new ListCollection(data);
@@ -369,11 +359,6 @@ package ui.screens.display.settings.treatments
 		private function onLoadInstructions(e:Event):void
 		{
 			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/Treatments"));
-		}
-		
-		private function onSendConfigurationFiles(e:Event):void
-		{
-			WorkflowConfigSender.displayWorkflowConfigSender(WorkflowConfigSender.WORKFLOW_TREATMENTS);
 		}
 		
 		private function onColorPaletteOpened(e:Event):void
@@ -638,13 +623,6 @@ package ui.screens.display.settings.treatments
 				loadInstructions.removeEventListener(Event.TRIGGERED, onLoadInstructions);
 				loadInstructions.dispose();
 				loadInstructions = null;
-			}
-			
-			if (emailConfigurationFiles != null)
-			{
-				emailConfigurationFiles.removeEventListener(Event.TRIGGERED, onSendConfigurationFiles);
-				emailConfigurationFiles.dispose();
-				emailConfigurationFiles = null;
 			}
 			
 			if (pumpUserEnabled != null)
