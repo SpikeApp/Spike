@@ -1363,7 +1363,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = widget/widget.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = M295NYD8ZT;
 				INFOPLIST_FILE = widget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
@@ -1374,7 +1374,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.todaywidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE_SPECIFIER = "Today Widget for Spike iPhone";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = ./Spike/Bridge.h;
 				SWIFT_VERSION = 4.0;
@@ -1388,7 +1388,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = widget/widget.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = M295NYD8ZT;
 				INFOPLIST_FILE = widget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
@@ -1399,7 +1399,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.todaywidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE_SPECIFIER = "Today Widget for Spike iPhone";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = ./Spike/Bridge.h;
 				SWIFT_VERSION = 4.0;

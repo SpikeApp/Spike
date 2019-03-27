@@ -1,12 +1,15 @@
 3.6.0
-FEATURE: New Workflow/Shortcuts screen. (Miguel)
-FEATURE: New Pebble screen. (Miguel)
-FEATURE: Complication support for Apple Watch Series 4 / WatchOS 5. You can now select the Spike complication directly from the Watch app on your home screen or by force touching your Apple Watch and selecting customize.It supports all watch faces (Infograph Modular, Infograph, etc). The Spike complication is a shortcut to the Spike Watch app. (Miguel)
-ENHANCEMENT: When sending Spike's database to an email address (settings > maintenance), if database is bigger than 15mb, zip it first before sending. (Miguel)
+FEATURE: Basal support is here. Pen users can now log their basal injections in Spike. Pump users can also add their basal rates to Spike as well as temp basals. All basals are rendered at the bottom of the main Spike chart. To learn how to use basals please read the new updated wiki at https://github.com/SpikeApp/Spike/wiki/Treatments (Miguel)
+FEATURE: New Workflow/Shortcuts screen at Settings -> Integration -> Workflow/Shotcuts. All Workflow/Shortcuts configurations are now listed in this new screen and can be added directly from Spike without having to be emailed first. (Miguel)
+FEATURE: New Pebble screen at Settings -> Integration -> Pebble. In this screen the user will find instructions and links to Pebble apps that allow to insert treatments into Spike. (Miguel)
+FEATURE: Complication support for Apple Watch Series 4 / WatchOS 5. You can now select the Spike complication directly from the Watch app on your home screen or by force touching your Apple Watch and selecting customize. It supports all watch faces (Infograph Modular, Infograph, etc). The Spike complication is a shortcut to the Spike Watch app. (Miguel)
+ENHANCEMENT: When sending Spike's database to an email address (Settings > Maintenance -> Database Backup/Restore), if the database is bigger than 15mb, Spike will zip it first before sending to avoid email sending errors. (Miguel)
 ENHANCEMENT: Support for importing databases into Spike that reside inside a zip file. (Miguel)
 ENHANCEMENT: When the IFFFT option "Separate IFTTT Events For Each Glucose Threshold" is enabled, besides firing the correspondent threshold event Spike will also always fire the "spike-bgreading" event. (Miguel)
-FIX: More bug fixes for low/in range/high percentage calculations for the lower glucose distribution stats. (Miguel)
+ENHANCEMENT: Improvements in the Finnish, Italian, Dutch, Turkish and Chinese translations. (Translators) 
+FIX: More bug fixes for low/in range/high percentage calculations for the lower glucose distribution stats to avoid the NaN error. (Miguel)
 FIX: Addresses a layout issue on the Today Widgets that sometimes would show some labels out of place. (Miguel)
+FIX: As usual, several other small bug fixes and improvements. (Miguel)
 
 3.5.3
 FIX: Addresses an issue that prevents the glucose distribution pie chart from being rendered and the percentage in low range from being properly calculated.
