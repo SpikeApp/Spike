@@ -324,6 +324,11 @@ package database
 		public static const LOCAL_SETTING_IFTTT_MDI_BASAL_ADDED_ON:int = 157;
 		public static const LOCAL_SETTING_IFTTT_MDI_BASAL_UPDATED_ON:int = 158;
 		public static const LOCAL_SETTING_IFTTT_MDI_BASAL_DELETED_ON:int = 159;
+		
+		/**
+		 * Ignition Update
+		 */
+		public static const LOCAL_SETTING_LAST_SHOWN_CHANGELOG:int = 160;
 
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -485,7 +490,8 @@ package database
 			"false",//LOCAL_SETTING_IFTTT_TEMP_BASAL_END_DELETED_ON
 			"false",//LOCAL_SETTING_IFTTT_MDI_BASAL_ADDED_ON
 			"false",//LOCAL_SETTING_IFTTT_MDI_BASAL_UPDATED_ON
-			"false"//LOCAL_SETTING_IFTTT_MDI_BASAL_DELETED_ON
+			"false",//LOCAL_SETTING_IFTTT_MDI_BASAL_DELETED_ON
+			"" //LOCAL_SETTING_LAST_SHOWN_CHANGELOG
 		];
 		
 		public function LocalSettings() {

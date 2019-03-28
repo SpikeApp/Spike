@@ -21,7 +21,7 @@ package model
 	import events.NotificationServiceEvent;
 	
 	import services.AlarmService;
-	import services.AppCenterService;
+	import services.IgnitionUpdateService;
 	import services.CalibrationService;
 	import services.DeepSleepService;
 	import services.DexcomShareService;
@@ -62,7 +62,6 @@ package model
 		public static const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 1;
 		public static const MAX_TIME_FOR_BGREADINGS:int = MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * TimeSpan.TIME_24_HOURS + Constants.READING_OFFSET;
 
-		public static const APPCENTER_MODE:Boolean = true;
 		public static const IS_IPAD:Boolean = false;
 		public static const INTERNAL_TESTING:Boolean = false;
 		
@@ -165,6 +164,9 @@ package model
 				//CGM Initialization
 				Database.getBlueToothDevice();
 				
+				//App Version
+				updateApplicationVersion();
+				
 				//Services Initialization
 				ProfileManager.init();
 				TreatmentsManager.init();
@@ -187,11 +189,8 @@ package model
 				WatchService.init();
 				ICloudService.init();
 				RemoteAlertService.init();
-				if (!APPCENTER_MODE) UpdateService.init();
-				updateApplicationVersion();
+				IgnitionUpdateService.init();
 				//MultipleMiaoMiaoService.init();
-				if (APPCENTER_MODE)
-					AppCenterService.init();
 			}
 		}
 		

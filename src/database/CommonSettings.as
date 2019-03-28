@@ -22,7 +22,7 @@ package database
 			 return _instance;
 		 }
 		 
-		 public static const APP_UPDATE_API_URL:String = "https://spike-app.com/app/latest_version.json";
+		 public static const APP_UPDATE_API_URL:String = "https://spike-app.com/app/latest_ignition_update.json";
 		 
 		 /**
 		 * Witout https:// and without /api/v1/treatments<br>

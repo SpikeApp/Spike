@@ -280,6 +280,56 @@ package network
 			}
 		}
 		
+		public static function createSpikeUpdateConnector(URL:String, method:String, parameters:String = null, mode:String = null, completeHandler:Function = null, errorHandler:Function = null):void
+		{
+			//Create the URL Request
+			var request:URLRequest = new URLRequest(URL);
+			request.useCache = false;
+			request.cacheResponse = false;
+			request.method = method;
+			if (parameters != null)
+			{
+				request.data = parameters;
+				request.contentType = "application/json";
+			}
+			
+			//Create Headers
+			var contenTypeHeader:URLRequestHeader = new URLRequestHeader("Content-Type", "application/json");
+			request.requestHeaders.push(contenTypeHeader);
+			
+			//Create the URL Loader
+			var urlLoader:URLLoader = new URLLoader();
+			urlLoader.dataFormat = URLLoaderDataFormat.TEXT;
+			//urlLoader.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus, false, 0, true);
+			//urlLoader.addEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus, false, 0, true);
+			
+			var finalCompleteHandler:Function;
+			var finalIOHandler:Function;
+			if (completeHandler != null)
+			{
+				finalCompleteHandler = completeHandler;
+				finalIOHandler = completeHandler;
+			}
+			else
+			{
+				finalCompleteHandler = localCompleteHandler;
+				finalIOHandler = localIOErrorHandler;
+			}
+			
+			urlLoader.addEventListener(Event.COMPLETE, finalCompleteHandler, false, 0, true);
+			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, finalIOHandler, false, 0, true);
+			
+			//Perform connection
+			try 
+			{ 
+				urlLoader.load(request); 
+			}  
+			catch (error:Error) 
+			{
+				manageConnectionError(urlLoader, error, finalCompleteHandler, finalIOHandler, errorHandler, mode);
+			}
+		}
+		
 		private static function manageConnectionError(loader:URLLoader, error:Error, completeHandler:Function, ioHandler:Function, errorHandler:Function = null, mode:String = null):void
 		{
 			//Dispose Loader

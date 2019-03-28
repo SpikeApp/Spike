@@ -1,19 +1,23 @@
 package services
 {
+	import com.distriqt.extension.notifications.Notifications;
+	import com.distriqt.extension.notifications.builders.NotificationBuilder;
+	
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
 	import flash.net.URLRequestMethod;
 	import flash.net.navigateToURL;
-	
-	import cryptography.Keys;
+	import flash.utils.setTimeout;
 	
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
+	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
+	import events.TransmitterServiceEvent;
 	
 	import feathers.controls.Alert;
 	import feathers.layout.HorizontalAlign;
@@ -23,27 +27,30 @@ package services
 	import network.NetworkConnector;
 	
 	import starling.events.Event;
+	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
 	
+	import utils.BadgeBuilder;
 	import utils.TimeSpan;
 	import utils.Trace;
 	
 	[ResourceBundle('updateservice')]
 	[ResourceBundle('globaltranslations')]
 
-	public class AppCenterService
+	public class IgnitionUpdateService
 	{
 		//Properties
 		private static var latestVersion:String = "";
+		private static var updateURL:String = "";
 		private static var lastReminded:Number = 0;
 		private static var lastChecked:Number = 0;
 		private static var serviceHalted:Boolean = false;
 		private static var serviceActive:Boolean = false;
 		
-		public function AppCenterService()
+		public function IgnitionUpdateService()
 		{
-			throw new Error("AppCenterService class is not meant to be instantiated!");	
+			throw new Error("IgnitionUpdateService class is not meant to be instantiated!");	
 		}
 		
 		public static function init():void
@@ -54,6 +61,38 @@ package services
 			//Activate Service
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_CENTER_UPDATE_NOTIFICATIONS_ON) == "true")
 				activateService();
+			
+			setTimeout(displayChangeLog, TimeSpan.TIME_5_SECONDS);
+		}
+		
+		private static function displayChangeLog():void
+		{
+			var currentAppVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
+			var lastChangelogVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LAST_SHOWN_CHANGELOG);
+			
+			if (lastChangelogVersion != "" && lastChangelogVersion != "x.x.x" && currentAppVersion != "x.x.x" && versionAIsSmallerThanB(lastChangelogVersion, currentAppVersion))
+			{
+				var alert:Alert = AlertManager.showActionAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_changelog"),
+					ModelLocator.resourceManagerInstance.getString('updateservice', "changelog_request_message").replace("{app_version_do_not_translate_this_word}", currentAppVersion),
+					Number.NaN,
+					[
+						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations', "no_uppercase") },
+						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations', "yes_uppercase"), triggered: onDisplayChangelog }	
+					]
+				);
+				alert.buttonGroupProperties.gap = 0;
+				alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+			}
+			
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LAST_SHOWN_CHANGELOG, currentAppVersion);
+		}
+		
+		private static function onDisplayChangelog(e:starling.events.Event):void
+		{
+			//Display changelog
+			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/Changelog"));
 		}
 		
 		private static function activateService():void
@@ -65,8 +104,10 @@ package services
 			//Register event listener for app halted
 			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			
-			//Register event listener for app in foreground
-			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onApplicationActivated);
+			//Register event listener for new reading
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBGReadingReceived, false, -900, true);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBGReadingReceived, false, -900, true);
+			DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBGReadingReceived, false, -900, true);
 		}
 		
 		private static function deactivateService():void
@@ -79,7 +120,7 @@ package services
 			Spike.instance.removeEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			
 			//Unregister event listener for app in foreground
-			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onApplicationActivated);
+			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onBGReadingReceived);
 		}
 		
 		private static function checkUpdate():void
@@ -88,13 +129,12 @@ package services
 			if (serviceHalted)
 				return;
 			
-			myTrace("Checking App Center Updates...");
+			myTrace("Checking App Updates...");
 			
-			const API_URL:String = !ModelLocator.IS_IPAD ? "https://api.appcenter.ms/v0.1/apps/Nightscout-Foundation/Spike/distribution_groups/Spike%20Users/releases" : "https://api.appcenter.ms/v0.1/apps/Nightscout-Foundation/Spike-for-iPad/distribution_groups/Spike%20Users/releases";
+			const API_URL:String = "https://spike-app.com/app/latest_ignition_update.json";
 			
-			NetworkConnector.createAppCenterConnector(
+			NetworkConnector.createSpikeUpdateConnector(
 				API_URL, 
-				Keys.APP_CENTER_API_SECRET, 
 				URLRequestMethod.GET, 
 				null, 
 				null, 
@@ -106,7 +146,7 @@ package services
 		/**
 		 * Event Listeners
 		 */
-		private static function onApplicationActivated(event:flash.events.Event = null):void
+		private static function onBGReadingReceived(event:flash.events.Event = null):void
 		{
 			//Validation
 			if (serviceHalted)
@@ -164,38 +204,57 @@ package services
 			
 			try
 			{
-				var releasesList:Array = JSON.parse(response) as Array;
-				if (releasesList != null && releasesList.length > 0 && releasesList[0] != null && releasesList[0].version != null)
+				var updateProperties:Object = JSON.parse(response) as Object;
+				if (updateProperties != null && updateProperties.version != null && updateProperties.url != null)
 				{
-					latestVersion = releasesList[0].version as String;
+					updateURL = updateProperties.url as String;
+					latestVersion = updateProperties.version as String;
 					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION) != "x.x.x" && latestVersion != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE) && versionAIsSmallerThanB(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION), latestVersion))
 					{
 						//There's an update in App Center
-						myTrace("Notifying user of new App Center update! New version: " + latestVersion);
+						myTrace("Notifying user of new Ignition update! New version: " + latestVersion);
 						
 						var alert:Alert = AlertManager.showActionAlert
-							(
-								ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title"),
-								ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_preversion_message") + " " + latestVersion + " " + ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_postversion_message") + ".",
-								Number.NaN,
-								[
-									{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_remind_later"), triggered: onRemindLater },
-									{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_ignore_update"), triggered: onIgnoreUpdate },
-									{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_update_button_label"), triggered: onUpdate }	
-								]
-							);
+						(
+							ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title"),
+							ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_preversion_message") + " " + latestVersion + " " + ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_postversion_message") + ".",
+							Number.NaN,
+							[
+								{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_remind_later"), triggered: onRemindLater },
+								{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_ignore_update"), triggered: onIgnoreUpdate },
+								{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_update_button_label"), triggered: onUpdate }	
+							]
+						);
 						alert.buttonGroupProperties.gap = 0;
 						alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+						
+						if (!SystemUtil.isApplicationActive)
+						{
+							//Notification
+							var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+								.setCount(BadgeBuilder.getAppBadge())
+								.setId(NotificationService.ID_FOR_NEW_APP_UPDATE_ALERT)
+								.setAlert(ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title"))
+								.setTitle(ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title"))
+								.setBody(ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_preversion_message") + " " + latestVersion + " " + ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_postversion_message") + ".")
+								.enableVibration(true)
+								.enableLights(true)
+								.setSound("default");
+							
+							Notifications.service.notify(notificationBuilder.build());
+						}
 					}
 					else
+					{
 						myTrace("Not updating. User already has the latest version!");
+					}
 				}
 				
 				lastChecked = new Date().valueOf();
 			} 
 			catch(error:Error) 
 			{
-				myTrace("Error parsing App Center API response! Error: " + error.message);
+				myTrace("Error parsing Update API response! Error: " + error.message);
 			}
 		}
 		
@@ -214,12 +273,12 @@ package services
 		private static function onUpdate(e:starling.events.Event):void
 		{
 			//Go to App Center control panel 
-			navigateToURL(new URLRequest(!ModelLocator.IS_IPAD ? "https://install.appcenter.ms/orgs/Nightscout-Foundation/apps/Spike" : "https://install.appcenter.ms/orgs/Nightscout-Foundation/apps/Spike-for-iPad"));
+			navigateToURL(new URLRequest(updateURL));
 		}
 		
 		private static function onConnectionFailed(error:Error, mode:String):void
 		{
-			myTrace("Failed to connect to App Center API! Error: " + error.message);
+			myTrace("Failed to connect to Update API! Error: " + error.message);
 		}
 		
 		private static function onSettingsChanged(event:SettingsServiceEvent):void 
@@ -227,7 +286,7 @@ package services
 			//Check if an update check can be made
 			if (event.data == CommonSettings.COMMON_SETTING_APP_CENTER_UPDATE_NOTIFICATIONS_ON) 
 			{
-				myTrace("Settings changed! App Center update checker is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_CENTER_UPDATE_NOTIFICATIONS_ON));
+				myTrace("Settings changed! Ignition update checker is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_CENTER_UPDATE_NOTIFICATIONS_ON));
 				
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_CENTER_UPDATE_NOTIFICATIONS_ON) == "true")
 				{
@@ -276,7 +335,7 @@ package services
 		
 		private static function myTrace(log:String):void 
 		{
-			Trace.myTrace("AppCenterService.as", log);
+			Trace.myTrace("IgnitionUpdateService.as", log);
 		}
 	}
 }

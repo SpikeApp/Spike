@@ -73,16 +73,13 @@ package ui.screens
 			//Deactivate menu drag gesture 
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
-			if (ModelLocator.APPCENTER_MODE)
-			{
-				//Update Section Label
-				updateLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','check_for_updates'), true);
-				screenRenderer.addChild(updateLabel);
+			//Update Section Label
+			updateLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','check_for_updates'), true);
+			screenRenderer.addChild(updateLabel);
 				
-				//Update Settings
-				updatesSettingsList = new UpdateSettingsList();
-				screenRenderer.addChild(updatesSettingsList);
-			}
+			//Update Settings
+			updatesSettingsList = new UpdateSettingsList();
+			screenRenderer.addChild(updatesSettingsList);
 			
 			//Caches Section Label
 			cachesMaintenanceLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','internal_cache_section_label'));
