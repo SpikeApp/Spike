@@ -142,6 +142,7 @@ package ui.screens.display.settings.maintenance
 			backupScheduler = LayoutFactory.createPickerList();
 			var backupSchedulerDataProvider:ArrayCollection = new ArrayCollection();
 			backupSchedulerDataProvider.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','no_automatic_backup_label'), timespan: 0 } );
+			backupSchedulerDataProvider.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','twice_daily_backup_label'), timespan: 0.5 * TimeSpan.TIME_24_HOURS } );
 			backupSchedulerDataProvider.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','daily_backup_label'), timespan: TimeSpan.TIME_24_HOURS } );
 			backupSchedulerDataProvider.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','weekly_backup_label'), timespan: 7 * TimeSpan.TIME_24_HOURS } );
 			backupSchedulerDataProvider.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','monthly_backup_label'), timespan: 30 * TimeSpan.TIME_24_HOURS } );

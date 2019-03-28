@@ -14,6 +14,8 @@ package services
 	import flash.filesystem.FileStream;
 	import flash.utils.ByteArray;
 	import flash.utils.CompressionAlgorithm;
+	import flash.utils.getTimer;
+	import flash.utils.setTimeout;
 	
 	import database.CommonSettings;
 	import database.Database;
@@ -28,6 +30,8 @@ package services
 	
 	import model.ModelLocator;
 	
+	import ui.popups.AlertManager;
+	
 	import utils.TimeSpan;
 	import utils.Trace;
 	
@@ -40,6 +44,7 @@ package services
 		private static var localDatabaseData:ByteArray;
 		private static var remoteDatabaseData:ByteArray;
 		private static var appHalted:Boolean = false;
+		private static var serviceStartedAt:int = 0;
 		
 		public function ICloudService()
 		{
@@ -49,6 +54,8 @@ package services
 		
 		public static function init():void
 		{
+			serviceStartedAt = getTimer();
+			
 			CloudStorage.init( !ModelLocator.IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad );
 			
 			try
@@ -80,6 +87,9 @@ package services
 							Trace.myTrace("ICloudService.as", "Error activating iCloud storage!");
 					}
 				}
+				
+				//Check for non-optimal iCloud backup settings
+				setTimeout(checkAutomaticBackupSchedule, TimeSpan.TIME_3_HOURS);
 			} 
 			catch(error:Error) 
 			{
@@ -247,6 +257,23 @@ package services
 				_instance.dispatchEvent( new ICloudEvent(ICloudEvent.ICLOUD_UNKNOWN_ERROR, false, false, e.message) );
 			}
 		}
+		
+		/**
+		 * Private Methods
+		 */
+		private static function checkAutomaticBackupSchedule ():void
+		{
+			if ((CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_WARNED_OF_NON_OPTIMAL_ICLOUD_BACKUP_SCHEDULE) == "false") && (Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ICLOUD_BACKUP_SCHEDULER_TIMESPAN)) != 0.5 * TimeSpan.TIME_24_HOURS))
+			{
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_USER_WARNED_OF_NON_OPTIMAL_ICLOUD_BACKUP_SCHEDULE, "true", true, false);
+				
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('icloudservice','non_optimal_backup_settings_warning_message')
+				);
+			}
+		}
 			
 		/**
 		 * Event Listeners
@@ -368,7 +395,7 @@ package services
 		private static function onBgReadingReceived(e:Event):void
 		{
 			//Validation
-			if (appHalted || (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ICLOUD_BACKUP_SCHEDULER_WIFI_ONLY) == "true" && NetworkInfo.networkInfo.isWWAN()))
+			if (appHalted || (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_ICLOUD_BACKUP_SCHEDULER_WIFI_ONLY) == "true" && NetworkInfo.networkInfo.isWWAN()) || (getTimer() - serviceStartedAt < TimeSpan.TIME_30_MINUTES))
 				return;
 			
 			var now:Number = new Date().valueOf();
@@ -401,7 +428,9 @@ package services
 				if (!isNaN(currentSchedule) && currentSchedule > 0)
 				{
 					var timeSpan:String = "";
-					if (currentSchedule == TimeSpan.TIME_24_HOURS)
+					if (currentSchedule == 0.5 * TimeSpan.TIME_24_HOURS)
+						timeSpan = "twice-daily";
+					else if (currentSchedule == TimeSpan.TIME_24_HOURS)
 						timeSpan = "daily";
 					else if (currentSchedule == 7 * TimeSpan.TIME_24_HOURS)
 						timeSpan = "weekly";
