@@ -37,7 +37,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     var chart:PNLineChart! = nil
     var chartGlucoseValues = [Double]()
     var chartGlucoseTimes = [String]()
-    var fileUrl:URL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.org.nightscoutfoundation.spike")!
+    var fileUrl:URL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.miguelkennedy.spike")!
     var externalData:[String : AnyObject] = [:]
     var latestWidgetUpdate:String = ""
     var latestGlucoseValue:String = ""
@@ -182,7 +182,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     {
         //External Data
         //Define database file path
-        fileUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.org.nightscoutfoundation.spike")!.appendingPathComponent("Library/Preferences/group.org.nightscoutfoundation.spike.plist")
+        fileUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.miguelkennedy.spike")!.appendingPathComponent("Library/Preferences/group.com.miguelkennedy.spike.plist")
         
         //Check if file exists
         let fileManager = FileManager.default

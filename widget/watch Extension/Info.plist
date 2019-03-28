@@ -42,7 +42,7 @@
 		<key>NSExtensionAttributes</key>
 		<dict>
 			<key>WKAppBundleIdentifier</key>
-			<string>org.nightscoutfoundation.spike.watchkitapp</string>
+			<string>com.miguelkennedy.spike.watchkitapp</string>
 		</dict>
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.watchkit</string>

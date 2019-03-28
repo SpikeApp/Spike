@@ -1232,14 +1232,14 @@
 				CODE_SIGN_ENTITLEMENTS = Spike/Spike.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4J6GHFAM55;
 				INFOPLIST_FILE = Spike/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 4.0;
@@ -1256,14 +1256,14 @@
 				CODE_SIGN_ENTITLEMENTS = Spike/Spike.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4J6GHFAM55;
 				INFOPLIST_FILE = Spike/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 4.0;
@@ -1364,7 +1364,7 @@
 				CODE_SIGN_ENTITLEMENTS = widget/widget.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4J6GHFAM55;
 				INFOPLIST_FILE = widget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1372,7 +1372,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.todaywidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.todaywidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -1389,7 +1389,7 @@
 				CODE_SIGN_ENTITLEMENTS = widget/widget.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4J6GHFAM55;
 				INFOPLIST_FILE = widget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1397,7 +1397,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.todaywidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.todaywidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -1415,10 +1415,10 @@
 				CODE_SIGN_ENTITLEMENTS = watch/watch.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4J6GHFAM55;
 				IBSC_MODULE = watch_Extension;
 				INFOPLIST_FILE = watch/Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
@@ -1437,10 +1437,10 @@
 				CODE_SIGN_ENTITLEMENTS = watch/watch.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4J6GHFAM55;
 				IBSC_MODULE = watch_Extension;
 				INFOPLIST_FILE = watch/Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
@@ -1458,14 +1458,14 @@
 				CODE_SIGN_ENTITLEMENTS = "watch Extension/watch Extension.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4J6GHFAM55;
 				INFOPLIST_FILE = "watch Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.watchkitapp.watchkitextension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.watchkitapp.watchkitextension;
 				PRODUCT_NAME = "${TARGET_NAME}";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
@@ -1483,14 +1483,14 @@
 				CODE_SIGN_ENTITLEMENTS = "watch Extension/watch Extension.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4J6GHFAM55;
 				INFOPLIST_FILE = "watch Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.watchkitapp.watchkitextension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.watchkitapp.watchkitextension;
 				PRODUCT_NAME = "${TARGET_NAME}";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
@@ -1507,7 +1507,7 @@
 				CODE_SIGN_ENTITLEMENTS = fswidget/fswidget.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4J6GHFAM55;
 				INFOPLIST_FILE = fswidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1515,7 +1515,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.fswidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.fswidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -1531,7 +1531,7 @@
 				CODE_SIGN_ENTITLEMENTS = fswidget/fswidget.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4J6GHFAM55;
 				INFOPLIST_FILE = fswidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1539,7 +1539,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.fswidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.fswidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;

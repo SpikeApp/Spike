@@ -11,7 +11,7 @@
 	<!-- A universally unique application identifier. Must be unique across 
 		all AIR applications. Using a reverse DNS-style name as the id is recommended. 
 		(Eg. com.example.ExampleApplication.) Required. -->
-	<id>org.nightscoutfoundation.spike</id>
+	<id>com.miguelkennedy.spike</id>
 
 	<!-- Used as the filename for the application. Required. -->
 	<filename>Spike</filename>
@@ -244,7 +244,7 @@
 				<array>
 					<dict>
 						<key>CFBundleURLName</key>
-						<string>org.nightscoutfoundation.spike</string>
+						<string>com.miguelkennedy.spike</string>
 						<key>CFBundleURLSchemes</key>
 						<array>
 							<string>spikeapp</string>
@@ -309,20 +309,20 @@
 		<Entitlements> 
 			<![CDATA[
 				<key>application-identifier</key>
-				<string>M295NYD8ZT.org.nightscoutfoundation.spike</string>
+				<string>4J6GHFAM55.com.miguelkennedy.spike</string>
 				<key>com.apple.developer.healthkit</key>
 				<true/>
 				<key>com.apple.security.application-groups</key>
 				<array>
-					<string>group.org.nightscoutfoundation.spike</string>
+					<string>group.com.miguelkennedy.spike</string>
 				</array>
 				<key>keychain-access-groups</key>
 				<array>
-					<string>M295NYD8ZT.*</string>
+					<string>4J6GHFAM55.*</string>
 				</array>
 				<key>com.apple.developer.icloud-container-identifiers</key>
 				<array>
-					<string>iCloud.org.nightscoutfoundation.spike</string>
+					<string>iCloud.com.miguelkennedy.spike</string>
 				</array>
 				<key>com.apple.developer.icloud-services</key>
 				<array>
@@ -331,10 +331,10 @@
 				</array>
 				<key>com.apple.developer.ubiquity-container-identifiers</key>
 				<array>
-					<string>iCloud.org.nightscoutfoundation.spike</string>
+					<string>iCloud.com.miguelkennedy.spike</string>
 				</array>
 				<key>com.apple.developer.ubiquity-kvstore-identifier</key>
-				<string>M295NYD8ZT.org.nightscoutfoundation.spike</string>
+				<string>4J6GHFAM55.com.miguelkennedy.spike</string>
 			 ]]>
 		</Entitlements>
 		<!-- 

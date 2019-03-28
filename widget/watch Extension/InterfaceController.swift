@@ -680,7 +680,8 @@ class InterfaceController: WKInterfaceController
         //create string for google chart api
         let band1="&chm=r,FFFFFF,0,"+String(format:"%.2f",high-0.003)+","+String(format:"%.3f",high)
         let band2="|r,FFFFFF,0,"+String(format:"%.2f",(low))+","+String(format:"%.3f",low+0.003)
-        let h:String=String(stringInterpolationSegment: 100.0/Double(hours))
+        //let h:String=String(stringInterpolationSegment: 100.0/Double(hours))
+        let h:String=String(100.0/Double(hours))
         let hourlyverticals="&chg="+h+",0,4,0"
         
         if (mmol == false)
