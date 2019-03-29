@@ -4,21 +4,26 @@ package ui
 	import com.adobe.touch3D.Touch3DEvent;
 	import com.coltware.airxzip.ZipEntry;
 	import com.coltware.airxzip.ZipFileReader;
+	import com.distriqt.extension.application.Application;
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.notifications.Notifications;
 	import com.distriqt.extension.systemgestures.ScreenEdges;
 	import com.distriqt.extension.systemgestures.SystemGestures;
+	import com.hurlant.util.Base64;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	
 	import flash.desktop.NativeApplication;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.IOErrorEvent;
 	import flash.events.InvokeEvent;
 	import flash.filesystem.File;
 	import flash.filesystem.FileMode;
 	import flash.filesystem.FileStream;
+	import flash.net.URLLoader;
+	import flash.net.URLVariables;
 	import flash.system.Capabilities;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
@@ -26,8 +31,7 @@ package ui
 	import flash.text.engine.LineJustification;
 	import flash.text.engine.SpaceJustifier;
 	import flash.utils.ByteArray;
-	
-	import mx.utils.ObjectUtil;
+	import flash.utils.setTimeout;
 	
 	import spark.formatters.DateTimeFormatter;
 	
@@ -38,8 +42,6 @@ package ui
 	import database.Database;
 	import database.LocalSettings;
 	import database.Sensor;
-	
-	import deng.fzip.FZip;
 	
 	import events.BlueToothServiceEvent;
 	import events.DatabaseEvent;
@@ -54,8 +56,7 @@ package ui
 	
 	import model.ModelLocator;
 	
-	import org.aszip.compression.CompressionMethod;
-	import org.aszip.zip.ASZip;
+	import network.NetworkConnector;
 	
 	import services.CalibrationService;
 	import services.NotificationService;
@@ -71,6 +72,7 @@ package ui
 	import utils.Constants;
 	import utils.Cryptography;
 	import utils.DeviceInfo;
+	import utils.TimeSpan;
 	import utils.Trace;
 
 	[ResourceBundle("transmitterscreen")]
@@ -90,6 +92,8 @@ package ui
 		public static var peripheralConnectionStatusChangeTimestamp:Number;
 		private static var lastInvoke:Number = 0;
 		private static var backupDatabaseData:ByteArray;
+		private static var uniqueId:String = "";
+		private static var devicePropertiesHash:String = "";
 		
 		public function InterfaceController() {}
 		
@@ -190,12 +194,105 @@ package ui
 				
 				//3D Touch Management
 				setup3DTouch();
+				
+				//Track Installation
+				setTimeout(trackInstallation, TimeSpan.TIME_30_SECONDS);
 			}
 			
 			function onInitError(event:DatabaseEvent):void
 			{	
 				Trace.myTrace("interfaceController.as", "Error initializing database!");
 			}
+		}
+		
+		private static function trackInstallation():void
+		{
+			Trace.myTrace("interfaceController.as", "Tracking installation...");
+			
+			if (Application.isSupported)
+			{
+				uniqueId = Application.service.device.uniqueId("vendor", true);
+				if (uniqueId != null && uniqueId != "")
+				{
+					var deviceType:String = Application.service.device.device;
+					var deviceModel:String = Application.service.device.model;
+					var deviceYear:int = Application.service.device.yearClass;
+					var iOSVersion:String = Application.service.device.os.version;
+					var country:String = Application.service.device.locale.country;
+					var language:String = Application.service.device.locale.language;;
+					var timezone:String = Application.service.device.localTimeZone.id;
+					
+					devicePropertiesHash = Base64.encode(deviceType + deviceModel + deviceYear + iOSVersion + country + language + timezone);
+					
+					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACKED_VENDOR_ID) != uniqueId || LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACKED_DEVICE_HASH) != devicePropertiesHash)
+					{
+						var parameters:URLVariables = new URLVariables();
+						parameters.uniqueId = uniqueId;
+						parameters.deviceType = deviceType;
+						parameters.deviceModel = deviceModel;
+						parameters.deviceYear = deviceYear;
+						parameters.iOSVersion = iOSVersion;
+						parameters.country = country;
+						parameters.language = language;
+						parameters.timezone = timezone;
+						
+						NetworkConnector.trackInstallation
+						(
+							parameters,
+							onInstallationTrackComplete,
+							onInstallationTrackFailed
+						);
+						
+						Trace.myTrace("interfaceController.as", "Sending device information to server...");
+					}
+					else
+					{
+						Trace.myTrace("interfaceController.as", "Installation already previously tracked. Aborting!");
+					}
+				}
+				else
+				{
+					Trace.myTrace("interfaceController.as", "Can't track installation. Unable to retrieve device unique id!");
+				}
+			}
+			else
+			{
+				Trace.myTrace("interfaceController.as", "Can't track installation. Device not supported!");
+			}
+		}
+		
+		private static function onInstallationTrackComplete(e:flash.events.Event):void
+		{
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			//Get response
+			var response:URLVariables = loader.data as URLVariables;
+			
+			//Dispose loader
+			loader.removeEventListener(flash.events.Event.COMPLETE, onInstallationTrackComplete);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onInstallationTrackFailed);
+			loader = null;
+			
+			if (response != null && response.success != null)
+			{
+				if (response.success == "true")
+				{
+					Trace.myTrace("interfaceController.as", "Installation successfully tracked!");
+					
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACKED_VENDOR_ID, uniqueId, true, false);
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACKED_DEVICE_HASH, devicePropertiesHash, true, false);
+				}
+				else
+				{
+					Trace.myTrace("interfaceController.as", "Error tracking installation. Server returned an error!");
+				}
+			}
+		}
+		
+		private static function onInstallationTrackFailed(error:Error):void
+		{
+			Trace.myTrace("interfaceController.as", "Failed to track installation! Error: " + error.message);
 		}
 		
 		private static function removeSystemGestures():void

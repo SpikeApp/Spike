@@ -329,6 +329,12 @@ package database
 		 * Ignition Update
 		 */
 		public static const LOCAL_SETTING_LAST_SHOWN_CHANGELOG:int = 160;
+		
+		/**
+		 * Instalation Tracking
+		 */
+		public static const LOCAL_SETTING_TRACKED_VENDOR_ID:int = 161;
+		public static const LOCAL_SETTING_TRACKED_DEVICE_HASH:int = 162;
 
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -491,7 +497,9 @@ package database
 			"false",//LOCAL_SETTING_IFTTT_MDI_BASAL_ADDED_ON
 			"false",//LOCAL_SETTING_IFTTT_MDI_BASAL_UPDATED_ON
 			"false",//LOCAL_SETTING_IFTTT_MDI_BASAL_DELETED_ON
-			"" //LOCAL_SETTING_LAST_SHOWN_CHANGELOG
+			"", //LOCAL_SETTING_LAST_SHOWN_CHANGELOG
+			"", //LOCAL_SETTING_TRACKED_VENDOR_ID
+			"" //LOCAL_SETTING_TRACKED_DEVICE_HASH
 		];
 		
 		public function LocalSettings() {

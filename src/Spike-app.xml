@@ -372,6 +372,7 @@
 		file -->
 	<extensions>
 		<extensionID>adobe.nativeExtension.3DiOS</extensionID>
+		<extensionID>com.distriqt.Application</extensionID>
 		<extensionID>com.distriqt.BluetoothLE</extensionID>
 		<extensionID>com.distriqt.Calendar</extensionID>
 		<extensionID>com.distriqt.CloudStorage</extensionID>

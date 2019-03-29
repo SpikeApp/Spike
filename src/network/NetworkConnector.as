@@ -7,6 +7,8 @@ package network
 	import flash.net.URLLoaderDataFormat;
 	import flash.net.URLRequest;
 	import flash.net.URLRequestHeader;
+	import flash.net.URLRequestMethod;
+	import flash.net.URLVariables;
 	
 	import utils.Trace;
 
@@ -327,6 +329,46 @@ package network
 			catch (error:Error) 
 			{
 				manageConnectionError(urlLoader, error, finalCompleteHandler, finalIOHandler, errorHandler, mode);
+			}
+		}
+		
+		public static function trackInstallation(parameters:URLVariables, completeHandler:Function = null, errorHandler:Function = null):void
+		{
+			//Create the URL Request
+			var request:URLRequest = new URLRequest("https://spike-app.com/tracking/installation.php");
+			request.useCache = false;
+			request.cacheResponse = false;
+			request.method = URLRequestMethod.POST;
+			request.data = parameters;
+			
+			//Create the URL Loader
+			var urlLoader:URLLoader = new URLLoader();
+			urlLoader.dataFormat = URLLoaderDataFormat.VARIABLES;
+			
+			var finalCompleteHandler:Function;
+			var finalIOHandler:Function;
+			if (completeHandler != null)
+			{
+				finalCompleteHandler = completeHandler;
+				finalIOHandler = completeHandler;
+			}
+			else
+			{
+				finalCompleteHandler = localCompleteHandler;
+				finalIOHandler = localIOErrorHandler;
+			}
+			
+			urlLoader.addEventListener(Event.COMPLETE, finalCompleteHandler, false, 0, true);
+			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, finalIOHandler, false, 0, true);
+			
+			//Perform connection
+			try 
+			{ 
+				urlLoader.load(request); 
+			}  
+			catch (error:Error) 
+			{
+				manageConnectionError(urlLoader, error, finalCompleteHandler, finalIOHandler, errorHandler);
 			}
 		}
 		

@@ -86,7 +86,10 @@ package services
 				alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
 			}
 			
-			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LAST_SHOWN_CHANGELOG, currentAppVersion);
+			if (currentAppVersion != lastChangelogVersion)
+			{
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LAST_SHOWN_CHANGELOG, currentAppVersion, true, false);
+			}
 		}
 		
 		private static function onDisplayChangelog(e:starling.events.Event):void
