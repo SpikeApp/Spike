@@ -21,6 +21,8 @@ package utils
 		/**
 		 * Constants that hold time in milliseconds
 		 */
+		public static const TIME_2_WEEKS:int = 1209600000;
+		public static const TIME_1_WEEK:int = 604800000;
 		public static const TIME_48_HOURS:int = 172800000;
 		public static const TIME_24_HOURS_6_MINUTES:int = 86760000;
 		public static const TIME_24_HOURS:int = 86400000;

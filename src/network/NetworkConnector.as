@@ -332,10 +332,10 @@ package network
 			}
 		}
 		
-		public static function trackInstallation(parameters:URLVariables, completeHandler:Function = null, errorHandler:Function = null):void
+		public static function trackInstallationUsage(url:String, parameters:URLVariables, completeHandler:Function = null, errorHandler:Function = null):void
 		{
 			//Create the URL Request
-			var request:URLRequest = new URLRequest("https://spike-app.com/tracking/installation.php");
+			var request:URLRequest = new URLRequest(url);
 			request.useCache = false;
 			request.cacheResponse = false;
 			request.method = URLRequestMethod.POST;

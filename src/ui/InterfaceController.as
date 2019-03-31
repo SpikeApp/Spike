@@ -196,7 +196,7 @@ package ui
 				setup3DTouch();
 				
 				//Track Installation
-				setTimeout(trackInstallation, TimeSpan.TIME_30_SECONDS);
+				setTimeout(trackInstallationUsage, TimeSpan.TIME_30_SECONDS);
 			}
 			
 			function onInitError(event:DatabaseEvent):void
@@ -205,9 +205,9 @@ package ui
 			}
 		}
 		
-		private static function trackInstallation():void
+		private static function trackInstallationUsage():void
 		{
-			Trace.myTrace("interfaceController.as", "Tracking installation...");
+			Trace.myTrace("interfaceController.as", "Tracking installation & usage...");
 			
 			if (Application.isSupported)
 			{
@@ -223,10 +223,11 @@ package ui
 					var timezone:String = Application.service.device.localTimeZone.id;
 					
 					devicePropertiesHash = Base64.encode(deviceType + deviceModel + deviceYear + iOSVersion + country + language + timezone);
+					var parameters:URLVariables;
 					
 					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACKED_VENDOR_ID) != uniqueId || LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACKED_DEVICE_HASH) != devicePropertiesHash)
 					{
-						var parameters:URLVariables = new URLVariables();
+						parameters = new URLVariables();
 						parameters.uniqueId = uniqueId;
 						parameters.deviceType = deviceType;
 						parameters.deviceModel = deviceModel;
@@ -236,18 +237,34 @@ package ui
 						parameters.language = language;
 						parameters.timezone = timezone;
 						
-						NetworkConnector.trackInstallation
+						NetworkConnector.trackInstallationUsage
 						(
+							"https://spike-app.com/tracking/installation.php",
 							parameters,
 							onInstallationTrackComplete,
 							onInstallationTrackFailed
 						);
 						
-						Trace.myTrace("interfaceController.as", "Sending device information to server...");
+						Trace.myTrace("interfaceController.as", "Sending device information to server for installation tracking...");
+					}
+					else if (Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACKED_DEVICE_LATEST_TIMESTAMP)) != 0 && new Date().valueOf() - Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACKED_DEVICE_LATEST_TIMESTAMP)) > TimeSpan.TIME_2_WEEKS)
+					{
+						parameters = new URLVariables();
+						parameters.uniqueId = uniqueId;
+						
+						NetworkConnector.trackInstallationUsage
+						(
+							"https://spike-app.com/tracking/usage.php",
+							parameters,
+							onInstallationTrackComplete,
+							onInstallationTrackFailed
+						);
+						
+						Trace.myTrace("interfaceController.as", "Sending device id to server for usage tracking...");
 					}
 					else
 					{
-						Trace.myTrace("interfaceController.as", "Installation already previously tracked. Aborting!");
+						Trace.myTrace("interfaceController.as", "Installation/usage already previously tracked. Aborting!");
 					}
 				}
 				else
@@ -278,14 +295,15 @@ package ui
 			{
 				if (response.success == "true")
 				{
-					Trace.myTrace("interfaceController.as", "Installation successfully tracked!");
+					Trace.myTrace("interfaceController.as", "Installation/usage successfully tracked!");
 					
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACKED_VENDOR_ID, uniqueId, true, false);
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACKED_DEVICE_HASH, devicePropertiesHash, true, false);
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_TRACKED_DEVICE_LATEST_TIMESTAMP, String(new Date().valueOf()), true, false);
 				}
 				else
 				{
-					Trace.myTrace("interfaceController.as", "Error tracking installation. Server returned an error!");
+					Trace.myTrace("interfaceController.as", "Error tracking installation/usage. Server returned an error!");
 				}
 			}
 		}
