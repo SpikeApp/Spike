@@ -1,9 +1,5 @@
 package utils
 {
-	import spark.formatters.DateTimeFormatter;
-	
-	import database.CommonSettings;
-	
 	import model.ModelLocator;
 
 	[ResourceBundle("chartscreen")]
