@@ -16,18 +16,21 @@ package ui.screens.display.readings
 	import feathers.data.ArrayCollection;
 	import feathers.data.ListCollection;
 	import feathers.layout.HorizontalAlign;
+	import feathers.layout.VerticalAlign;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
 	import model.ModelLocator;
 	
 	import starling.display.Canvas;
+	import starling.display.DisplayObject;
 	import starling.display.Image;
 	import starling.events.Event;
 	import starling.textures.RenderTexture;
 	import starling.textures.SubTexture;
 	import starling.textures.Texture;
 	
+	import ui.chart.helpers.GlucoseFactory;
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
@@ -39,9 +42,13 @@ package ui.screens.display.readings
 	import utils.TimeSpan;
 	
 	[ResourceBundle("globaltranslations")]
+	[ResourceBundle("glucosemanagementscreen")]
 
 	public class ReadingsManagementList extends SpikeList 
 	{
+		/* Constants */
+		private const MAX_READINGS:uint = 500;
+		
 		/* Display Objects */
 		private var urgentHighCanvas:Canvas;
 		private var urgentHighTexture:RenderTexture;
@@ -53,6 +60,7 @@ package ui.screens.display.readings
 		private var lowTexture:RenderTexture;
 		private var urgentLowCanvas:Canvas;
 		private var urgentLowTexture:RenderTexture;
+		private var excessReadingsWarningLabel:Label;
 		
 		/* Objects */
 		private var accessoriesList:Array = [];
@@ -177,15 +185,56 @@ package ui.screens.display.readings
 			
 			// Data
 			var dataList:Array = [];
-			var readingsList:Array = ModelLocator.bgReadings;
+			var readingsList:Array = ModelLocator.bgReadings.concat();
+			var numberOfReadings:uint = readingsList.length ;
+			if (numberOfReadings > MAX_READINGS)
+			{
+				//Trim excess readings
+				readingsList = readingsList.slice(numberOfReadings - MAX_READINGS);
+				numberOfReadings = MAX_READINGS;
+				
+				//Add a warning header
+				dataList.push( { label: "", isWarning: true } );
+			}
 			
-			for(var i:int = readingsList.length - 1 ; i >= 0; i--)
+			for(var i:int = numberOfReadings - 1 ; i >= 0; i--)
 			{
 				//Glucose reading properties
 				var reading:BgReading = readingsList[i];
+				if (reading == null)
+					continue;
+				
 				var glucoseValue:String = BgGraphBuilder.unitizedString(reading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
 				var glucoseValueNumber:Number = Number(glucoseValue);
 				var glucoseTime:Date = new Date(reading.timestamp);
+				
+				//Delta
+				var glucoseValueProperties:Object = GlucoseFactory.getGlucoseOutput(reading.calculatedValue);
+				var glucoseValueFormatted:Number = glucoseValueProperties.glucoseValueFormatted;
+				var previousGlucoseValueFormatted:Number;
+				var previousGlucoseValue:Number;
+				if (i > 0)
+				{
+					previousGlucoseValue = readingsList[i-1].calculatedValue;
+					var previousGlucoseValueProperties:Object = GlucoseFactory.getGlucoseOutput(previousGlucoseValue);
+					previousGlucoseValueFormatted = previousGlucoseValueProperties.glucoseValueFormatted;
+				}
+				
+				var slopeOutput:String = "";
+				
+				if (i > 0)
+				{
+					var finalSlopeOutput:String = GlucoseFactory.getGlucoseSlope
+					(
+						previousGlucoseValue,
+						previousGlucoseValueFormatted,
+						reading.calculatedValue,
+						glucoseValueFormatted,
+						true
+					);
+					
+					slopeOutput += "(" + (Number(finalSlopeOutput) == 0 ? "0" : finalSlopeOutput) + ")";
+				}
 				
 				//Row label
 				var timeFormatted:String;
@@ -193,7 +242,7 @@ package ui.screens.display.readings
 					timeFormatted = TimeSpan.formatHoursMinutes(glucoseTime.getHours(), glucoseTime.getMinutes(), TimeSpan.TIME_FORMAT_24H);
 				else
 					timeFormatted = TimeSpan.formatHoursMinutes(glucoseTime.getHours(), glucoseTime.getMinutes(), TimeSpan.TIME_FORMAT_12H);
-				var label:String = timeFormatted + "  -  " + glucoseValue;
+				var label:String = timeFormatted + "  -  " + glucoseValue + " " + slopeOutput;
 				
 				//Row icon (changes color depending of value of glucose reading
 				var icon:RenderTexture;
@@ -226,6 +275,8 @@ package ui.screens.display.readings
 			{
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.iconSourceField = "icon";
+				itemRenderer.accessoryLabelProperties.wordWrap = true;
+				itemRenderer.defaultLabelProperties.wordWrap = true;
 				itemRenderer.iconLoaderFactory = function():ImageLoader
 				{
 					var loader:ImageLoader = new ImageLoader();
@@ -234,7 +285,7 @@ package ui.screens.display.readings
 				itemRenderer.iconOffsetX = 10;
 				itemRenderer.labelField = "label";
 				
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 						itemRenderer.paddingLeft = 30;
@@ -242,24 +293,38 @@ package ui.screens.display.readings
 						itemRenderer.paddingRight = 30;
 				}
 				
-				itemRenderer.accessoryFunction = function(item:Object):Button
+				itemRenderer.accessoryFunction = function(item:Object):DisplayObject
 				{
-					var deleteButton:Button = accessoryDictionary[ item ];
-					if(!deleteButton)
+					if (item.isWarning)
 					{
-						deleteButton = new Button();
-						var buttonIconTexture:Texture = MaterialDeepGreyAmberMobileThemeIcons.deleteForeverTexture;
-						var buttonIconImage:Image = new Image(buttonIconTexture);
-						deleteButton.defaultIcon = buttonIconImage;
-						deleteButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
-						deleteButton.pivotX = -5;
-						deleteButton.addEventListener(Event.TRIGGERED, onDeleteReading);
-						accessoryDictionary[ item ] = deleteButton;
-						buttonIconsTextures.push(buttonIconTexture);
-						buttonIconsImages.push(buttonIconImage);
+						if (excessReadingsWarningLabel == null)
+						{
+							excessReadingsWarningLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('glucosemanagementscreen','max_number_of_readings_reached').replace("{MAX_READINGS_DO_NOT_TRANSLATE_THIS_WORD}", String(MAX_READINGS)).replace("{MAX_READINGS_DO_NOT_TRANSLATE_THIS_WORD}", String(MAX_READINGS)), HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true, 0xFF0000);
+							excessReadingsWarningLabel.wordWrap = true;
+							excessReadingsWarningLabel.width = width;
+						}
+						
+						return excessReadingsWarningLabel;
 					}
-					
-					return deleteButton;
+					else
+					{
+						var deleteButton:Button = accessoryDictionary[ item ];
+						if(!deleteButton)
+						{
+							deleteButton = new Button();
+							var buttonIconTexture:Texture = MaterialDeepGreyAmberMobileThemeIcons.deleteForeverTexture;
+							var buttonIconImage:Image = new Image(buttonIconTexture);
+							deleteButton.defaultIcon = buttonIconImage;
+							deleteButton.styleNameList.add( BaseMaterialDeepGreyAmberMobileTheme.THEME_STYLE_NAME_BUTTON_HEADER_QUIET_ICON_ONLY );
+							deleteButton.pivotX = -5;
+							deleteButton.addEventListener(Event.TRIGGERED, onDeleteReading);
+							accessoryDictionary[ item ] = deleteButton;
+							buttonIconsTextures.push(buttonIconTexture);
+							buttonIconsImages.push(buttonIconImage);
+						}
+						
+						return deleteButton;
+					}
 				}
 				
 				return itemRenderer;
@@ -305,7 +370,16 @@ package ui.screens.display.readings
 			function deleteReading(e:Event):void
 			{
 				//Delete reading from Spike, database and list
-				ModelLocator.bgReadings.removeAt(id);
+				for(var i:int = ModelLocator.bgReadings.length - 1 ; i >= 0; i--)
+				{
+					var tempReading:BgReading = ModelLocator.bgReadings[i];
+					if (tempReading != null && tempReading.uniqueId == bgReading.uniqueId)
+					{
+						ModelLocator.bgReadings.removeAt(i);
+						break;
+					}
+				}
+				
 				Database.deleteBgReadingSynchronous(bgReading);
 				dataProvider.removeItem(item);
 			}
@@ -337,6 +411,8 @@ package ui.screens.display.readings
 			{
 				if (buttonIconsImages[i] != null)
 				{
+					if (buttonIconsImages[i].texture != null)
+						buttonIconsImages[i].texture.dispose();
 					buttonIconsImages[i].dispose();
 					buttonIconsImages[i] = null;
 				}
@@ -432,6 +508,13 @@ package ui.screens.display.readings
 						(iconsList[i] as SubTexture).parent.dispose();
 					iconsList[i] = null;
 				}
+			}
+			
+			if (excessReadingsWarningLabel != null)
+			{
+				excessReadingsWarningLabel.removeFromParent();
+				excessReadingsWarningLabel.dispose();
+				excessReadingsWarningLabel = null;
 			}
 			
 			super.dispose();

@@ -3,7 +3,7 @@ package ui.screens
 	import flash.display.StageOrientation;
 	import flash.system.System;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
@@ -22,6 +22,7 @@ package ui.screens
 	import ui.screens.display.settings.chart.GlucoseDistributionSettingsList;
 	import ui.screens.display.settings.chart.ModeSettingsList;
 	import ui.screens.display.settings.chart.SizeSettingsList;
+	import ui.screens.display.settings.chart.VisualizationSettingsList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -39,6 +40,8 @@ package ui.screens
 		private var chartGlucoseDistributionLabel:Label;
 		private var chartModeLabel:Label;
 		private var chartModeSettings:ModeSettingsList;
+		private var chartVisualizationLabel:Label;
+		private var chartVisualizationSettings:VisualizationSettingsList;
 		
 		public function ChartSettingsScreen() 
 		{
@@ -75,10 +78,10 @@ package ui.screens
 			AppInterface.instance.drawers.openGesture = DragGesture.NONE;
 			
 			//24H Distribution Section Label
-			if (!BlueToothDevice.isFollower())
-				chartGlucoseDistributionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_distribution_settings_title_master'), true);
+			if (!CGMBlueToothDevice.isFollower())
+				chartGlucoseDistributionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','statistics_settings_title_master'), true);
 			else
-				chartGlucoseDistributionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_distribution_settings_title_follower'), true);
+				chartGlucoseDistributionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','statistics_settings_title_follower'), true);
 			screenRenderer.addChild(chartGlucoseDistributionLabel);
 			
 			//24H Distribution Settings
@@ -92,6 +95,14 @@ package ui.screens
 			//Mode Settings
 			chartModeSettings = new ModeSettingsList();
 			screenRenderer.addChild(chartModeSettings);
+			
+			//Visualization Section Label
+			chartVisualizationLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','visualization_section_label'), true);
+			screenRenderer.addChild(chartVisualizationLabel);
+			
+			//Visualization Settings
+			chartVisualizationSettings = new VisualizationSettingsList();
+			screenRenderer.addChild(chartVisualizationSettings);
 			
 			//Size Section Label
 			chartSizeLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','size_settings_title'), true);
@@ -112,7 +123,7 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			AppInterface.instance.menu.selectedIndex = 3;
+			AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 4 : 3;
 		}
 		
 		/**
@@ -123,6 +134,8 @@ package ui.screens
 			//Save Settings
 			if (chartModeSettings.needsSave)
 				chartModeSettings.save();
+			if (chartVisualizationSettings.needsSave)
+				chartVisualizationSettings.save();
 			if (chartColorSettings.needsSave)
 				chartColorSettings.save();
 			if (chartSizeSettings.needsSave)
@@ -144,10 +157,11 @@ package ui.screens
 		
 		override protected function onStarlingBaseResize(e:ResizeEvent):void 
 		{
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 			{
 				if (chartGlucoseDistributionLabel != null) chartGlucoseDistributionLabel.paddingLeft = 30;
 				if (chartModeLabel != null) chartModeLabel.paddingLeft = 30;
+				if (chartVisualizationLabel != null) chartVisualizationLabel.paddingLeft = 30;
 				if (chartSizeLabel != null) chartSizeLabel.paddingLeft = 30;
 				if (chartColorLabel != null) chartColorLabel.paddingLeft = 30;
 			}
@@ -155,6 +169,7 @@ package ui.screens
 			{
 				if (chartGlucoseDistributionLabel != null) chartGlucoseDistributionLabel.paddingLeft = 0;
 				if (chartModeLabel != null) chartModeLabel.paddingLeft = 0;
+				if (chartVisualizationLabel != null) chartVisualizationLabel.paddingLeft = 0;
 				if (chartSizeLabel != null) chartSizeLabel.paddingLeft = 0;
 				if (chartColorLabel != null) chartColorLabel.paddingLeft = 0;
 			}
@@ -221,6 +236,20 @@ package ui.screens
 				chartModeSettings.removeFromParent();
 				chartModeSettings.dispose();
 				chartModeSettings = null;
+			}
+			
+			if (chartVisualizationLabel != null)
+			{
+				chartVisualizationLabel.removeFromParent();
+				chartVisualizationLabel.dispose();
+				chartVisualizationLabel = null;
+			}
+			
+			if (chartVisualizationSettings != null)
+			{
+				chartVisualizationSettings.removeFromParent();
+				chartVisualizationSettings.dispose();
+				chartVisualizationSettings = null;
 			}
 			
 			super.dispose();

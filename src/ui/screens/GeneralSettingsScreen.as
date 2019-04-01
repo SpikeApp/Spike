@@ -24,7 +24,6 @@ package ui.screens
 	import ui.screens.display.settings.general.DateSettingsList;
 	import ui.screens.display.settings.general.GlucoseSettingsList;
 	import ui.screens.display.settings.general.LanguageSettingsList;
-	import ui.screens.display.settings.general.UpdateSettingsList;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -37,9 +36,7 @@ package ui.screens
 		private var chartDateSettings:DateSettingsList;
 		private var chartDateFormatLabel:Label;
 		private var glucoseSettings:GlucoseSettingsList;
-		private var updatesSettingsList:UpdateSettingsList;
 		private var glucoseLabel:Label;
-		private var updateLabel:Label;
 		private var dataCollectionLabel:Label;
 		private var dataCollectionSettings:DataCollectionSettingsList;
 		private var languageLabel:Label;
@@ -111,22 +108,11 @@ package ui.screens
 			//Glucose Settings
 			glucoseSettings = new GlucoseSettingsList();
 			screenRenderer.addChild(glucoseSettings);
-			
-			if (!ModelLocator.TEST_FLIGHT_MODE)
-			{
-				//Update Section Label
-				updateLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','check_for_updates'), true);
-				screenRenderer.addChild(updateLabel);
-				
-				//Update Settings
-				updatesSettingsList = new UpdateSettingsList();
-				screenRenderer.addChild(updatesSettingsList);
-			}
 		}
 		
 		private function adjustMainMenu():void
 		{
-			AppInterface.instance.menu.selectedIndex = 3;
+			AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 4 : 3;
 		}
 		
 		private function setupEventHandlers():void
@@ -153,8 +139,6 @@ package ui.screens
 				languageSettings.save();
 			if (glucoseSettings.needsSave)
 				glucoseSettings.save();
-			if (updatesSettingsList != null && updatesSettingsList.needsSave)
-				updatesSettingsList.save();
 			if (chartDateSettings.needsSave)
 				chartDateSettings.save();
 			if (dataCollectionSettings.needsSave)
@@ -178,13 +162,12 @@ package ui.screens
 		
 		override protected function onStarlingBaseResize(e:ResizeEvent):void 
 		{
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 			{
 				if (languageLabel != null) languageLabel.paddingLeft = 30;
 				if (dataCollectionLabel != null) dataCollectionLabel.paddingLeft = 30;
 				if (chartDateFormatLabel != null) chartDateFormatLabel.paddingLeft = 30;
 				if (glucoseLabel != null) glucoseLabel.paddingLeft = 30;
-				if (updateLabel != null) updateLabel.paddingLeft = 30;
 			}
 			else
 			{
@@ -192,7 +175,6 @@ package ui.screens
 				if (dataCollectionLabel != null) dataCollectionLabel.paddingLeft = 0;
 				if (chartDateFormatLabel != null) chartDateFormatLabel.paddingLeft = 0;
 				if (glucoseLabel != null) glucoseLabel.paddingLeft = 0;
-				if (updateLabel != null) updateLabel.paddingLeft = 0;
 			}
 			
 			setupHeaderSize();
@@ -213,25 +195,11 @@ package ui.screens
 				glucoseSettings = null;
 			}
 			
-			if (updatesSettingsList != null)
-			{
-				updatesSettingsList.removeFromParent();
-				updatesSettingsList.dispose();
-				updatesSettingsList = null;
-			}
-			
 			if (glucoseLabel != null)
 			{
 				glucoseLabel.removeFromParent();
 				glucoseLabel.dispose();
 				glucoseLabel = null;
-			}
-			
-			if (updateLabel != null)
-			{
-				updateLabel.removeFromParent();
-				updateLabel.dispose();
-				updateLabel = null;
 			}
 			
 			if (chartDateSettings != null)
@@ -254,7 +222,6 @@ package ui.screens
 				dataCollectionLabel.dispose();
 				dataCollectionLabel = null;
 			}
-			
 			
 			if (dataCollectionSettings != null)
 			{

@@ -21,6 +21,7 @@ class TodayViewController: UIViewController, NCWidgetProviding
     @IBOutlet var noData: UILabel!
     @IBOutlet var treatmentsLabel: UILabel!
     @IBOutlet var treatmentsConstrain: NSLayoutConstraint!
+    @IBOutlet var predictionsLabel: UILabel!
     
     //IBActions
     @IBAction func openApp(_ sender: Any)
@@ -35,7 +36,7 @@ class TodayViewController: UIViewController, NCWidgetProviding
     //Variables
     var chartGlucoseValues = [Double]()
     var chartGlucoseTimes = [String]()
-    var fileUrl:URL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.spike-app.spike")!
+    var fileUrl:URL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.org.nightscoutfoundation.spike")!
     var externalData:[String : AnyObject] = [:]
     var latestWidgetUpdate:String = ""
     var latestGlucoseValue:String = ""
@@ -49,6 +50,8 @@ class TodayViewController: UIViewController, NCWidgetProviding
     var lowThreshold:String = ""
     var highThreshold:String = ""
     var urgentHighThreshold:String = ""
+    var highString:String = ""
+    var lowString:String = ""
     var urgenLowColor:String = ""
     var lowColor:String = ""
     var inRangeColor:String = ""
@@ -65,6 +68,10 @@ class TodayViewController: UIViewController, NCWidgetProviding
     var openSpike:String = ""
     var IOB:String = "0.00U"
     var COB:String = "0.00g"
+    var IOBString:String = ""
+    var COBString:String = ""
+    var predictionsDuration:String = ""
+    var predictionsOutcome:String = ""
     
     //Constants
     let millisecondsInHour = 3600000
@@ -104,7 +111,10 @@ class TodayViewController: UIViewController, NCWidgetProviding
          now = "now"
          openSpike = "open spike"
          IOB = "6.05"
-         COB = "25.4"*/
+         COB = "25.4"
+         predictionsDuration = "1h30m"
+         predictionsOutcome = "101"
+         */
         
         //Widget Properties
         if #available(iOSApplicationExtension 10.0, *)
@@ -143,7 +153,7 @@ class TodayViewController: UIViewController, NCWidgetProviding
     {
         //External Data
         //Define database file path
-        fileUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.spike-app.spike")!.appendingPathComponent("Library/Preferences/group.com.spike-app.spike.plist")
+        fileUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.org.nightscoutfoundation.spike")!.appendingPathComponent("Library/Preferences/group.org.nightscoutfoundation.spike.plist")
         
         //Check if file exists
         let fileManager = FileManager.default
@@ -187,7 +197,13 @@ class TodayViewController: UIViewController, NCWidgetProviding
             externalData["minAgo"] == nil ||
             externalData["ago"] == nil ||
             externalData["now"] == nil ||
-            externalData["openSpike"] == nil
+            externalData["openSpike"] == nil ||
+            externalData["high"] == nil ||
+            externalData["low"] == nil ||
+            externalData["IOBString"] == nil ||
+            externalData["COBString"] == nil ||
+            externalData["predictionDuration"] == nil ||
+            externalData["predictionOutcome"] == nil
         {
             print("Missing data in database!")
             noData.text = "Missing data in database!"
@@ -220,6 +236,13 @@ class TodayViewController: UIViewController, NCWidgetProviding
         ago = (externalData["ago"] as? String)!
         now = (externalData["now"] as? String)!
         openSpike = (externalData["openSpike"] as? String)!
+        highString = (externalData["high"] as? String)!
+        lowString = (externalData["low"] as? String)!
+        IOBString = (externalData["IOBString"] as? String)!
+        COBString = (externalData["COBString"] as? String)!
+        predictionsDuration = (externalData["predictionDuration"] as? String)!
+        predictionsOutcome = (externalData["predictionOutcome"] as? String)!
+        
         if (externalData["IOB"] != nil)
         {
             IOB = (externalData["IOB"] as? String)!
@@ -258,10 +281,12 @@ class TodayViewController: UIViewController, NCWidgetProviding
             else if latestGlucoseValue == "LOW" || latestGlucoseValue == "??0" || latestGlucoseValue == "?SN" || latestGlucoseValue == "??2" || latestGlucoseValue == "?NA" || latestGlucoseValue == "?NC" || latestGlucoseValue == "?CD" || latestGlucoseValue == "?AD" || latestGlucoseValue == "?RF" || latestGlucoseValue == "???"
             {
                 glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgenLowColor)
+                glucoseDisplay.text = lowString + " " + latestGlucoseSlopeArrow
             }
             else if latestGlucoseValue == "HIGH"
             {
                 glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgentHighColor)
+                glucoseDisplay.text = highString + " " + latestGlucoseSlopeArrow
             }
             else if let latestGlucoseValueInteger = Int(latestGlucoseValue), let urgentLowThresholdInteger = Int(urgenLowThreshold), latestGlucoseValueInteger <= urgentLowThresholdInteger
             {
@@ -293,10 +318,12 @@ class TodayViewController: UIViewController, NCWidgetProviding
             else if latestGlucoseValue == "LOW" || latestGlucoseValue == "??0" || latestGlucoseValue == "?SN" || latestGlucoseValue == "??2" || latestGlucoseValue == "?NA" || latestGlucoseValue == "?NC" || latestGlucoseValue == "?CD" || latestGlucoseValue == "?AD" || latestGlucoseValue == "?RF" || latestGlucoseValue == "???"
             {
                 glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgenLowColor)
+                glucoseDisplay.text = lowString + " " + latestGlucoseSlopeArrow
             }
             else if latestGlucoseValue == "HIGH"
             {
                 glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgentHighColor)
+                glucoseDisplay.text = highString + " " + latestGlucoseSlopeArrow
             }
             else if let latestGlucoseValueFloat = Float(latestGlucoseValue), let urgentLowThresholdFloat = Float(urgenLowThreshold), latestGlucoseValueFloat <= urgentLowThresholdFloat
             {
@@ -344,7 +371,7 @@ class TodayViewController: UIViewController, NCWidgetProviding
         openApp.setTitle(openSpike, for: .normal)
         openApp.setTitleColor(UIColor.colorFromHex(hexString: displayLabelsColor), for: .normal)
         
-        treatmentsLabel.text = "COB:" + COB + "   IOB:" + IOB
+        treatmentsLabel.text = COBString + ":" + COB + "   " + IOBString + ":" + IOB
         treatmentsLabel.textColor = UIColor.colorFromHex(hexString: displayLabelsColor)
         
         if phone.isSmallScreen
@@ -353,6 +380,15 @@ class TodayViewController: UIViewController, NCWidgetProviding
             mainView.layoutIfNeeded()
             treatmentsLabel.font = treatmentsLabel.font.withSize(14)
         }
+        
+        var predictValue:String = "";
+        if (predictionsOutcome != "-1")
+        {
+            predictValue = predictionsDuration + ": " + predictionsOutcome
+        }
+        
+        predictionsLabel.text = predictValue
+        predictionsLabel.textColor = UIColor.colorFromHex(hexString: displayLabelsColor)
     }
     
     /**

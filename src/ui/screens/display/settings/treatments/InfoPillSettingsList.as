@@ -2,6 +2,7 @@ package ui.screens.display.settings.treatments
 {
 	import flash.display.StageOrientation;
 	
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import feathers.controls.Check;
@@ -32,8 +33,6 @@ package ui.screens.display.settings.treatments
 		private var displayBasalEnabled:Check;
 		private var displayRawEnabled:Check;
 		private var displayUploaderBatteryEnabled:Check;
-		private var displayOutcomeEnabled:Check;
-		private var displayEffectEnabled:Check;
 		private var displayOpenAPSMomentEnabled:Check;
 		private var displayLoopMomentEnabled:Check;
 		private var displayPumpBatteryEnabled:Check;
@@ -44,6 +43,8 @@ package ui.screens.display.settings.treatments
 		private var displaySAGEEnabled:Check;
 		private var displayIAGEEnabled:Check;
 		private var displayTransmitterBatteryEnabled:Check;
+		private var displaySensorNoiseEnabled:Check;
+		private var displayBAGEEnabled:Check;
 		
 		/* Internal Variables */
 		public var needsSave:Boolean = false;
@@ -51,8 +52,6 @@ package ui.screens.display.settings.treatments
 		private var basalEnabledValue:Boolean;
 		private var rawEnabledValue:Boolean;
 		private var uploaderBatteryEnabledValue:Boolean;
-		private var outcomeEnabledValue:Boolean;
-		private var effectEnabledValue:Boolean;
 		private var openAPSMomentEnabledValue:Boolean;
 		private var loopMomentEnabledValue:Boolean;
 		private var pumpBatteryEnabledValue:Boolean;
@@ -63,6 +62,8 @@ package ui.screens.display.settings.treatments
 		private var sageEnabledValue:Boolean;
 		private var iageEnabledValue:Boolean;
 		private var transmitterBatteryEnabledValue:Boolean;
+		private var sensorNoiseEnabledValue:Boolean;
+		private var bageEnabledValue:Boolean;
 		
 		public function InfoPillSettingsList()
 		{
@@ -98,8 +99,6 @@ package ui.screens.display.settings.treatments
 			rawEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_RAW_GLUCOSE_ON) == "true";
 			basalEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASAL_ON) == "true";
 			uploaderBatteryEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOADER_BATTERY_ON) == "true";
-			outcomeEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OUTCOME_ON) == "true";
-			effectEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_EFFECT_ON) == "true";
 			openAPSMomentEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OPENAPS_MOMENT_ON) == "true";
 			loopMomentEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOOP_MOMENT_ON) == "true";
 			pumpBatteryEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PUMP_BATTERY_ON) == "true";
@@ -108,7 +107,9 @@ package ui.screens.display.settings.treatments
 			pumpTimeEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PUMP_TIME_ON) == "true";
 			cageEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CAGE_ON) == "true";
 			sageEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SAGE_ON) == "true";
+			sensorNoiseEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INFO_PILL_SENSOR_NOISE_ON) == "true";
 			iageEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_IAGE_ON) == "true";
+			bageEnabledValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BAGE_ON) == "true";
 		}
 		
 		private function setupContent():void
@@ -132,14 +133,6 @@ package ui.screens.display.settings.treatments
 			/* Enable/Disable Uploader Battery */
 			displayUploaderBatteryEnabled = LayoutFactory.createCheckMark(uploaderBatteryEnabledValue);
 			displayUploaderBatteryEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
-			
-			/* Enable/Disable Outcome */
-			displayOutcomeEnabled = LayoutFactory.createCheckMark(outcomeEnabledValue);
-			displayOutcomeEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
-			
-			/* Enable/Disable Effect */
-			displayEffectEnabled = LayoutFactory.createCheckMark(effectEnabledValue);
-			displayEffectEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			/* Enable/Disable OpenAPS Moment */
 			displayOpenAPSMomentEnabled = LayoutFactory.createCheckMark(openAPSMomentEnabledValue);
@@ -173,9 +166,17 @@ package ui.screens.display.settings.treatments
 			displaySAGEEnabled = LayoutFactory.createCheckMark(sageEnabledValue);
 			displaySAGEEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
 			
+			/* Enable/Disable Sensor Noise */
+			displaySensorNoiseEnabled = LayoutFactory.createCheckMark(sensorNoiseEnabledValue);
+			displaySensorNoiseEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
+			
 			/* Enable/Disable IAGE */
 			displayIAGEEnabled = LayoutFactory.createCheckMark(iageEnabledValue);
 			displayIAGEEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			/* Enable/Disable BAGE */
+			displayBAGEEnabled = LayoutFactory.createCheckMark(bageEnabledValue);
+			displayBAGEEnabled.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			/* Renderer */
 			itemRendererFactory = function():IListItemRenderer 
@@ -202,12 +203,13 @@ package ui.screens.display.settings.treatments
 			if (infoPillEnabledValue)
 			{
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"transmitter_battery"), accessory: displayTransmitterBatteryEnabled, selectable: false });
-				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"raw_glucose_extended"), accessory: displayRawEnabled, selectable: false });
+				if (!CGMBlueToothDevice.isBlueReader() && !CGMBlueToothDevice.isBluKon() && !CGMBlueToothDevice.isLimitter() && !CGMBlueToothDevice.isMiaoMiao() && !CGMBlueToothDevice.isTransmiter_PL())
+					data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"raw_glucose_extended"), accessory: displayRawEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"sensor_age"), accessory: displaySAGEEnabled, selectable: false });
+				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"sensor_noise_label"), accessory: displaySensorNoiseEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"canula_age"), accessory: displayCAGEEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"insulin_age"), accessory: displayIAGEEnabled, selectable: false });
-				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"glucose_outcome"), accessory: displayOutcomeEnabled, selectable: false });
-				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"glucose_effect"), accessory: displayEffectEnabled, selectable: false });
+				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"battery_age"), accessory: displayBAGEEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"basal_insulin"), accessory: displayBasalEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"openaps_moment"), accessory: displayOpenAPSMomentEnabled, selectable: false });
 				data.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen',"loop_moment"), accessory: displayLoopMomentEnabled, selectable: false });
@@ -238,12 +240,6 @@ package ui.screens.display.settings.treatments
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_UPLOADER_BATTERY_ON) != String(uploaderBatteryEnabledValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_UPLOADER_BATTERY_ON, String(uploaderBatteryEnabledValue));
 			
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OUTCOME_ON) != String(outcomeEnabledValue))
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_OUTCOME_ON, String(outcomeEnabledValue));
-			
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_EFFECT_ON) != String(effectEnabledValue))
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_EFFECT_ON, String(effectEnabledValue));
-			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OPENAPS_MOMENT_ON) != String(openAPSMomentEnabledValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_OPENAPS_MOMENT_ON, String(openAPSMomentEnabledValue));
 			
@@ -268,8 +264,14 @@ package ui.screens.display.settings.treatments
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SAGE_ON) != String(sageEnabledValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SAGE_ON, String(sageEnabledValue));
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_INFO_PILL_SENSOR_NOISE_ON) != String(sensorNoiseEnabledValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_INFO_PILL_SENSOR_NOISE_ON, String(sensorNoiseEnabledValue));
+			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_IAGE_ON) != String(iageEnabledValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_IAGE_ON, String(iageEnabledValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BAGE_ON) != String(bageEnabledValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BAGE_ON, String(bageEnabledValue));
 			
 			needsSave = false;
 		}
@@ -284,7 +286,9 @@ package ui.screens.display.settings.treatments
 				item.accessoryField = "accessory";
 				item.itemHasSelectable = true;
 				item.selectableField = "selectable";
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				item.accessoryLabelProperties.wordWrap = true;
+				item.defaultLabelProperties.wordWrap = true;
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 						item.paddingLeft = 30;
@@ -305,8 +309,6 @@ package ui.screens.display.settings.treatments
 			rawEnabledValue = displayRawEnabled.isSelected;
 			basalEnabledValue = displayBasalEnabled.isSelected;
 			uploaderBatteryEnabledValue = displayUploaderBatteryEnabled.isSelected;
-			outcomeEnabledValue = displayOutcomeEnabled.isSelected;
-			effectEnabledValue = displayEffectEnabled.isSelected;
 			openAPSMomentEnabledValue = displayOpenAPSMomentEnabled.isSelected;
 			loopMomentEnabledValue = displayLoopMomentEnabled.isSelected;
 			pumpBatteryEnabledValue = displayPumpBatteryEnabled.isSelected;
@@ -315,7 +317,9 @@ package ui.screens.display.settings.treatments
 			pumpTimeEnabledValue = displayPumpTimeEnabled.isSelected;
 			cageEnabledValue = displayCAGEEnabled.isSelected;
 			sageEnabledValue = displaySAGEEnabled.isSelected;
+			sensorNoiseEnabledValue = displaySensorNoiseEnabled.isSelected;
 			iageEnabledValue = displayIAGEEnabled.isSelected;
+			bageEnabledValue = displayBAGEEnabled.isSelected;
 			
 			refreshContent();
 			
@@ -353,20 +357,6 @@ package ui.screens.display.settings.treatments
 				displayUploaderBatteryEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
 				displayUploaderBatteryEnabled.dispose();
 				displayUploaderBatteryEnabled = null;
-			}
-			
-			if (displayOutcomeEnabled != null)
-			{
-				displayOutcomeEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
-				displayOutcomeEnabled.dispose();
-				displayOutcomeEnabled = null;
-			}
-			
-			if (displayEffectEnabled != null)
-			{
-				displayEffectEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
-				displayEffectEnabled.dispose();
-				displayEffectEnabled = null;
 			}
 			
 			if (displayOpenAPSMomentEnabled != null)
@@ -425,11 +415,25 @@ package ui.screens.display.settings.treatments
 				displaySAGEEnabled = null;
 			}
 			
+			if (displaySensorNoiseEnabled != null)
+			{
+				displaySensorNoiseEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
+				displaySensorNoiseEnabled.dispose();
+				displaySensorNoiseEnabled = null;
+			}
+			
 			if (displayIAGEEnabled != null)
 			{
 				displayIAGEEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
 				displayIAGEEnabled.dispose();
 				displayIAGEEnabled = null;
+			}
+			
+			if (displayBAGEEnabled != null)
+			{
+				displayBAGEEnabled.removeEventListener(Event.CHANGE, onSettingsChanged);
+				displayBAGEEnabled.dispose();
+				displayBAGEEnabled = null;
 			}
 			
 			if (displayTransmitterBatteryEnabled != null)

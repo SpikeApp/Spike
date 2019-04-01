@@ -8,6 +8,7 @@ package ui.screens.display
 	import feathers.controls.Button;
 	import feathers.controls.Check;
 	import feathers.controls.Label;
+	import feathers.controls.LayoutGroup;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
 	import feathers.controls.Radio;
@@ -15,7 +16,9 @@ package ui.screens.display
 	import feathers.controls.ToggleSwitch;
 	import feathers.core.ToggleGroup;
 	import feathers.layout.HorizontalAlign;
+	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalAlign;
+	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -44,7 +47,7 @@ package ui.screens.display
 		}
 		
 		//Input Text Fields
-		public static function createTextInput(isPassword:Boolean = false, isNumeric: Boolean = false, width:Number = 140, horizontalAlign:String = null, isNumericExtended:Boolean = false, isEmail:Boolean = false, isURL:Boolean = false, capitalizeOnFirstFocus:Boolean = false, autoCorrect:Boolean = false):TextInput
+		public static function createTextInput(isPassword:Boolean = false, isNumeric: Boolean = false, width:Number = 140, horizontalAlign:String = null, isNumericExtended:Boolean = false, isEmail:Boolean = false, isURL:Boolean = false, capitalizeOnFirstFocus:Boolean = false, autoCorrect:Boolean = false, isNumericExtendedWithNegatives:Boolean = false):TextInput
 		{
 			var inputField:TextInput = new TextInput();
 			inputField.displayAsPassword = isPassword;
@@ -65,6 +68,12 @@ package ui.screens.display
 			else if (isNumericExtended)
 			{
 				inputField.restrict = "0-9.,";
+				inputField.textEditorProperties.softKeyboardType = SoftKeyboardType.DECIMAL;
+				
+			}
+			else if (isNumericExtendedWithNegatives)
+			{
+				inputField.restrict = "0-9.,\\-";
 				inputField.textEditorProperties.softKeyboardType = SoftKeyboardType.DECIMAL;
 				
 			}
@@ -198,6 +207,33 @@ package ui.screens.display
 				stepper.value = currentValue;
 			stepper.step = step;
 			return stepper;
+		}
+		
+		//Horizontal LayoutGroups
+		public static function createLayoutGroup(orientation:String, horizontalAlign:String = HorizontalAlign.LEFT, verticalAlign:String = VerticalAlign.MIDDLE, gap:Number = 0):LayoutGroup
+		{
+			var group:LayoutGroup = new LayoutGroup();
+			
+			if (orientation == "horizontal")
+			{
+				var horizontalLayout:HorizontalLayout = new HorizontalLayout();
+				horizontalLayout.horizontalAlign = horizontalAlign;
+				horizontalLayout.verticalAlign = verticalAlign;
+				horizontalLayout.gap = gap;
+				
+				group.layout = horizontalLayout;
+			}
+			else if (orientation == "vertical")
+			{
+				var verticalLayout:VerticalLayout = new VerticalLayout();
+				verticalLayout.horizontalAlign = horizontalAlign;
+				verticalLayout.verticalAlign = verticalAlign;
+				verticalLayout.gap = gap;
+				
+				group.layout = verticalLayout;
+			}
+			
+			return group;
 		}
 	}
 }

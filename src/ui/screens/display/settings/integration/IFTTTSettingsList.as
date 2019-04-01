@@ -1,9 +1,13 @@
 package ui.screens.display.settings.integration
 {
+	import flash.display.StageOrientation;
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
 	
+	import cryptography.Keys;
+	
 	import database.BgReading;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
@@ -14,10 +18,13 @@ package ui.screens.display.settings.integration
 	import feathers.controls.NumericStepper;
 	import feathers.controls.TextInput;
 	import feathers.controls.ToggleSwitch;
+	import feathers.controls.renderers.DefaultListItemRenderer;
+	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
 	import feathers.layout.VerticalAlign;
+	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
@@ -29,6 +36,7 @@ package ui.screens.display.settings.integration
 	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
+	import utils.Cryptography;
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("iftttsettingsscreen")]
@@ -86,6 +94,28 @@ package ui.screens.display.settings.integration
 		private var fastRiseGlucoseSnoozedCheck:Check;
 		private var fastDropGlucoseTriggeredCheck:Check;
 		private var fastDropGlucoseSnoozedCheck:Check;
+		private var treatmentExerciseAddedCheck:Check;
+		private var treatmentExerciseUpdatedCheck:Check;
+		private var treatmentExerciseDeletedCheck:Check;
+		private var treatmentInsulinCartridgeAddedCheck:Check;
+		private var treatmentInsulinCartridgeUpdatedCheck:Check;
+		private var treatmentInsulinCartridgeDeletedCheck:Check;
+		private var treatmentPumpSiteAddedCheck:Check;
+		private var treatmentPumpSiteUpdatedCheck:Check;
+		private var treatmentPumpSiteDeletedCheck:Check;
+		private var treatmentPumpBatteryAddedCheck:Check;
+		private var treatmentPumpBatteryUpdatedCheck:Check;
+		private var treatmentPumpBatteryDeletedCheck:Check;
+		private var glucoseDivideByThresholdCheck:Check;
+		private var basalTempStartAddedCheck:Check;
+		private var basalTempStartUpdatedCheck:Check;
+		private var basalTempStartDeletedCheck:Check;
+		private var basalTempEndAddedCheck:Check;
+		private var basalTempEndUpdatedCheck:Check;
+		private var basalTempEndDeletedCheck:Check;
+		private var basalMDIAddedCheck:Check;
+		private var basalMDIUpdatedCheck:Check;
+		private var basalMDIDeletedCheck:Check;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -134,11 +164,34 @@ package ui.screens.display.settings.integration
 		private var isIFTTTFastRiseSnoozedEnabled:Boolean;
 		private var isIFTTTFastDropTriggeredEnabled:Boolean;
 		private var isIFTTTFastDropSnoozedEnabled:Boolean;
+		private var isIFTTTexerciseTreatmentAddedEnabled:Boolean;
+		private var isIFTTTexerciseTreatmentUpdatedEnabled:Boolean;
+		private var isIFTTTexerciseTreatmentDeletedEnabled:Boolean;
+		private var isIFTTTinsulinCartridgeTreatmentAddedEnabled:Boolean;
+		private var isIFTTTinsulinCartridgeTreatmentUpdatedEnabled:Boolean;
+		private var isIFTTTinsulinCartridgeTreatmentDeletedEnabled:Boolean;
+		private var isIFTTTpumpSiteTreatmentAddedEnabled:Boolean;
+		private var isIFTTTpumpSiteTreatmentUpdatedEnabled:Boolean;
+		private var isIFTTTpumpSiteTreatmentDeletedEnabled:Boolean;
+		private var isIFTTTpumpBatteryTreatmentAddedEnabled:Boolean;
+		private var isIFTTTpumpBatteryTreatmentUpdatedEnabled:Boolean;
+		private var isIFTTTpumpBatteryTreatmentDeletedEnabled:Boolean;
+		private var isIFTTGlucoseEventsDividedByThreshold:Boolean;
+		private var isIFTTTtempBasalStartAddedEnabled:Boolean;
+		private var isIFTTTtempBasalStartUpdatedEnabled:Boolean;
+		private var isIFTTTtempBasalStartDeletedEnabled:Boolean;
+		private var isIFTTTtempBasalEndAddedEnabled:Boolean;
+		private var isIFTTTtempBasalEndUpdatedEnabled:Boolean;
+		private var isIFTTTtempBasalEndDeletedEnabled:Boolean;
+		private var isIFTTTmdiBasalAddedEnabled:Boolean;
+		private var isIFTTTmdiBasalUpdatedEnabled:Boolean;
+		private var isIFTTTmdiBasalDeletedEnabled:Boolean;
 
 		public function IFTTTSettingsList()
 		{
 			super();
 		}
+		
 		override protected function initialize():void 
 		{
 			super.initialize();
@@ -187,7 +240,8 @@ package ui.screens.display.settings.integration
 			isIFTTTTransmitterLowBatteryTriggeredEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TRANSMITTER_LOW_BATTERY_TRIGGERED_ON) == "true";
 			isIFTTTTransmitterLowBatterySnoozedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TRANSMITTER_LOW_BATTERY_SNOOZED_ON) == "true";
 			isIFTTTGlucoseReadingsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_READING_ON) == "true";
-			makerKeyValue = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY);
+			isIFTTGlucoseEventsDividedByThreshold = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_DIVIDE_BG_EVENTS_BY_THRESHOLD_ON) == "true";
+			makerKeyValue = Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY));
 			isIFTTTGlucoseThresholdsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_THRESHOLDS_ON) == "true";
 			highGlucoseThresholdValue = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_HIGH_THRESHOLD));
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true")
@@ -213,6 +267,27 @@ package ui.screens.display.settings.integration
 			isIFTTTnoteTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_NOTE_DELETED_ON) == "true";
 			isIFTTTiobUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_IOB_UPDATED_ON) == "true";
 			isIFTTTcobUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_COB_UPDATED_ON) == "true";
+			isIFTTTexerciseTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_ADDED_ON) == "true";
+			isIFTTTexerciseTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_UPDATED_ON) == "true";
+			isIFTTTexerciseTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_DELETED_ON) == "true";
+			isIFTTTinsulinCartridgeTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_ADDED_ON) == "true";
+			isIFTTTinsulinCartridgeTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_UPDATED_ON) == "true";
+			isIFTTTinsulinCartridgeTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_DELETED_ON) == "true";
+			isIFTTTpumpSiteTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_ADDED_ON) == "true";
+			isIFTTTpumpSiteTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_UPDATED_ON) == "true";
+			isIFTTTpumpSiteTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_DELETED_ON) == "true";
+			isIFTTTpumpBatteryTreatmentAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_ADDED_ON) == "true";
+			isIFTTTpumpBatteryTreatmentUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_UPDATED_ON) == "true";
+			isIFTTTpumpBatteryTreatmentDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_DELETED_ON) == "true";
+			isIFTTTtempBasalStartAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_ADDED_ON) == "true";
+			isIFTTTtempBasalStartUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_UPDATED_ON) == "true";
+			isIFTTTtempBasalStartDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_DELETED_ON) == "true";
+			isIFTTTtempBasalEndAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_ADDED_ON) == "true";
+			isIFTTTtempBasalEndUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_UPDATED_ON) == "true";
+			isIFTTTtempBasalEndDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_DELETED_ON) == "true";
+			isIFTTTmdiBasalAddedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_ADDED_ON) == "true";
+			isIFTTTmdiBasalUpdatedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_UPDATED_ON) == "true";
+			isIFTTTmdiBasalDeletedEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_DELETED_ON) == "true";
 		}
 		
 		private function setupContent():void
@@ -234,14 +309,15 @@ package ui.screens.display.settings.integration
 			instructionsButton.addEventListener(Event.TRIGGERED, onShowInstructions);
 			
 			//Maker Key Input Field
-			makerKeyTextInput = LayoutFactory.createTextInput(false, false, Constants.deviceModel != DeviceInfo.IPHONE_X ? 160 : 130, HorizontalAlign.RIGHT);
+			makerKeyTextInput = LayoutFactory.createTextInput(false, false, Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? 160 : 130, HorizontalAlign.RIGHT);
 			if (!Constants.isPortrait) makerKeyTextInput.width += 100;
 			makerKeyTextInput.fontStyles.size = 11;
 			makerKeyTextInput.text = makerKeyValue;
 			makerKeyTextInput.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//Maker Key Description
-			makerKeyDescriptionLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","maker_key_description_label"), HorizontalAlign.CENTER, VerticalAlign.TOP, Constants.deviceModel != DeviceInfo.IPHONE_X ? 10 : 9);
+			makerKeyDescriptionLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","maker_key_description_label"), HorizontalAlign.CENTER, VerticalAlign.TOP, Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? 10 : 9);
+			makerKeyDescriptionLabel.wordWrap = true;
 			makerKeyDescriptionLabel.width = width - 10;
 			
 			//Glucose tresholds on/off switch
@@ -276,6 +352,10 @@ package ui.screens.display.settings.integration
 			//Glucose Readings
 			glucoseReadingCheck = LayoutFactory.createCheckMark(isIFTTTGlucoseReadingsEnabled);
 			glucoseReadingCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Divide Glucose Thresholds
+			glucoseDivideByThresholdCheck = LayoutFactory.createCheckMark(isIFTTGlucoseEventsDividedByThreshold);
+			glucoseDivideByThresholdCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			//HTTP Server
 			httpServerErrorsCheck = LayoutFactory.createCheckMark(isIFTTTinteralServerErrorsEnabled);
@@ -413,6 +493,42 @@ package ui.screens.display.settings.integration
 			treatmentMealDeletedCheck = LayoutFactory.createCheckMark(isIFTTTmealTreatmentDeletedEnabled);
 			treatmentMealDeletedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 			
+			//Treatment Temp Basal Start Added
+			basalTempStartAddedCheck = LayoutFactory.createCheckMark(isIFTTTtempBasalStartAddedEnabled);
+			basalTempStartAddedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Temp Basal Start Updated
+			basalTempStartUpdatedCheck = LayoutFactory.createCheckMark(isIFTTTtempBasalStartUpdatedEnabled);
+			basalTempStartUpdatedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Temp Basal Start Deleted
+			basalTempStartDeletedCheck = LayoutFactory.createCheckMark(isIFTTTtempBasalStartDeletedEnabled);
+			basalTempStartDeletedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Temp Basal End Added
+			basalTempEndAddedCheck = LayoutFactory.createCheckMark(isIFTTTtempBasalEndAddedEnabled);
+			basalTempEndAddedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Temp Basal End Updated
+			basalTempEndUpdatedCheck = LayoutFactory.createCheckMark(isIFTTTtempBasalEndUpdatedEnabled);
+			basalTempEndUpdatedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Temp Basal End Deleted
+			basalTempEndDeletedCheck = LayoutFactory.createCheckMark(isIFTTTtempBasalEndDeletedEnabled);
+			basalTempEndDeletedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment MDI Basal Added
+			basalMDIAddedCheck = LayoutFactory.createCheckMark(isIFTTTmdiBasalAddedEnabled);
+			basalMDIAddedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment MDI Basal Updated
+			basalMDIUpdatedCheck = LayoutFactory.createCheckMark(isIFTTTmdiBasalUpdatedEnabled);
+			basalMDIUpdatedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment MDI Basal Deleted
+			basalMDIDeletedCheck = LayoutFactory.createCheckMark(isIFTTTmdiBasalDeletedEnabled);
+			basalMDIDeletedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
 			//Treatment BGCheck Added
 			treatmentBGCheckAddedCheck = LayoutFactory.createCheckMark(isIFTTTbgCheckTreatmentAddedEnabled);
 			treatmentBGCheckAddedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
@@ -436,6 +552,54 @@ package ui.screens.display.settings.integration
 			//Treatment Note Deleted
 			treatmentNoteDeletedCheck = LayoutFactory.createCheckMark(isIFTTTnoteTreatmentDeletedEnabled);
 			treatmentNoteDeletedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+
+			//Treatment Exercise Added
+			treatmentExerciseAddedCheck = LayoutFactory.createCheckMark(isIFTTTexerciseTreatmentAddedEnabled);
+			treatmentExerciseAddedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Exercise Updated
+			treatmentExerciseUpdatedCheck = LayoutFactory.createCheckMark(isIFTTTexerciseTreatmentUpdatedEnabled);
+			treatmentExerciseUpdatedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Exercise Deleted
+			treatmentExerciseDeletedCheck = LayoutFactory.createCheckMark(isIFTTTexerciseTreatmentDeletedEnabled);
+			treatmentExerciseDeletedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+
+			//Treatment Insulin Cartridge Added
+			treatmentInsulinCartridgeAddedCheck = LayoutFactory.createCheckMark(isIFTTTinsulinCartridgeTreatmentAddedEnabled);
+			treatmentInsulinCartridgeAddedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Insulin Cartridge Updated
+			treatmentInsulinCartridgeUpdatedCheck = LayoutFactory.createCheckMark(isIFTTTinsulinCartridgeTreatmentUpdatedEnabled);
+			treatmentInsulinCartridgeUpdatedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Insulin Cartridge Deleted
+			treatmentInsulinCartridgeDeletedCheck = LayoutFactory.createCheckMark(isIFTTTinsulinCartridgeTreatmentDeletedEnabled);
+			treatmentInsulinCartridgeDeletedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+
+			//Treatment Pump Site Added
+			treatmentPumpSiteAddedCheck = LayoutFactory.createCheckMark(isIFTTTpumpSiteTreatmentAddedEnabled);
+			treatmentPumpSiteAddedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Pump Site Updated
+			treatmentPumpSiteUpdatedCheck = LayoutFactory.createCheckMark(isIFTTTpumpSiteTreatmentUpdatedEnabled);
+			treatmentPumpSiteUpdatedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Pump Site Deleted
+			treatmentPumpSiteDeletedCheck = LayoutFactory.createCheckMark(isIFTTTpumpSiteTreatmentDeletedEnabled);
+			treatmentPumpSiteDeletedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+
+			//Treatment Pump Battery Added
+			treatmentPumpBatteryAddedCheck = LayoutFactory.createCheckMark(isIFTTTpumpBatteryTreatmentAddedEnabled);
+			treatmentPumpBatteryAddedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Pump Battery Updated
+			treatmentPumpBatteryUpdatedCheck = LayoutFactory.createCheckMark(isIFTTTpumpBatteryTreatmentUpdatedEnabled);
+			treatmentPumpBatteryUpdatedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			
+			//Treatment Pump Battery Deleted
+			treatmentPumpBatteryDeletedCheck = LayoutFactory.createCheckMark(isIFTTTpumpBatteryTreatmentDeletedEnabled);
+			treatmentPumpBatteryDeletedCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 			
 			reloadContent();
 		}
@@ -457,6 +621,10 @@ package ui.screens.display.settings.integration
 					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","low_threshold_label"), accessory: lowGlucoseThresholdStepper } );
 				}
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","glucose_readings_label"), accessory: glucoseReadingCheck } );
+				if (isIFTTTGlucoseReadingsEnabled)
+				{
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","glucose_thresholds_separated_by_events_label"), accessory: glucoseDivideByThresholdCheck } );
+				}
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","http_server_errors"), accessory: httpServerErrorsCheck } );
 				screenContent.push( { label: "", accessory: alarmsLabel } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","fast_rise_glucose_triggered_label"), accessory: fastRiseGlucoseTriggeredCheck } );
@@ -471,32 +639,71 @@ package ui.screens.display.settings.integration
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","low_glucose_snoozed_label"), accessory: lowGlucoseSnoozedCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","urgent_low_glucose_triggered_label"), accessory: urgentLowGlucoseTriggeredCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","urgent_low_glucose_snoozed_label"), accessory: urgentLowGlucoseSnoozedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","calibration_request_triggered_label"), accessory: calibrationTriggeredCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","calibration_request_snoozed_label"), accessory: calibrationSnoozedCheck } );
+				if (!CGMBlueToothDevice.isFollower())
+				{
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","calibration_request_triggered_label"), accessory: calibrationTriggeredCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","calibration_request_snoozed_label"), accessory: calibrationSnoozedCheck } );
+				}
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","missed_readings_triggered_label"), accessory: missedReadingsTriggeredCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","missed_readings_snoozed_label"), accessory: missedReadingsSnoozedCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","phone_muted_triggered_label"), accessory: phoneMutedTriggeredCheck } );
 				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","phone_muted_snoozed_label"), accessory: phoneMutedSnoozedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","transmitter_battery_triggered_label"), accessory: transmitterLowBatteryTriggeredCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","transmitter_battery_snoozed_label"), accessory: transmitterLowBatterySnoozedCheck } );
-				screenContent.push( { label: "", accessory: treatmentsLabel } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","iob_updated_label"), accessory: treatmentIOBUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","cob_updated_label"), accessory: treatmentCOBUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bolus_added_label"), accessory: treatmentBolusAddedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bolus_updated_label"), accessory: treatmentBolusUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bolus_deleted_label"), accessory: treatmentBolusDeletedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","carbs_added_label"), accessory: treatmentCarbsAddedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","carbs_updated_label"), accessory: treatmentCarbsUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","carbs_deleted_label"), accessory: treatmentCarbsDeletedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_added_label"), accessory: treatmentMealAddedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_updated_label"), accessory: treatmentMealUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_deleted_label"), accessory: treatmentMealDeletedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_added_label"), accessory: treatmentBGCheckAddedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_updated_label"), accessory: treatmentBGCheckUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_deleted_label"), accessory: treatmentBGCheckDeletedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","note_added_label"), accessory: treatmentNoteAddedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","note_updated_label"), accessory: treatmentNoteUpdatedCheck } );
-				screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","note_deleted_label"), accessory: treatmentNoteDeletedCheck } );
+				if (!CGMBlueToothDevice.isFollower())
+				{
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","transmitter_battery_triggered_label"), accessory: transmitterLowBatteryTriggeredCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","transmitter_battery_snoozed_label"), accessory: transmitterLowBatterySnoozedCheck } );
+				}
+				
+				if (!CGMBlueToothDevice.isDexcomFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) == "true")
+				{
+					screenContent.push( { label: "", accessory: treatmentsLabel } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","iob_updated_label"), accessory: treatmentIOBUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","cob_updated_label"), accessory: treatmentCOBUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bolus_added_label"), accessory: treatmentBolusAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bolus_updated_label"), accessory: treatmentBolusUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bolus_deleted_label"), accessory: treatmentBolusDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","carbs_added_label"), accessory: treatmentCarbsAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","carbs_updated_label"), accessory: treatmentCarbsUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","carbs_deleted_label"), accessory: treatmentCarbsDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_added_label"), accessory: treatmentMealAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_updated_label"), accessory: treatmentMealUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","meal_deleted_label"), accessory: treatmentMealDeletedCheck } );
+					
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump")
+					{
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","temp_basal_start_added_label"), accessory: basalTempStartAddedCheck } );
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","temp_basal_start_updated_label"), accessory: basalTempStartUpdatedCheck } );
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","temp_basal_start_deleted_label"), accessory: basalTempStartDeletedCheck } );
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","temp_basal_end_added_label"), accessory: basalTempEndAddedCheck } );
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","temp_basal_end_updated_label"), accessory: basalTempEndUpdatedCheck } );
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","temp_basal_end_deleted_label"), accessory: basalTempEndDeletedCheck } );
+					}
+					else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "mdi")
+					{
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","mdi_basal_added_label"), accessory: basalMDIAddedCheck } );
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","mdi_basal_updated_label"), accessory: basalMDIUpdatedCheck } );
+						screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","mdi_basal_deleted_label"), accessory: basalMDIDeletedCheck } );
+					}
+					
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_added_label"), accessory: treatmentBGCheckAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_updated_label"), accessory: treatmentBGCheckUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","bgcheck_deleted_label"), accessory: treatmentBGCheckDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","note_added_label"), accessory: treatmentNoteAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","note_updated_label"), accessory: treatmentNoteUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","note_deleted_label"), accessory: treatmentNoteDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","exercise_added_label"), accessory: treatmentExerciseAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","exercise_updated_label"), accessory: treatmentExerciseUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","exercise_deleted_label"), accessory: treatmentExerciseDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","insulin_cartridge_added_label"), accessory: treatmentInsulinCartridgeAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","insulin_cartridge_updated_label"), accessory: treatmentInsulinCartridgeUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","insulin_cartridge_deleted_label"), accessory: treatmentInsulinCartridgeDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_site_added_label"), accessory: treatmentPumpSiteAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_site_updated_label"), accessory: treatmentPumpSiteUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_site_deleted_label"), accessory: treatmentPumpSiteDeletedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_battery_added_label"), accessory: treatmentPumpBatteryAddedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_battery_updated_label"), accessory: treatmentPumpBatteryUpdatedCheck } );
+					screenContent.push( { label: ModelLocator.resourceManagerInstance.getString("iftttsettingsscreen","pump_battery_deleted_label"), accessory: treatmentPumpBatteryDeletedCheck } );
+				}
 			}
 			
 			dataProvider = screenContent;
@@ -571,8 +778,12 @@ package ui.screens.display.settings.integration
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_READING_ON) != String(isIFTTTGlucoseReadingsEnabled))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_READING_ON, String(isIFTTTGlucoseReadingsEnabled));
 			
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY) != makerKeyValue.replace(" ", ""))
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY, makerKeyValue.replace(" ", ""));
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_DIVIDE_BG_EVENTS_BY_THRESHOLD_ON) != String(isIFTTGlucoseEventsDividedByThreshold))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_DIVIDE_BG_EVENTS_BY_THRESHOLD_ON, String(isIFTTGlucoseEventsDividedByThreshold));
+			
+			var masterKeyToSave:String = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, makerKeyValue.replace(" ", ""));
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY) != masterKeyToSave)
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY, masterKeyToSave);
 			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_THRESHOLDS_ON) != String(isIFTTTGlucoseThresholdsEnabled))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_GLUCOSE_THRESHOLDS_ON, String(isIFTTTGlucoseThresholdsEnabled));
@@ -625,6 +836,33 @@ package ui.screens.display.settings.integration
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MEAL_DELETED_ON) != String(isIFTTTmealTreatmentDeletedEnabled))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MEAL_DELETED_ON, String(isIFTTTmealTreatmentDeletedEnabled));
 			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_ADDED_ON) != String(isIFTTTtempBasalStartAddedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_ADDED_ON, String(isIFTTTtempBasalStartAddedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_UPDATED_ON) != String(isIFTTTtempBasalStartUpdatedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_UPDATED_ON, String(isIFTTTtempBasalStartUpdatedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_DELETED_ON) != String(isIFTTTtempBasalStartDeletedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_START_DELETED_ON, String(isIFTTTtempBasalStartDeletedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_ADDED_ON) != String(isIFTTTtempBasalEndAddedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_ADDED_ON, String(isIFTTTtempBasalEndAddedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_UPDATED_ON) != String(isIFTTTtempBasalEndUpdatedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_UPDATED_ON, String(isIFTTTtempBasalEndUpdatedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_DELETED_ON) != String(isIFTTTtempBasalEndDeletedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_TEMP_BASAL_END_DELETED_ON, String(isIFTTTtempBasalEndDeletedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_ADDED_ON) != String(isIFTTTmdiBasalAddedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_ADDED_ON, String(isIFTTTmdiBasalAddedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_UPDATED_ON) != String(isIFTTTmdiBasalUpdatedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_UPDATED_ON, String(isIFTTTmdiBasalUpdatedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_DELETED_ON) != String(isIFTTTmdiBasalDeletedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MDI_BASAL_DELETED_ON, String(isIFTTTmdiBasalDeletedEnabled));
+			
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_BGCHECK_ADDED_ON) != String(isIFTTTbgCheckTreatmentAddedEnabled))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_BGCHECK_ADDED_ON, String(isIFTTTbgCheckTreatmentAddedEnabled));
 			
@@ -649,13 +887,49 @@ package ui.screens.display.settings.integration
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_COB_UPDATED_ON) != String(isIFTTTcobUpdatedEnabled))
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_COB_UPDATED_ON, String(isIFTTTcobUpdatedEnabled));
 			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_ADDED_ON) != String(isIFTTTexerciseTreatmentAddedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_ADDED_ON, String(isIFTTTexerciseTreatmentAddedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_UPDATED_ON) != String(isIFTTTexerciseTreatmentUpdatedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_UPDATED_ON, String(isIFTTTexerciseTreatmentUpdatedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_DELETED_ON) != String(isIFTTTexerciseTreatmentDeletedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_EXERCISE_DELETED_ON, String(isIFTTTexerciseTreatmentDeletedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_ADDED_ON) != String(isIFTTTinsulinCartridgeTreatmentAddedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_ADDED_ON, String(isIFTTTinsulinCartridgeTreatmentAddedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_UPDATED_ON) != String(isIFTTTinsulinCartridgeTreatmentUpdatedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_UPDATED_ON, String(isIFTTTinsulinCartridgeTreatmentUpdatedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_DELETED_ON) != String(isIFTTTinsulinCartridgeTreatmentDeletedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_INSULIN_CARTRIDGE_DELETED_ON, String(isIFTTTinsulinCartridgeTreatmentDeletedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_ADDED_ON) != String(isIFTTTpumpSiteTreatmentAddedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_ADDED_ON, String(isIFTTTpumpSiteTreatmentAddedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_UPDATED_ON) != String(isIFTTTpumpSiteTreatmentUpdatedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_UPDATED_ON, String(isIFTTTpumpSiteTreatmentUpdatedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_DELETED_ON) != String(isIFTTTpumpSiteTreatmentDeletedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_SITE_DELETED_ON, String(isIFTTTpumpSiteTreatmentDeletedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_ADDED_ON) != String(isIFTTTpumpBatteryTreatmentAddedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_ADDED_ON, String(isIFTTTpumpBatteryTreatmentAddedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_UPDATED_ON) != String(isIFTTTpumpBatteryTreatmentUpdatedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_UPDATED_ON, String(isIFTTTpumpBatteryTreatmentUpdatedEnabled));
+			
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_DELETED_ON) != String(isIFTTTpumpBatteryTreatmentDeletedEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_PUMP_BATTERY_DELETED_ON, String(isIFTTTpumpBatteryTreatmentDeletedEnabled));
+			
 			needsSave = false;
 		}
 		
 		/**
 		 * Event Handlers
 		 */
-		private function onSettingsChanged(E:Event):void
+		private function onSettingsChanged(e:Event):void
 		{
 			/* Update Internal Variables */
 			isIFTTTFastRiseTriggeredEnabled = fastRiseGlucoseTriggeredCheck.isSelected;
@@ -692,6 +966,15 @@ package ui.screens.display.settings.integration
 			isIFTTTmealTreatmentAddedEnabled = treatmentMealAddedCheck.isSelected;
 			isIFTTTmealTreatmentUpdatedEnabled = treatmentMealUpdatedCheck.isSelected;
 			isIFTTTmealTreatmentDeletedEnabled = treatmentMealDeletedCheck.isSelected;
+			isIFTTTtempBasalStartAddedEnabled = basalTempStartAddedCheck.isSelected;
+			isIFTTTtempBasalStartUpdatedEnabled = basalTempStartUpdatedCheck.isSelected;
+			isIFTTTtempBasalStartDeletedEnabled = basalTempStartDeletedCheck.isSelected;
+			isIFTTTtempBasalEndAddedEnabled = basalTempEndAddedCheck.isSelected;
+			isIFTTTtempBasalEndUpdatedEnabled = basalTempEndUpdatedCheck.isSelected;
+			isIFTTTtempBasalEndDeletedEnabled = basalTempEndDeletedCheck.isSelected;
+			isIFTTTmdiBasalAddedEnabled = basalMDIAddedCheck.isSelected;
+			isIFTTTmdiBasalUpdatedEnabled = basalMDIUpdatedCheck.isSelected;
+			isIFTTTmdiBasalDeletedEnabled = basalMDIDeletedCheck.isSelected;
 			isIFTTTbgCheckTreatmentAddedEnabled = treatmentBGCheckAddedCheck.isSelected;
 			isIFTTTbgCheckTreatmentUpdatedEnabled = treatmentBGCheckUpdatedCheck.isSelected;
 			isIFTTTbgCheckTreatmentDeletedEnabled = treatmentBGCheckDeletedCheck.isSelected;
@@ -700,8 +983,26 @@ package ui.screens.display.settings.integration
 			isIFTTTnoteTreatmentDeletedEnabled = treatmentNoteDeletedCheck.isSelected;
 			isIFTTTiobUpdatedEnabled = treatmentIOBUpdatedCheck.isSelected;
 			isIFTTTcobUpdatedEnabled = treatmentCOBUpdatedCheck.isSelected;
+			isIFTTTexerciseTreatmentAddedEnabled = treatmentExerciseAddedCheck.isSelected;
+			isIFTTTexerciseTreatmentUpdatedEnabled = treatmentExerciseUpdatedCheck.isSelected;
+			isIFTTTexerciseTreatmentDeletedEnabled = treatmentExerciseDeletedCheck.isSelected;
+			isIFTTTinsulinCartridgeTreatmentAddedEnabled = treatmentInsulinCartridgeAddedCheck.isSelected;
+			isIFTTTinsulinCartridgeTreatmentUpdatedEnabled = treatmentInsulinCartridgeUpdatedCheck.isSelected;
+			isIFTTTinsulinCartridgeTreatmentDeletedEnabled = treatmentInsulinCartridgeDeletedCheck.isSelected;
+			isIFTTTpumpSiteTreatmentAddedEnabled = treatmentPumpSiteAddedCheck.isSelected;
+			isIFTTTpumpSiteTreatmentUpdatedEnabled = treatmentPumpSiteUpdatedCheck.isSelected;
+			isIFTTTpumpSiteTreatmentDeletedEnabled = treatmentPumpSiteDeletedCheck.isSelected;
+			isIFTTTpumpBatteryTreatmentAddedEnabled = treatmentPumpBatteryAddedCheck.isSelected;
+			isIFTTTpumpBatteryTreatmentUpdatedEnabled = treatmentPumpBatteryUpdatedCheck.isSelected;
+			isIFTTTpumpBatteryTreatmentDeletedEnabled = treatmentPumpBatteryDeletedCheck.isSelected;
+			isIFTTGlucoseEventsDividedByThreshold = glucoseDivideByThresholdCheck.isSelected;
 			
 			needsSave = true;
+			
+			if (e.currentTarget == glucoseReadingCheck)
+			{
+				reloadContent();
+			}
 		}
 		
 		private function onSettingsReload(event:Event):void
@@ -735,7 +1036,7 @@ package ui.screens.display.settings.integration
 			
 			if (makerKeyTextInput != null)
 			{
-				makerKeyTextInput.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? 160 : 130;
+				makerKeyTextInput.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? 160 : 130;
 				if (!Constants.isPortrait)
 					makerKeyTextInput.width += 100;
 			}
@@ -746,6 +1047,44 @@ package ui.screens.display.settings.integration
 		/**
 		 * Utility
 		 */
+		override protected function setupRenderFactory():void
+		{
+			/* List Item Renderer */
+			itemRendererFactory = function():IListItemRenderer 
+			{
+				const item:DefaultListItemRenderer = new DefaultListItemRenderer();
+				item.labelField = "label";
+				item.accessoryField = "accessory";
+				item.iconSourceField = "icon";
+				item.accessoryLabelProperties.wordWrap = true;
+				item.defaultLabelProperties.wordWrap = true;
+				item.paddingTop = item.paddingBottom = 10;
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						item.paddingLeft = 30;
+						if (noRightPadding) item.paddingRight = 0;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+						item.paddingRight = 30;
+				}
+				else
+					if (noRightPadding) item.paddingRight = 0;
+				
+				return item;
+			};
+		}
+		
+		override protected function draw():void
+		{
+			super.draw();
+			
+			if ((layout as VerticalLayout) != null)
+				(layout as VerticalLayout).hasVariableItemDimensions = true;
+		}
+		
 		override public function dispose():void
 		{
 			if(IFTTTToggle != null)
@@ -907,6 +1246,13 @@ package ui.screens.display.settings.integration
 				glucoseReadingCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
 				glucoseReadingCheck.dispose();
 				glucoseReadingCheck = null;
+			}
+			
+			if(glucoseDivideByThresholdCheck != null)
+			{
+				glucoseDivideByThresholdCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				glucoseDivideByThresholdCheck.dispose();
+				glucoseDivideByThresholdCheck = null;
 			}
 			
 			if(makerKeyTextInput != null)
@@ -1087,6 +1433,153 @@ package ui.screens.display.settings.integration
 				treatmentNoteDeletedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
 				treatmentNoteDeletedCheck.dispose();
 				treatmentNoteDeletedCheck = null;
+			}
+			
+			if(treatmentExerciseAddedCheck != null)
+			{
+				treatmentExerciseAddedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				treatmentExerciseAddedCheck.dispose();
+				treatmentExerciseAddedCheck = null;
+			}
+			
+			if(treatmentExerciseUpdatedCheck != null)
+			{
+				treatmentExerciseUpdatedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				treatmentExerciseUpdatedCheck.dispose();
+				treatmentExerciseUpdatedCheck = null;
+			}
+			
+			if(treatmentExerciseDeletedCheck != null)
+			{
+				treatmentExerciseDeletedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				treatmentExerciseDeletedCheck.dispose();
+				treatmentExerciseDeletedCheck = null;
+			}
+			
+			if(treatmentInsulinCartridgeAddedCheck != null)
+			{
+				treatmentInsulinCartridgeAddedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				treatmentInsulinCartridgeAddedCheck.dispose();
+				treatmentInsulinCartridgeAddedCheck = null;
+			}
+			
+			if(treatmentInsulinCartridgeUpdatedCheck != null)
+			{
+				treatmentInsulinCartridgeUpdatedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				treatmentInsulinCartridgeUpdatedCheck.dispose();
+				treatmentInsulinCartridgeUpdatedCheck = null;
+			}
+			
+			if(treatmentInsulinCartridgeDeletedCheck != null)
+			{
+				treatmentInsulinCartridgeDeletedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				treatmentInsulinCartridgeDeletedCheck.dispose();
+				treatmentInsulinCartridgeDeletedCheck = null;
+			}
+			
+			if(treatmentPumpSiteAddedCheck != null)
+			{
+				treatmentPumpSiteAddedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				treatmentPumpSiteAddedCheck.dispose();
+				treatmentPumpSiteAddedCheck = null;
+			}
+			
+			if(treatmentPumpSiteUpdatedCheck != null)
+			{
+				treatmentPumpSiteUpdatedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				treatmentPumpSiteUpdatedCheck.dispose();
+				treatmentPumpSiteUpdatedCheck = null;
+			}
+			
+			if(treatmentPumpSiteDeletedCheck != null)
+			{
+				treatmentPumpSiteDeletedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				treatmentPumpSiteDeletedCheck.dispose();
+				treatmentPumpSiteDeletedCheck = null;
+			}
+			
+			if(treatmentPumpBatteryAddedCheck != null)
+			{
+				treatmentPumpBatteryAddedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				treatmentPumpBatteryAddedCheck.dispose();
+				treatmentPumpBatteryAddedCheck = null;
+			}
+			
+			if(treatmentPumpBatteryUpdatedCheck != null)
+			{
+				treatmentPumpBatteryUpdatedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				treatmentPumpBatteryUpdatedCheck.dispose();
+				treatmentPumpBatteryUpdatedCheck = null;
+			}
+			
+			if(treatmentPumpBatteryDeletedCheck != null)
+			{
+				treatmentPumpBatteryDeletedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				treatmentPumpBatteryDeletedCheck.dispose();
+				treatmentPumpBatteryDeletedCheck = null;
+			}
+			
+			if(basalTempStartAddedCheck != null)
+			{
+				basalTempStartAddedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalTempStartAddedCheck.dispose();
+				basalTempStartAddedCheck = null;
+			}
+			
+			if(basalTempStartUpdatedCheck != null)
+			{
+				basalTempStartUpdatedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalTempStartUpdatedCheck.dispose();
+				basalTempStartUpdatedCheck = null;
+			}
+			
+			if(basalTempStartDeletedCheck != null)
+			{
+				basalTempStartDeletedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalTempStartDeletedCheck.dispose();
+				basalTempStartDeletedCheck = null;
+			}
+			
+			if(basalTempEndAddedCheck != null)
+			{
+				basalTempEndAddedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalTempEndAddedCheck.dispose();
+				basalTempEndAddedCheck = null;
+			}
+			
+			if(basalTempEndUpdatedCheck != null)
+			{
+				basalTempEndUpdatedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalTempEndUpdatedCheck.dispose();
+				basalTempEndUpdatedCheck = null;
+			}
+			
+			if(basalTempEndDeletedCheck != null)
+			{
+				basalTempEndDeletedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalTempEndDeletedCheck.dispose();
+				basalTempEndDeletedCheck = null;
+			}
+			
+			if(basalMDIAddedCheck != null)
+			{
+				basalMDIAddedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalMDIAddedCheck.dispose();
+				basalMDIAddedCheck = null;
+			}
+			
+			if(basalMDIUpdatedCheck != null)
+			{
+				basalMDIUpdatedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalMDIUpdatedCheck.dispose();
+				basalMDIUpdatedCheck = null;
+			}
+			
+			if(basalMDIDeletedCheck != null)
+			{
+				basalMDIDeletedCheck.removeEventListener( Event.CHANGE, onSettingsChanged);	
+				basalMDIDeletedCheck.dispose();
+				basalMDIDeletedCheck = null;
 			}
 			
 			super.dispose();

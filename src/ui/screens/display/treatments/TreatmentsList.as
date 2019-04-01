@@ -1,6 +1,8 @@
 package ui.screens.display.treatments
 {
-	import database.BlueToothDevice;
+	import flash.system.System;
+	
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.Sensor;
@@ -16,10 +18,12 @@ package ui.screens.display.treatments
 	
 	import services.CalibrationService;
 	
+	import starling.display.DisplayObject;
 	import starling.display.Image;
 	import starling.events.Event;
 	import starling.textures.Texture;
 	
+	import treatments.BolusWizard;
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
@@ -49,6 +53,20 @@ package ui.screens.display.treatments
 		private var mealImage:Image;
 		private var treatmentsTexture:Texture;
 		private var treatmentsImage:Image;
+		private var bolusWizardTexture:Texture;
+		private var bolusWizardImage:Image;
+		private var exerciseTexture:Texture;
+		private var exerciseImage:Image;
+		private var insulinCartridgeTexture:Texture;
+		private var insulinCartridgeImage:Image;
+		private var pumpSiteTexture:Texture;
+		private var pumpSiteImage:Image;
+		private var pumpBatteryTexture:Texture;
+		private var pumpBatteryImage:Image;
+		private var basalStartTexture:Texture;
+		private var basalStartImage:Image;
+		private var basalEndTexture:Texture;
+		private var basalEndImage:Image;
 		
 		/* Properties */
 		private var calibrationButtonEnabled:Boolean = false;
@@ -56,7 +74,7 @@ package ui.screens.display.treatments
 		private var numBgReadings:int = 0;
 		private var canAddTreatments:Boolean = false;
 		private var canSeeTreatments:Boolean = false;
-		
+
 		public function TreatmentsList()
 		{
 			super();
@@ -90,15 +108,20 @@ package ui.screens.display.treatments
 			numBgReadings = ModelLocator.bgReadings.length;
 			
 			//Images & Textures
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
 				calibrationTexture = MaterialDeepGreyAmberMobileThemeIcons.calibrationTexture;
 				calibrationImage = new Image(calibrationTexture);
 			}
-			if (treatmentsEnabled && (!BlueToothDevice.isFollower() || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout")))
+
+			if (treatmentsEnabled && (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout")))
 			{
 				bolusTexture = MaterialDeepGreyAmberMobileThemeIcons.insulinTexture;
 				bolusImage = new Image(bolusTexture);
+				basalStartTexture = MaterialDeepGreyAmberMobileThemeIcons.basalStartTexture;
+				basalStartImage = new Image(basalStartTexture);
+				basalEndTexture = MaterialDeepGreyAmberMobileThemeIcons.basalEndTexture;
+				basalEndImage = new Image(basalEndTexture);
 				carbsTexture = MaterialDeepGreyAmberMobileThemeIcons.carbsTexture;
 				carbsImage = new Image(carbsTexture);
 				mealTexture = MaterialDeepGreyAmberMobileThemeIcons.mealTexture;
@@ -107,7 +130,18 @@ package ui.screens.display.treatments
 				bgCheckImage = new Image(bgCheckTexture);
 				noteTexture = MaterialDeepGreyAmberMobileThemeIcons.noteTexture;
 				noteImage = new Image(noteTexture);
+				bolusWizardTexture = MaterialDeepGreyAmberMobileThemeIcons.bolusWizardTexture;
+				bolusWizardImage = new Image(bolusWizardTexture);
+				exerciseTexture = MaterialDeepGreyAmberMobileThemeIcons.exerciseTexture;
+				exerciseImage = new Image(exerciseTexture);
+				insulinCartridgeTexture = MaterialDeepGreyAmberMobileThemeIcons.insulinCartridgeTexture;
+				insulinCartridgeImage = new Image(insulinCartridgeTexture);
+				pumpSiteTexture = MaterialDeepGreyAmberMobileThemeIcons.pumpSiteTexture;
+				pumpSiteImage = new Image(pumpSiteTexture);
+				pumpBatteryTexture = MaterialDeepGreyAmberMobileThemeIcons.pumpBatteryTexture;
+				pumpBatteryImage = new Image(pumpBatteryTexture);
 			}
+			
 			if (treatmentsEnabled)
 			{
 				treatmentsTexture = MaterialDeepGreyAmberMobileThemeIcons.treatmentsTexture;
@@ -118,29 +152,47 @@ package ui.screens.display.treatments
 		private function setupContent():void
 		{
 			/* Content */
-			if (Calibration.allForSensor().length > 1 && (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING))
+			if ((Calibration.allForSensor().length > 1 && (!CGMBlueToothDevice.isFollower()) || ModelLocator.INTERNAL_TESTING))
 				calibrationButtonEnabled = true;
 			
-			if ((numBgReadings > 2 && Calibration.allForSensor().length > 1 && Sensor.getActiveSensor() != null) || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
+			if ((numBgReadings > 2 && Calibration.allForSensor().length > 1 && Sensor.getActiveSensor() != null) || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 				canAddTreatments = true;
 			
-			if (numBgReadings > 2 || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
+			if (numBgReadings > 2 || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 				canSeeTreatments = true;
 			
 			var menuData:Array = [];
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('chartscreen','calibration_button_title'), icon: calibrationImage, selectable: calibrationButtonEnabled, id: 1 } );
-			if (treatmentsEnabled && (!BlueToothDevice.isFollower() || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout")))
+			
+			if (treatmentsEnabled && (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout")))
 			{
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bolus'), icon: bolusImage, selectable: canAddTreatments, id: 2 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_carbs'), icon: carbsImage, selectable: canAddTreatments, id: 3 } );
 				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_meal'), icon: mealImage, selectable: canAddTreatments, id: 4 } );
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check'), icon: bgCheckImage, selectable: canAddTreatments, id: 5 } );
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note'), icon: noteImage, selectable: canAddTreatments, id: 6 } );
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump")
+				{
+					menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_temp_basal_start'), icon: basalStartImage, selectable: canAddTreatments, id: 5 } );
+					menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_temp_basal_end'), icon: basalEndImage, selectable: canAddTreatments, id: 6 } );
+				}
+				else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "mdi")
+				{
+					menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_basal'), icon: basalStartImage, selectable: canAddTreatments, id: 7 } );
+				}
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','bolus_wizard_settings_label'), icon: bolusWizardImage, selectable: canAddTreatments, id: 8 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_bg_check'), icon: bgCheckImage, selectable: canAddTreatments, id: 9 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_note'), icon: noteImage, selectable: canAddTreatments, id: 10 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_exercise'), icon: exerciseImage, selectable: canAddTreatments, id: 11 } );
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump")
+				{
+					menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_insulin_cartridge_change'), icon: insulinCartridgeImage, selectable: canAddTreatments, id: 12 } );
+					menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_site_change'), icon: pumpSiteImage, selectable: canAddTreatments, id: 13 } );
+					menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_battery_change'), icon: pumpBatteryImage, selectable: canAddTreatments, id: 14 } );
+				}
 			}
 			if (treatmentsEnabled)
 			{
-				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatments_screen_title'), icon: treatmentsImage, selectable: canSeeTreatments, id: 7 } );
+				menuData.push( { label: ModelLocator.resourceManagerInstance.getString('treatments','treatments_screen_title'), icon: treatmentsImage, selectable: canSeeTreatments, id: 15 } );
 			}
 			
 			dataProvider = new ListCollection(menuData);
@@ -198,15 +250,15 @@ package ui.screens.display.treatments
 			setItemRendererFactoryWithID( "treatment-list-item", treatmentListItemFactory );
 			
 			//Menu Factory
-			if (!BlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
+			if (!CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 			{
 				factoryIDFunction = function( item:Object, index:int ):String
 				{
-					if(index === 0)
+					if(index === 0 && !CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING)
 						return "calibration-item";
-					else if(index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6)
+					else if(index == 0 || index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6 || index == 7 || index == 8 || index == 9 || index == 10 || index == 11 || index == 12 || index == 13 || index == 14 || index == 15)
 						return "treatment-item";
-					else if(index == 6)
+					else if(index == 16)
 						return "treatment-list-item";
 					
 					return "default-item";
@@ -258,19 +310,67 @@ package ui.screens.display.treatments
 				
 				TreatmentsManager.addTreatment(Treatment.TYPE_MEAL_BOLUS);
 			}
-			else if(treatmentID == 5) //BG Check
+			else if(treatmentID == 5) //Temp Basal Start
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_TEMP_BASAL);
+			}
+			else if(treatmentID == 6) //Temp Basal Start
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_TEMP_BASAL_END);
+			}
+			else if(treatmentID == 7) //Pen Basal
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_MDI_BASAL);
+			}
+			else if(treatmentID == 8) //Bolus Wizard
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				BolusWizard.display();
+			}
+			else if(treatmentID == 9) //BG Check
 			{	
 				dispatchEventWith(CLOSE); //Close Menu
 				
 				TreatmentsManager.addTreatment(Treatment.TYPE_GLUCOSE_CHECK);
 			}
-			else if(treatmentID == 6) //Note
+			else if(treatmentID == 10) //Note
 			{	
 				dispatchEventWith(CLOSE); //Close Menu
 				
 				TreatmentsManager.addTreatment(Treatment.TYPE_NOTE);
 			}
-			else if(treatmentID == 7) //All Treatments
+			else if(treatmentID == 11) //Exercise
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_EXERCISE);
+			}
+			else if(treatmentID == 12) //Insulin Cartridge
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE);
+			}
+			else if(treatmentID == 13) //Pump Site
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_PUMP_SITE_CHANGE);
+			}
+			else if(treatmentID == 14) //Pump Battery
+			{	
+				dispatchEventWith(CLOSE); //Close Menu
+				
+				TreatmentsManager.addTreatment(Treatment.TYPE_PUMP_BATTERY_CHANGE);
+			}
+			else if(treatmentID == 15) //Treatments Manager
 			{	
 				dispatchEventWith(CLOSE); //Close Menu
 				
@@ -285,6 +385,16 @@ package ui.screens.display.treatments
 		{
 			removeEventListener( Event.CHANGE, onMenuChanged );
 			
+			if (dataProvider != null)
+			{
+				dataProvider.dispose( function( item:Object ):void
+				{
+					var icon:DisplayObject = DisplayObject(item.icon);
+					if (icon != null)
+						icon.dispose();
+				});
+			}
+			
 			if (calibrationTexture != null)
 			{
 				calibrationTexture.dispose();
@@ -293,6 +403,8 @@ package ui.screens.display.treatments
 			
 			if (calibrationImage != null)
 			{
+				if (calibrationImage.texture != null)
+					calibrationImage.texture.dispose();
 				calibrationImage.dispose();
 				calibrationImage = null;
 			}
@@ -305,6 +417,8 @@ package ui.screens.display.treatments
 			
 			if (bolusImage != null)
 			{
+				if (bolusImage.texture != null)
+					bolusImage.texture.dispose();
 				bolusImage.dispose();
 				bolusImage = null;
 			}
@@ -317,6 +431,8 @@ package ui.screens.display.treatments
 			
 			if (noteImage != null)
 			{
+				if (noteImage.texture != null)
+					noteImage.texture.dispose();
 				noteImage.dispose();
 				noteImage = null;
 			}
@@ -329,6 +445,8 @@ package ui.screens.display.treatments
 			
 			if (bgCheckImage != null)
 			{
+				if (bgCheckImage.texture != null)
+					bgCheckImage.texture.dispose();
 				bgCheckImage.dispose();
 				bgCheckImage = null;
 			}
@@ -341,6 +459,8 @@ package ui.screens.display.treatments
 			
 			if (carbsImage != null)
 			{
+				if (carbsImage.texture != null)
+					carbsImage.texture.dispose();
 				carbsImage.dispose();
 				carbsImage = null;
 			}
@@ -353,8 +473,38 @@ package ui.screens.display.treatments
 			
 			if (mealImage != null)
 			{
+				if (mealImage.texture != null)
+					mealImage.texture.dispose();
 				mealImage.dispose();
 				mealImage = null;
+			}
+			
+			if (basalStartTexture != null)
+			{
+				basalStartTexture.dispose();
+				basalStartTexture = null;
+			}
+			
+			if (basalStartImage != null)
+			{
+				if (basalStartImage.texture != null)
+					basalStartImage.texture.dispose();
+				basalStartImage.dispose();
+				basalStartImage = null;
+			}
+			
+			if (basalEndTexture != null)
+			{
+				basalEndTexture.dispose();
+				basalEndTexture = null;
+			}
+			
+			if (basalEndImage != null)
+			{
+				if (basalEndImage.texture != null)
+					basalEndImage.texture.dispose();
+				basalEndImage.dispose();
+				basalEndImage = null;
 			}
 			
 			if (treatmentsTexture != null)
@@ -365,11 +515,86 @@ package ui.screens.display.treatments
 			
 			if (treatmentsImage != null)
 			{
+				if (treatmentsImage.texture != null)
+					treatmentsImage.texture.dispose();
 				treatmentsImage.dispose();
 				treatmentsImage = null;
 			}
 			
+			if (bolusWizardTexture != null)
+			{
+				bolusWizardTexture.dispose();
+				bolusWizardTexture = null;
+			}
+			
+			if (bolusWizardImage != null)
+			{
+				if (bolusWizardImage.texture != null)
+					bolusWizardImage.texture.dispose();
+				bolusWizardImage.dispose();
+				bolusWizardImage = null;
+			}
+			
+			if (exerciseTexture != null)
+			{
+				exerciseTexture.dispose();
+				exerciseTexture = null;
+			}
+			
+			if (exerciseImage != null)
+			{
+				if (exerciseImage.texture != null)
+					exerciseImage.texture.dispose();
+				exerciseImage.dispose();
+				exerciseImage = null;
+			}
+			
+			if (insulinCartridgeTexture != null)
+			{
+				insulinCartridgeTexture.dispose();
+				insulinCartridgeTexture = null;
+			}
+			
+			if (insulinCartridgeImage != null)
+			{
+				if (insulinCartridgeImage.texture != null)
+					insulinCartridgeImage.texture.dispose();
+				insulinCartridgeImage.dispose();
+				insulinCartridgeImage = null;
+			}
+			
+			if (pumpSiteTexture != null)
+			{
+				pumpSiteTexture.dispose();
+				pumpSiteTexture = null;
+			}
+			
+			if (pumpSiteImage != null)
+			{
+				if (pumpSiteImage.texture != null)
+					pumpSiteImage.texture.dispose();
+				pumpSiteImage.dispose();
+				pumpSiteImage = null;
+			}
+			
+			if (pumpBatteryTexture != null)
+			{
+				pumpBatteryTexture.dispose();
+				pumpBatteryTexture = null;
+			}
+			
+			if (pumpBatteryImage != null)
+			{
+				if (pumpBatteryImage.texture != null)
+					pumpBatteryImage.texture.dispose();
+				pumpBatteryImage.dispose();
+				pumpBatteryImage = null;
+			}
+			
 			super.dispose();
+			
+			System.pauseForGCIfCollectionImminent(0);
+			System.gc();
 		}
 	}
 }

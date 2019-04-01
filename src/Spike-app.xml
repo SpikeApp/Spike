@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<application xmlns="http://ns.adobe.com/air/application/30.0">
+<application xmlns="http://ns.adobe.com/air/application/31.0">
 
 	<!-- Adobe AIR Application Descriptor File Template. Specifies parameters 
 		for identifying, installing, and launching AIR applications. xmlns - The 
@@ -11,7 +11,7 @@
 	<!-- A universally unique application identifier. Must be unique across 
 		all AIR applications. Using a reverse DNS-style name as the id is recommended. 
 		(Eg. com.example.ExampleApplication.) Required. -->
-	<id>com.spike-app.spike</id>
+	<id>org.nightscoutfoundation.spike</id>
 
 	<!-- Used as the filename for the application. Required. -->
 	<filename>Spike</filename>
@@ -25,7 +25,7 @@
 		can also be 1-part or 2-part. It is not necessary to have a 3-part value. 
 		An updated version of application must have a versionNumber value higher 
 		than the previous version. Required for namespace >= 2.5 . -->
-	<versionNumber>2.2.1</versionNumber>
+	<versionNumber>3.6.0</versionNumber>
 
 	<!-- A string value (such as "v1", "2.5", or "Alpha 1") that represents 
 		the version of the application, as it should be shown to users. Optional. -->
@@ -244,30 +244,99 @@
 				<array>
 					<dict>
 						<key>CFBundleURLName</key>
-						<string>com.spike-app.spike</string>
+						<string>org.nightscoutfoundation.spike</string>
 						<key>CFBundleURLSchemes</key>
 						<array>
 							<string>spikeapp</string>
 						</array>
 					</dict>
 				</array>
+				<key>NSCameraUsageDescription</key>
+				<string>Access to the camera is required.</string>
+				<key>CFBundleDocumentTypes</key>
+				<array>
+					<dict>
+						<key>CFBundleTypeName</key>
+						<string>Spike SQLite Viewer</string>
+						<key>CFBundleTypeRole</key>
+						<string>Viewer</string>
+						<key>LSHandlerRank</key>
+						<string>Owner</string>
+						<key>LSItemContentTypes</key>
+						<array>
+							<string>public.db</string>
+						</array>
+					</dict>
+					<dict>
+				        <key>CFBundleTypeName</key>
+				        <string>ZIP</string>
+				        <key>LSHandlerRank</key>
+				        <string>Alternate</string>
+				        <key>LSItemContentTypes</key>
+				        <array>
+				            <string>com.pkware.zip-archive</string>
+				            <string>public.zip-archive</string>
+				        </array>
+				    </dict>
+				</array>
+				<key>UTExportedTypeDeclarations</key>
+		        <array>
+		            <dict>
+		                <key>UTTypeIdentifier</key>
+		                <string>public.db</string>
+		                <key>UTTypeDescription</key>
+		                <string>Database File</string>
+		                <key>UTTypeConformsTo</key>
+		                <array>
+		                    <string>public.data</string>
+		                </array>
+		                <key>UTTypeTagSpecification</key>
+		                <dict>
+		                    <key>com.apple.ostype</key>
+		                    <string>sqlite3</string>
+		                    <key>public.filename-extension</key>
+		                    <array>
+		                        <string>db</string>
+		                    </array>
+		                    <key>public.mime-type</key>
+		                    <string>application/x-sqlite3</string>
+		                </dict>
+		            </dict>
+		        </array>
             ]]>
 		</InfoAdditions>
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->
-		<Entitlements> <![CDATA[
-		<key>application-identifier</key>
-		<string>AGW6KV7M2W.com.spike-app.spike</string>
-		<key>com.apple.developer.healthkit</key>
-		<true/>
-		<key>com.apple.security.application-groups</key>
-		<array>
-			<string>group.com.spike-app.spike</string>
-		</array>
-		<key>keychain-access-groups</key>
-		<array>
-		<string>AGW6KV7M2W.*</string>
-		</array>
-			 ]]></Entitlements>
+		<Entitlements> 
+			<![CDATA[
+				<key>application-identifier</key>
+				<string>M295NYD8ZT.org.nightscoutfoundation.spike</string>
+				<key>com.apple.developer.healthkit</key>
+				<true/>
+				<key>com.apple.security.application-groups</key>
+				<array>
+					<string>group.org.nightscoutfoundation.spike</string>
+				</array>
+				<key>keychain-access-groups</key>
+				<array>
+					<string>M295NYD8ZT.*</string>
+				</array>
+				<key>com.apple.developer.icloud-container-identifiers</key>
+				<array>
+					<string>iCloud.org.nightscoutfoundation.spike</string>
+				</array>
+				<key>com.apple.developer.icloud-services</key>
+				<array>
+					<string>CloudDocuments</string>
+					<string>CloudKit</string>
+				</array>
+				<key>com.apple.developer.ubiquity-container-identifiers</key>
+				<array>
+					<string>iCloud.org.nightscoutfoundation.spike</string>
+				</array>
+				<key>com.apple.developer.ubiquity-kvstore-identifier</key>
+				<string>M295NYD8ZT.org.nightscoutfoundation.spike</string>
+			 ]]>
+		</Entitlements>
 		<!-- 
 		TEST FLIGHT
 		<key>get-task-allow</key>
@@ -305,9 +374,12 @@
 		<extensionID>adobe.nativeExtension.3DiOS</extensionID>
 		<extensionID>com.distriqt.BluetoothLE</extensionID>
 		<extensionID>com.distriqt.Calendar</extensionID>
+		<extensionID>com.distriqt.CloudStorage</extensionID>
 		<extensionID>com.distriqt.Core</extensionID>
 		<extensionID>com.distriqt.NetworkInfo</extensionID>
 		<extensionID>com.distriqt.Notifications</extensionID>
+		<extensionID>com.distriqt.Scanner</extensionID>
+		<extensionID>com.distriqt.SystemGestures</extensionID>
     	<extensionID>com.spike-app.spike.AirNativeExtension</extensionID>
     </extensions>
 </application>

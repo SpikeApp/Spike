@@ -7,6 +7,11 @@ package com.spikeapp.spike.airlibrary
 	
 	public class SpikeANE extends EventDispatcher
 	{
+		public static const APPLICATION_DIR:String = "application";
+		public static const CACHE_DIR:String = "cache";
+		public static const DOCUMENTS_DIR:String = "documents";
+		public static const STORAGE_DIR:String = "storage";
+		
 		private static var _instance:SpikeANE = new SpikeANE();
 
 		public function SpikeANE(target:IEventDispatcher=null)
@@ -59,10 +64,49 @@ package com.spikeapp.spike.airlibrary
 		public static function confirmSensorChangeMiaoMiao():void {
 		}
 		
-		public static function disconnectMiaoMiao():void {
-		}		
+		/******************
+		 * G5 FUNCTIONS
+		 ******************/
+		public static function startScanningForG5():void {
+		}
 		
-		public static function reconnectMiaoMiao():void {
+		public static function setG5Mac(newMac:String):void {
+		}
+		
+		public static function resetG5Mac():void {
+		}
+		
+		public static function cancelG5Connection(MAC:String):void {
+		}
+		
+		public static function stopScanningG5():void {
+		}
+		
+		public static function forgetG5Peripheral():void {
+		}
+		
+		public static function startScanDeviceG5():void {
+		}
+		
+		public static function stopScanDeviceG5():void {
+		}
+		
+		public static function setTransmitterIdG5(transmitterID:String, cryptKey:ByteArray):void {
+		}
+		
+		public static function setG5Reset(resetG5:Boolean):void {
+		}
+		
+		public static function setTestData(testdata:ByteArray):void {
+		}
+		
+		public static function doG5FirmwareVersionRequest():void {
+		}
+		
+		public static function doG5BatteryInfoRequest():void {
+		}
+		
+		public static function disconnectG5():void {
 		}
 		
 		/****************
@@ -93,14 +137,14 @@ package com.spikeapp.spike.airlibrary
 		public static function stopPlayingSound():void {
 		}
 
-		public static function playSound(sound:String, volume:Number = Number.NaN):void {
+		public static function playSound(sound:String, volume:Number = Number.NaN, systemVolume:Number = Number.NaN):void {
 		}
 		
 		public static function isPlayingSound():Boolean {
 			return false;
 		}
 
-		public static function say(text:String, language:String):void {
+		public static function say(text:String, language:String, systemVolume:Number = Number.NaN):void {
 		}
 
 		public static function setAvAudioSessionCategory(toCategoryPlayback:Boolean):void {
@@ -125,6 +169,22 @@ package com.spikeapp.spike.airlibrary
 		
 		public static function getAppVersion():String {
 			return "x.x.x";
+		}
+		
+		public static function setDatabaseResetStatus(isResetted:Boolean):void {
+		}
+		
+		public static function getDatabaseResetStatus():Boolean {
+			return false;
+		}
+		
+		public static function terminateApp():void {
+		}
+		
+		public static function setStatusBarToWhite():void {
+		}
+		
+		public static function openWithDefaultApplication(filePath:String, basePath:String = APPLICATION_DIR):void{
 		}
 		
 		/**********

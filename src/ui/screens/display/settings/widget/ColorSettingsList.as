@@ -19,7 +19,7 @@ package ui.screens.display.settings.widget
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	
-	import ui.chart.ColorPicker;
+	import ui.chart.visualcomponents.ColorPicker;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
 	
@@ -284,7 +284,7 @@ package ui.screens.display.settings.widget
 				dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','main_line'), accessory: mainLineColorPicker });
 			dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','grid_lines'), accessory: gridLinesColorPicker });
 			dataList.push({ label: ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background'), accessory: backgroundColorPicker });
-			dataList.push({ label: Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity') : ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity_x'), accessory: opacityContainer });
+			dataList.push({ label: Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity') : ModelLocator.resourceManagerInstance.getString('widgetsettingsscreen','background_opacity_x'), accessory: opacityContainer });
 			dataList.push({ label: "", accessory: resetColors });
 			dataList.push({ label: "", accessory: copyColors });
 			

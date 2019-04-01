@@ -1,7 +1,7 @@
 package utils
 {
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import model.ModelLocator;
@@ -68,13 +68,13 @@ package utils
 		
 		public static function unitizedDeltaString(showUnit:Boolean,highGranularity:Boolean):String {
 			
-			var last2:Array = BgReading.latest(2, BlueToothDevice.isFollower());
+			var last2:Array = BgReading.latest(2, CGMBlueToothDevice.isFollower());
 			if(last2.length < 2 || (last2[0] as BgReading).timestamp - (last2[1] as BgReading).timestamp > MAX_SLOPE_MINUTES * 60 * 1000) {
 				// don't show delta if there are not enough values or the values are more than 20 mintes apart
 				return "???";
 			}
 			
-			var value:Number = BgReading.currentSlope(BlueToothDevice.isFollower()) * 5 * 60 * 1000;
+			var value:Number = BgReading.currentSlope(CGMBlueToothDevice.isFollower()) * 5 * 60 * 1000;
 			if(Math.abs(value) > 100){
 				// a delta > 100 will not happen with real BG values -> problematic sensor data
 				return "ERR";

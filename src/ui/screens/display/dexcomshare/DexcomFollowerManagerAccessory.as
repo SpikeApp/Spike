@@ -88,6 +88,8 @@ package ui.screens.display.dexcomshare
 			{
 				editButtonTexture.dispose();
 				editButtonTexture = null;
+				if (editButtonIcon.texture != null)
+					editButtonIcon.texture.dispose();
 				editButtonIcon.dispose();
 				editButtonIcon = null;
 				editButton.removeEventListener(Event.TRIGGERED, onEdit);
@@ -99,6 +101,8 @@ package ui.screens.display.dexcomshare
 			{
 				deleteButtonTexture.dispose();
 				deleteButtonTexture = null;
+				if (deleteButtonIcon.texture != null)
+					deleteButtonIcon.texture.dispose();
 				deleteButtonIcon.dispose();
 				deleteButtonIcon = null;
 				deleteButton.removeEventListener(Event.TRIGGERED, onDelete);

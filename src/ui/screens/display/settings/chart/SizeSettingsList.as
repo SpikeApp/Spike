@@ -5,6 +5,7 @@ package ui.screens.display.settings.chart
 	import feathers.controls.NumericStepper;
 	import feathers.controls.Slider;
 	import feathers.data.ArrayCollection;
+	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
@@ -27,6 +28,8 @@ package ui.screens.display.settings.chart
 		private var glucoseDisplayFontSize:Slider;
 		private var timeAgoDisplayFontSize:Slider;
 		private var axisFontSize:Slider;
+		private var glucoseLineThickness:NumericStepper;
+		private var basalsSizePercentage:NumericStepper;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -34,7 +37,9 @@ package ui.screens.display.settings.chart
 		private var glucoseFontSizeValue:Number;
 		private var timeAgoFontSizeValue:Number;
 		private var axisFontSizeValue:Number;
-		
+		private var glucoseLineThicknessValue:Number;
+		private var basalsSizePercentageValue:Number;
+
 		public function SizeSettingsList()
 		{
 			super(true);
@@ -65,12 +70,18 @@ package ui.screens.display.settings.chart
 			glucoseMarkerRadius = LayoutFactory.createNumericStepper(1, 5, 3);
 			glucoseMarkerRadius.validate();
 			
+			glucoseLineThickness = LayoutFactory.createNumericStepper(1, 3, 1);
+			glucoseLineThickness.validate();
+			
+			basalsSizePercentage = LayoutFactory.createNumericStepper(5, 50, 20);
+			basalsSizePercentage.validate();
+			
 			glucoseDisplayFontSize = new Slider();
 			glucoseDisplayFontSize.minimum = 0;
 			glucoseDisplayFontSize.maximum = 100;
 			glucoseDisplayFontSize.value = 50;
 			glucoseDisplayFontSize.step = 50;
-			glucoseDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+			glucoseDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? glucoseMarkerRadius.width : 100;
 			if (!Constants.isPortrait)
 				glucoseDisplayFontSize.width += 100;
 			glucoseDisplayFontSize.pivotX = 10;
@@ -80,7 +91,7 @@ package ui.screens.display.settings.chart
 			timeAgoDisplayFontSize.maximum = 100;
 			timeAgoDisplayFontSize.value = 50;
 			timeAgoDisplayFontSize.step = 50;
-			timeAgoDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+			timeAgoDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? glucoseMarkerRadius.width : 100;
 			if (!Constants.isPortrait)
 				timeAgoDisplayFontSize.width += 100;
 			timeAgoDisplayFontSize.pivotX = 10;
@@ -90,7 +101,7 @@ package ui.screens.display.settings.chart
 			axisFontSize.maximum = 100;
 			axisFontSize.value = 50;
 			axisFontSize.step = 50;
-			axisFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+			axisFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? glucoseMarkerRadius.width : 100;
 			if (!Constants.isPortrait)
 				axisFontSize.width += 100;
 			axisFontSize.pivotX = 10;
@@ -99,6 +110,8 @@ package ui.screens.display.settings.chart
 			dataProvider = new ArrayCollection(
 			[
 				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_marker_radius'), accessory: glucoseMarkerRadius },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_line_thickness'), accessory: glucoseLineThickness },
+				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','basal_area_size_settings_label'), accessory: basalsSizePercentage },
 				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','glucose_font_size'), accessory: glucoseDisplayFontSize },
 				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','time_ago_font_size'), accessory: timeAgoDisplayFontSize },
 				{ label: ModelLocator.resourceManagerInstance.getString('chartsettingsscreen','axis_font_size'), accessory: axisFontSize }
@@ -112,9 +125,13 @@ package ui.screens.display.settings.chart
 			glucoseFontSizeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_BG_FONT_SIZE));
 			timeAgoFontSizeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_TIMEAGO_FONT_SIZE));
 			axisFontSizeValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_FONT_SIZE));
+			glucoseLineThicknessValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_GLUCOSE_LINE_THICKNESS));
+			basalsSizePercentageValue = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_AREA_SIZE_PERCENTAGE));
 			
 			/* Set Control's Sizes */
 			glucoseMarkerRadius.value = glucoseMarkerRadiusValue;
+			glucoseLineThickness.value = glucoseLineThicknessValue;
+			basalsSizePercentage.value = basalsSizePercentageValue;
 			
 			if (glucoseFontSizeValue == 0.8)
 				glucoseDisplayFontSize.value = 0;
@@ -139,6 +156,8 @@ package ui.screens.display.settings.chart
 			
 			/* Set Event Listeners */
 			glucoseMarkerRadius.addEventListener(Event.CHANGE, onSizeChange);
+			glucoseLineThickness.addEventListener(Event.CHANGE, onSizeChange);
+			basalsSizePercentage.addEventListener(Event.CHANGE, onSizeChange);
 			glucoseDisplayFontSize.addEventListener(Event.CHANGE, onSizeChange);
 			timeAgoDisplayFontSize.addEventListener(Event.CHANGE, onSizeChange);
 			axisFontSize.addEventListener(Event.CHANGE, onSizeChange);
@@ -158,6 +177,12 @@ package ui.screens.display.settings.chart
 			if (Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_FONT_SIZE)) != axisFontSizeValue)
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_AXIS_FONT_SIZE, String(axisFontSizeValue));
 			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_GLUCOSE_LINE_THICKNESS) != String(glucoseLineThicknessValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_GLUCOSE_LINE_THICKNESS, String(glucoseLineThicknessValue));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASALS_AREA_SIZE_PERCENTAGE) != String(basalsSizePercentageValue))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BASALS_AREA_SIZE_PERCENTAGE, String(basalsSizePercentageValue));
+			
 			needsSave = false;
 		}
 		
@@ -168,6 +193,9 @@ package ui.screens.display.settings.chart
 		{
 			if (glucoseMarkerRadius.value != glucoseMarkerRadiusValue)
 				glucoseMarkerRadiusValue = glucoseMarkerRadius.value;
+			
+			glucoseLineThicknessValue = glucoseLineThickness.value;
+			basalsSizePercentageValue = basalsSizePercentage.value;
 			
 			if (glucoseDisplayFontSize.value == 0)
 				glucoseFontSizeValue = 0.8;
@@ -201,21 +229,21 @@ package ui.screens.display.settings.chart
 			{
 				if (glucoseDisplayFontSize != null)
 				{
-					glucoseDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+					glucoseDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? glucoseMarkerRadius.width : 100;
 					if (!Constants.isPortrait)
 						glucoseDisplayFontSize.width += 100;
 				}
 				
 				if (timeAgoDisplayFontSize != null)
 				{
-					timeAgoDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+					timeAgoDisplayFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? glucoseMarkerRadius.width : 100;
 					if (!Constants.isPortrait)
 						timeAgoDisplayFontSize.width += 100;
 				}
 				
 				if (axisFontSize != null)
 				{
-					axisFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X ? glucoseMarkerRadius.width : 100;
+					axisFontSize.width = Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? glucoseMarkerRadius.width : 100;
 					if (!Constants.isPortrait)
 						axisFontSize.width += 100;
 				}
@@ -227,6 +255,14 @@ package ui.screens.display.settings.chart
 		/**
 		 * Utility
 		 */
+		override protected function draw():void
+		{
+			if ((layout as VerticalLayout) != null)
+				(layout as VerticalLayout).hasVariableItemDimensions = true;
+			
+			super.draw();
+		}
+		
 		override public function dispose():void
 		{
 			if (glucoseMarkerRadius != null)
@@ -234,6 +270,20 @@ package ui.screens.display.settings.chart
 				glucoseMarkerRadius.removeEventListener(Event.CHANGE, onSizeChange);
 				glucoseMarkerRadius.dispose();
 				glucoseMarkerRadius = null;
+			}
+			
+			if (glucoseLineThickness != null)
+			{
+				glucoseLineThickness.removeEventListener(Event.CHANGE, onSizeChange);
+				glucoseLineThickness.dispose();
+				glucoseLineThickness = null;
+			}
+			
+			if (basalsSizePercentage != null)
+			{
+				basalsSizePercentage.removeEventListener(Event.CHANGE, onSizeChange);
+				basalsSizePercentage.dispose();
+				basalsSizePercentage = null;
 			}
 			
 			if(glucoseDisplayFontSize != null)

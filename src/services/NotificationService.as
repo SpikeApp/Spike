@@ -18,7 +18,7 @@ package services
 	import flash.utils.Timer;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.LocalSettings;
@@ -38,6 +38,7 @@ package services
 	import utils.BadgeBuilder;
 	import utils.BgGraphBuilder;
 	import utils.Trace;
+	import services.bluetooth.CGMBluetoothService;
 	
 	/**
 	 * This service<br>
@@ -94,7 +95,7 @@ package services
 		public static const ID_FOR_PATCH_READ_ERROR_BLUKON:int = 14;
 		public static const ID_FOR_APP_UPDATE:int = 15; //used ?
 		public static const ID_FOR_DEAD_G5_BATTERY_INFO:int = 16;
-		public static const ID_FOR_BAD_PLACED_G5_INFO:int = 17;
+		public static const ID_FOR_BAD_PLACED_G5_G6_INFO:int = 17;
 		public static const ID_FOR_OTHER_G5_APP:int = 18;
 		public static const ID_FOR_APPLICATION_INACTIVE_ALERT:int = 19;
 		public static const ID_FOR_DEAD_OR_EXPIRED_SENSOR_TRANSMITTER_PL:int = 20;
@@ -104,6 +105,7 @@ package services
 		public static const ID_FOR_G5_RESET_DONE:int = 24;
 		public static const ID_FOR_FAST_RISE_ALERT:int = 25;
 		public static const ID_FOR_FAST_DROP_ALERT:int = 26;
+		public static const ID_FOR_EXTENDED_BOLUS_ALERT:int = 27;
 		
 		public static const ID_FOR_ALERT_LOW_CATEGORY:String = "LOW_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_HIGH_CATEGORY:String = "HIGH_ALERT_CATEGORY";
@@ -187,6 +189,8 @@ package services
 			else
 				initialStart = false;
 			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
+			
 			Core.init();
 			Notifications.init(!ModelLocator.IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
 			if (!Notifications.isSupported) {
@@ -201,7 +205,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_LOW_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_LOW_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -212,7 +216,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_HIGH_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_HIGH_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -223,7 +227,7 @@ package services
 				.setIdentifier(ID_FOR_PHONE_MUTED_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_PHONE_MUTED_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -234,7 +238,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_BATTERY_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_BATTERY_LEVEL_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -245,7 +249,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_CALIBRATION_REQUEST_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -256,7 +260,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_VERY_LOW_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_VERY_LOW_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -267,7 +271,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_VERY_HIGH_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_VERY_HIGH_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -278,7 +282,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_MISSED_READING_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_MISSED_READING_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -289,7 +293,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_FAST_RISE_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_FAST_RISE_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -300,7 +304,7 @@ package services
 				.setIdentifier(ID_FOR_ALERT_FAST_DROP_CATEGORY)
 				.addAction( 
 					new ActionBuilder()
-					.setTitle(ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen"))
+					.setTitle("Snooze")
 					.setIdentifier(ID_FOR_FAST_DROP_ALERT_SNOOZE_IDENTIFIER)
 					.build()
 				)
@@ -311,8 +315,8 @@ package services
 			
 			alwaysOnNotificationsInterval = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL));
 			
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.GLUCOSE_PATCH_READ_ERROR, glucosePatchReadError);
+			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
+			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.GLUCOSE_PATCH_READ_ERROR, glucosePatchReadError);
 			
 			//var object:Object = Notifications.service.authorisationStatus();
 			switch (Notifications.service.authorisationStatus())
@@ -355,59 +359,60 @@ package services
 				Notifications.service.addEventListener(NotificationEvent.NOTIFICATION, notificationHandler);
 				Notifications.service.addEventListener(NotificationEvent.ACTION, notificationActionHandler);
 				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateBgNotification);
-				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, updateBgNotification);
+				TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, updateBgNotification);
 				NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, updateBgNotification);
+				DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, updateBgNotification);
 				Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
 				Notifications.service.register();
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onLocalSettingsChanged);
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingsChanged);
 			}
-			
-			function onLocalSettingsChanged(event:SettingsServiceEvent):void
+		}
+		
+		private static function onLocalSettingsChanged(event:SettingsServiceEvent):void
+		{
+			if (event.data == LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE || (event.data == LocalSettings.LOCAL_SETTING_APP_BADGE_MMOL_MULTIPLIER_ON && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true"))
 			{
-				if (event.data == LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE || (event.data == LocalSettings.LOCAL_SETTING_APP_BADGE_MMOL_MULTIPLIER_ON && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true"))
-				{
-					Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
-				}
-				else if (event.data == LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL)
-				{
-					alwaysOnNotificationsInterval = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL));
-				}
+				Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
 			}
-			
-			function onCommonSettingsChanged(event:SettingsServiceEvent):void
+			else if (event.data == LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL)
 			{
-				if (event.data == CommonSettings.COMMON_SETTING_DO_MGDL)
-				{
-					Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
-				}
+				alwaysOnNotificationsInterval = int(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION_INTERVAL));
 			}
-			
-			function appInForeGround(event:Event):void {
-				myTrace("in appInForeGround, setting systemIdleMode = SystemIdleMode.NORMAL");
-				NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
+		}
+		
+		private static function onCommonSettingsChanged(event:SettingsServiceEvent):void
+		{
+			if (event.data == CommonSettings.COMMON_SETTING_DO_MGDL)
+			{
+				Notifications.service.setBadgeNumber( BadgeBuilder.getAppBadge() );
 			}
-			
-			function notificationSelectedHandler(event:NotificationEvent):void {
-				myTrace("in notificationSelectedHandler at " + (new Date()).toLocaleTimeString());
-				var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT);
-				notificationServiceEvent.data = event;
-				_instance.dispatchEvent(notificationServiceEvent);
-			}
-			
-			function notificationHandler(event:NotificationEvent):void {
-				myTrace("in notificationHandler at " + (new Date()).toLocaleTimeString());
-				var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_EVENT);
-				notificationServiceEvent.data = event;
-				_instance.dispatchEvent(notificationServiceEvent);
-			}
-			
-			function notificationActionHandler(event:NotificationEvent):void {
-				myTrace("in notificationActionHandler at " + (new Date()).toLocaleTimeString());
-				var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_ACTION_EVENT);
-				notificationServiceEvent.data = event;
-				_instance.dispatchEvent(notificationServiceEvent);
-			}
+		}
+		
+		private static function appInForeGround(event:Event):void {
+			myTrace("in appInForeGround, setting systemIdleMode = SystemIdleMode.NORMAL");
+			NativeApplication.nativeApplication.systemIdleMode = SystemIdleMode.NORMAL;
+		}
+		
+		private static function notificationSelectedHandler(event:NotificationEvent):void {
+			myTrace("in notificationSelectedHandler at " + (new Date()).toLocaleTimeString());
+			var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT);
+			notificationServiceEvent.data = event;
+			_instance.dispatchEvent(notificationServiceEvent);
+		}
+		
+		private static function notificationHandler(event:NotificationEvent):void {
+			myTrace("in notificationHandler at " + (new Date()).toLocaleTimeString());
+			var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_EVENT);
+			notificationServiceEvent.data = event;
+			_instance.dispatchEvent(notificationServiceEvent);
+		}
+		
+		private static function notificationActionHandler(event:NotificationEvent):void {
+			myTrace("in notificationActionHandler at " + (new Date()).toLocaleTimeString());
+			var notificationServiceEvent:NotificationServiceEvent = new NotificationServiceEvent(NotificationServiceEvent.NOTIFICATION_ACTION_EVENT);
+			notificationServiceEvent.data = event;
+			_instance.dispatchEvent(notificationServiceEvent);
 		}
 		
 		public static function updateBgNotification(be:Event = null):void {
@@ -420,7 +425,7 @@ package services
 			//start with bgreading notification
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_NOTIFICATION) == "true" && SpikeANE.appIsInBackground() && ((receivedReadings - 2) % alwaysOnNotificationsInterval == 0)) {
 				myTrace("in updateBgNotification notificatoin always on and not in foreground");
-				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) {
+				if (Calibration.allForSensor().length >= 2 || CGMBlueToothDevice.isFollower()) {
 					lastBgReading = BgReading.lastNoSensor(); 
 					var valueToShow:String = "";
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2");
@@ -470,7 +475,7 @@ package services
 			{	
 				//App badge
 				myTrace("in updateBgNotification app badge on, local notifications off and not in foreground");
-				if (Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) {
+				if (Calibration.allForSensor().length >= 2 || CGMBlueToothDevice.isFollower()) {
 					lastBgReading = BgReading.lastNoSensor(); 
 					myTrace("in updateBgNotification Calibration.allForSensor().length >= 2, setting app badge");
 					
@@ -513,7 +518,7 @@ package services
 				returnValue = "ID_FOR_APP_UPDATE";
 			else if (id == ID_FOR_DEAD_G5_BATTERY_INFO)
 				returnValue = "ID_FOR_DEAD_G5_BATTERY_INFO";
-			else if (id == ID_FOR_BAD_PLACED_G5_INFO)
+			else if (id == ID_FOR_BAD_PLACED_G5_G6_INFO)
 				returnValue = "ID_FOR_BAD_PLACED_G5_INFO";
 			else if (id == ID_FOR_OTHER_G5_APP)
 				returnValue = "ID_FOR_OTHER_G5_APP";
@@ -532,6 +537,34 @@ package services
 			else if (id == ID_FOR_FAST_DROP_ALERT)
 				returnValue = "ID_FOR_FAST_DROP_ALERT";
 			return returnValue;
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			myTrace("Stopping service...");
+			
+			stopService();
+		}
+		
+		private static function stopService():void
+		{
+			CGMBluetoothService.instance.removeEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
+			CGMBluetoothService.instance.removeEventListener(BlueToothServiceEvent.GLUCOSE_PATCH_READ_ERROR, glucosePatchReadError);
+			Notifications.service.removeEventListener(NotificationEvent.NOTIFICATION_SELECTED, notificationSelectedHandler);
+			Notifications.service.removeEventListener(NotificationEvent.NOTIFICATION, notificationHandler);
+			Notifications.service.removeEventListener(NotificationEvent.ACTION, notificationActionHandler);
+			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, updateBgNotification);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, updateBgNotification);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, updateBgNotification);
+			DexcomShareService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, updateBgNotification);
+			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
+			LocalSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onLocalSettingsChanged);
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onCommonSettingsChanged);
+			
+			myTrace("Service stopped!");
 		}
 		
 		private static function myTrace(log:String):void {

@@ -7,7 +7,7 @@ package services
 	import flash.events.Event;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.LocalSettings;
@@ -16,27 +16,28 @@ package services
 	
 	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	import events.TreatmentsEvent;
 	
+	import model.Forecast;
 	import model.ModelLocator;
 	
+	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
-	import ui.chart.GlucoseFactory;
+	import ui.chart.helpers.GlucoseFactory;
 	
 	import utils.BgGraphBuilder;
 	import utils.GlucoseHelper;
+	import utils.TimeSpan;
 	import utils.Trace;
 	import utils.UniqueId;
 	
+	[ResourceBundle("treatments")]
+	
 	public class WatchService
 	{
-		/* Constants */
-		private static const TIME_5_MINUTES:int = (5 * 60 * 1000) + 7000;
-		private static const TIME_10_MINUTES:int = 10 * 60 * 1000;
-		private static const TIME_1_DAY:int = 24 * 60 * 60 * 1000;
-		
 		/* Properties */
 		private static var initialStart:Boolean = true;
 		private static var serviceActive:Boolean = false;
@@ -50,6 +51,7 @@ package services
 		private static var applyGapFix:Boolean;
 		private static var displayCOBEnabled:Boolean;
 		private static var displayIOBEnabled:Boolean;
+		private static var displayPredictionsEnabled:Boolean;
 		
 		public function WatchService()
 		{
@@ -59,6 +61,8 @@ package services
 		public static function init():void
 		{
 			Trace.myTrace("WatchService.as", "Service started!");
+			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			
 			try
 			{
@@ -85,12 +89,13 @@ package services
 		{
 			watchComplicationEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_ON) == "true";
 			displayNameEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_NAME_ON) == "true";
+			displayPredictionsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_PREDICTIONS_ON) == "true";
 			displayNameValue = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_NAME);
 			calendarID = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_SELECTED_CALENDAR_ID);;
 			displayTrendEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_TREND) == "true";
 			displayDeltaEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_DELTA) == "true";
 			displayUnitsEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_UNITS) == "true";
-			applyGapFix = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON) == "true";
+			applyGapFix = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON) == "true" || CGMBlueToothDevice.isFollower() || CGMBlueToothDevice.isMiaoMiao();
 			displayIOBEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_IOB_ON) == "true";
 			displayCOBEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_COB_ON) == "true";
 		}
@@ -100,8 +105,9 @@ package services
 			Trace.myTrace("WatchService.as", "Service activated!");
 			
 			serviceActive = true;
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBloodGlucoseReceived);
-			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBloodGlucoseReceived, false, 160, false);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived, false, 160, false);
+			DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived, false, 160, false);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentsChanged);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentsChanged);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentsChanged);
@@ -115,8 +121,9 @@ package services
 			Trace.myTrace("WatchService.as", "Service deactivated!");
 			
 			serviceActive = false;
-			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBloodGlucoseReceived);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBloodGlucoseReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
+			DexcomShareService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentsChanged);
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentsChanged);
 			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentsChanged);
@@ -129,7 +136,7 @@ package services
 			Trace.myTrace("WatchService.as", "Deleting all previous calendar events");
 			
 			var now:Date = new Date();
-			var past:Date = new Date(now.valueOf() - TIME_1_DAY);
+			var past:Date = new Date(now.valueOf() - TimeSpan.TIME_24_HOURS);
 			deleteEvents(past, now, calendarID, "Created by Spike");
 		}
 		
@@ -148,12 +155,12 @@ package services
 			Trace.myTrace("WatchService.as", "Syncing glucose and treatments to watch.");
 			
 			//Get glucose output
-			var currentReading:BgReading = !BlueToothDevice.isFollower() ? BgReading.lastNoSensor() : BgReading.lastWithCalculatedValue();
+			var currentReading:BgReading = !CGMBlueToothDevice.isFollower() ? BgReading.lastNoSensor() : BgReading.lastWithCalculatedValue();
 			var glucoseValue:String;
 			
 			//Initial Start Validation
 			if (initialStart)
-				if (currentReading == null || currentReading.calculatedValue == 0 || (new Date()).valueOf() - currentReading.timestamp > TIME_5_MINUTES)
+				if (currentReading == null || currentReading.calculatedValue == 0 || (new Date()).valueOf() - currentReading.timestamp > TimeSpan.TIME_5_MINUTES)
 					return;
 			
 			if (currentReading != null && currentReading.calculatedValue != 0) 
@@ -184,9 +191,9 @@ package services
 			
 			var future:Number;
 			if (currentReading != null && currentReading.calculatedValue != 0)
-				future = !applyGapFix ? currentReading.timestamp + TIME_5_MINUTES : currentReading.timestamp + TIME_10_MINUTES;
+				future = !applyGapFix ? currentReading.timestamp + TimeSpan.TIME_5_MINUTES : currentReading.timestamp + TimeSpan.TIME_10_MINUTES;
 			else
-				future = !applyGapFix ? new Date().valueOf() + TIME_5_MINUTES : new Date().valueOf() + TIME_10_MINUTES;
+				future = !applyGapFix ? new Date().valueOf() + TimeSpan.TIME_5_MINUTES : new Date().valueOf() + TimeSpan.TIME_10_MINUTES;
 			
 			//Title
 			var title:String = "";
@@ -198,11 +205,31 @@ package services
 				title += "\n";
 				var nowTreatments:Number = new Date().valueOf();
 				if (displayIOBEnabled && displayCOBEnabled)
-					title += "C:" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments)) + " " + "I:" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments));
+					title += ModelLocator.resourceManagerInstance.getString('treatments','cob_label').charAt(0) + ":" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob) + " " + ModelLocator.resourceManagerInstance.getString('treatments','iob_label').charAt(0) + ":" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments).iob);
 				else if (displayIOBEnabled)
-					title += "IOB:" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments));
+					title += ModelLocator.resourceManagerInstance.getString('treatments','iob_label') + ":" + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(nowTreatments).iob);
 				else if (displayCOBEnabled)
-					title += "COB:" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments));
+					title += ModelLocator.resourceManagerInstance.getString('treatments','cob_label') + ":" + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(nowTreatments, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob);
+			}
+			
+			if (displayPredictionsEnabled)
+			{
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
+				{
+					var predictionsLengthInMinutes:Number = Forecast.getCurrentPredictionsDuration();
+					if (!isNaN(predictionsLengthInMinutes))
+					{
+						var currentPrediction:Number = Forecast.getLastPredictiveBG(predictionsLengthInMinutes);
+						if (!isNaN(currentPrediction))
+						{
+							title += "\n" + TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + ": " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? String(Math.round(currentPrediction)) : String(Math.round(BgReading.mgdlToMmol(currentPrediction * 10)) / 10)) + (displayUnitsEnabled ? " " + GlucoseHelper.getGlucoseUnit() : "");
+						}
+						else
+						{
+							title += "\n" + TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + ": " + ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+						}
+					}
+				}
 			}
 			
 			//Create watch event
@@ -225,14 +252,17 @@ package services
 		 */
 		private static function onBloodGlucoseReceived(e:Event):void
 		{
-			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) || Calendar.service.authorisationStatus() != AuthorisationStatus.AUTHORISED || !watchComplicationEnabled || calendarID == "")
+			if ((Calibration.allForSensor().length < 2 && !CGMBlueToothDevice.isFollower()) || Calendar.service.authorisationStatus() != AuthorisationStatus.AUTHORISED || !watchComplicationEnabled || calendarID == "")
 				return;
 			
 			processLatestGlucose();
 		}
 		
-		private static function onTreatmentsChanged(e:Event):void
+		private static function onTreatmentsChanged(e:TreatmentsEvent):void
 		{
+			if (e.treatment != null && e.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD)
+				return;
+			
 			if (displayCOBEnabled || displayIOBEnabled)
 				processLatestGlucose();
 		}
@@ -248,7 +278,8 @@ package services
 				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_UNITS ||
 				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON ||
 				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_IOB_ON ||
-				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_COB_ON
+				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_COB_ON ||
+				e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_PREDICTIONS_ON
 			)
 			{
 				getInitialProperties();
@@ -268,7 +299,8 @@ package services
 					e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_TREND ||
 					e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_DELTA ||
 					e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_DELTA ||
-					e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON
+					e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_GAP_FIX_ON ||
+					e.data == LocalSettings.LOCAL_SETTING_WATCH_COMPLICATION_DISPLAY_PREDICTIONS_ON
 				)
 					onBloodGlucoseReceived(null);
 			}
@@ -285,6 +317,20 @@ package services
 				if (serviceActive)
 					deactivateService();
 			}
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			Trace.myTrace("WatchService.as", "Stopping service...");
+			
+			LocalSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+			
+			deactivateService();
+			
+			Trace.myTrace("WatchService.as", "Service stopped!");
 		}
 	}
 }

@@ -1,9 +1,11 @@
 package ui.screens.display.settings.alarms
 {
+	import com.adobe.utils.StringUtil;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import database.AlertType;
 	import database.Database;
+	import database.LocalSettings;
 	
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
@@ -37,18 +39,17 @@ package ui.screens.display.settings.alarms
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
+	import utils.TimeSpan;
 	
 	[ResourceBundle("alertsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 
 	public class AlertCustomizerList extends List 
 	{
-		/**
-		 * this is the default value for 5 minutes, to be used as repeat interval<br>
-		 * the real value is a bit less than 5 minutes because if we would take 5 minutes then there's a risk that the check is done just a bit too soon 
-		 */
-		private const TIME_5_MINUTES:int = 5 * 60 * 1000 - 10000;
-
+		/* Constants */
+		public static const ALERT_NAMES_LIST:String = "No Sound,Alarm Buzzer,Alarm Clock,Alert Tone Busy,Alert Tone Ringtone 1,Alert Tone Ringtone 2,Alien Siren,Ambulance,Analog Watch Alarm,Big Clock Ticking,Burglar Alarm Siren 1,Burglar Alarm Siren 2,Cartoon Ascend Climb Sneaky,Cartoon Ascend Then Descend,Cartoon Bounce To Ceiling,Cartoon Dreamy Glissando Harp,Cartoon Fail Strings Trumpet,Cartoon Machine Clumsy Loop,Cartoon Siren,Cartoon Tip Toe Sneaky Walk,Cartoon Uh Oh,Cartoon Villain Horns,Cell Phone Ring Tone,Chimes Glassy,Computer Magic,CSFX-2 Alarm,Cuckoo Clock,Dhol Shuffleloop,Discreet,Early Sunrise,Emergency Alarm Carbon,Emergency Alarm Siren,Emergency Alarm,Ending Reached,Fly,Ghost Hover,Good Morning,Hell Yeah Somewhat Calmer,In A Hurry,Indeed,Insistently,Jingle All The Way,Laser Shoot,Machine Charge,Magical Twinkle,Marching Fat Elephants,Marimba Descend,Marimba Flutter or Shake,Martian Gun,Martian Scanner,Metallic,Nightguard,Not Kiddin,Open Your Eyes And See,Orchestral Horns,Oringz,Pager Beeps,Remembers Me Of Asia,Rise And Shine,Rush,Sci-Fi Air Raid Alarm,Sci-Fi Alarm Loop 1,Sci-Fi Alarm Loop 2,Sci-Fi Alarm Loop 3,Sci-Fi Alarm Loop 4,Sci-Fi Alarm,Sci-Fi Computer Console Alarm,Sci-Fi Console Alarm,Sci-Fi Eerie Alarm,Sci-Fi Engine Shut Down,Sci-Fi Incoming Message Alert,Sci-Fi Spaceship Message,Sci-Fi Spaceship Warm Up,Sci-Fi Warning,Signature Corporate,Siri Alert Calibration Needed,Siri Alert Device Muted,Siri Alert Glucose Dropping Fast,Siri Alert Glucose Rising Fast,Siri Alert High Glucose,Siri Alert Low Glucose,Siri Alert Missed Readings,Siri Alert Transmitter Battery Low,Siri Alert Urgent High Glucose,Siri Alert Urgent Low Glucose,Siri Calibration Needed,Siri Device Muted,Siri Glucose Dropping Fast,Siri Glucose Rising Fast,Siri High Glucose,Siri Low Glucose,Siri Missed Readings,Siri Transmitter Battery Low,Siri Urgent High Glucose,Siri Urgent Low Glucose,Soft Marimba Pad Positive,Soft Warm Airy Optimistic,Soft Warm Airy Reassuring,Store Door Chime,Sunny,Thunder Sound FX,Time Has Come,Tornado Siren,Two Turtle Doves,Unpaved,Wake Up Will You,Win Gain,Wrong Answer";
+		public static const ALERT_SOUNDS_LIST:String = "no_sound,Alarm_Buzzer.caf,Alarm_Clock.caf,Alert_Tone_Busy.caf,Alert_Tone_Ringtone_1.caf,Alert_Tone_Ringtone_2.caf,Alien_Siren.caf,Ambulance.caf,Analog_Watch_Alarm.caf,Big_Clock_Ticking.caf,Burglar_Alarm_Siren_1.caf,Burglar_Alarm_Siren_2.caf,Cartoon_Ascend_Climb_Sneaky.caf,Cartoon_Ascend_Then_Descend.caf,Cartoon_Bounce_To_Ceiling.caf,Cartoon_Dreamy_Glissando_Harp.caf,Cartoon_Fail_Strings_Trumpet.caf,Cartoon_Machine_Clumsy_Loop.caf,Cartoon_Siren.caf,Cartoon_Tip_Toe_Sneaky_Walk.caf,Cartoon_Uh_Oh.caf,Cartoon_Villain_Horns.caf,Cell_Phone_Ring_Tone.caf,Chimes_Glassy.caf,Computer_Magic.caf,CSFX-2_Alarm.caf,Cuckoo_Clock.caf,Dhol_Shuffleloop.caf,Discreet.caf,Early_Sunrise.caf,Emergency_Alarm_Carbon_Monoxide.caf,Emergency_Alarm_Siren.caf,Emergency_Alarm.caf,Ending_Reached.caf,Fly.caf,Ghost_Hover.caf,Good_Morning.caf,Hell_Yeah_Somewhat_Calmer.caf,In_A_Hurry.caf,Indeed.caf,Insistently.caf,Jingle_All_The_Way.caf,Laser_Shoot.caf,Machine_Charge.caf,Magical_Twinkle.caf,Marching_Heavy_Footed_Fat_Elephants.caf,Marimba_Descend.caf,Marimba_Flutter_or_Shake.caf,Martian_Gun.caf,Martian_Scanner.caf,Metallic.caf,Nightguard.caf,Not_Kiddin.caf,Open_Your_Eyes_And_See.caf,Orchestral_Horns.caf,Oringz.caf,Pager_Beeps.caf,Remembers_Me_Of_Asia.caf,Rise_And_Shine.caf,Rush.caf,Sci-Fi_Air_Raid_Alarm.caf,Sci-Fi_Alarm_Loop_1.caf,Sci-Fi_Alarm_Loop_2.caf,Sci-Fi_Alarm_Loop_3.caf,Sci-Fi_Alarm_Loop_4.caf,Sci-Fi_Alarm.caf,Sci-Fi_Computer_Console_Alarm.caf,Sci-Fi_Console_Alarm.caf,Sci-Fi_Eerie_Alarm.caf,Sci-Fi_Engine_Shut_Down.caf,Sci-Fi_Incoming_Message_Alert.caf,Sci-Fi_Spaceship_Message.caf,Sci-Fi_Spaceship_Warm_Up.caf,Sci-Fi_Warning.caf,Signature_Corporate.caf,Siri_Alert_Calibration_Needed.caf,Siri_Alert_Device_Muted.caf,Siri_Alert_Glucose_Dropping_Fast.caf,Siri_Alert_Glucose_Rising_Fast.caf,Siri_Alert_High_Glucose.caf,Siri_Alert_Low_Glucose.caf,Siri_Alert_Missed_Readings.caf,Siri_Alert_Transmitter_Battery_Low.caf,Siri_Alert_Urgent_High_Glucose.caf,Siri_Alert_Urgent_Low_Glucose.caf,Siri_Calibration_Needed.caf,Siri_Device_Muted.caf,Siri_Glucose_Dropping_Fast.caf,Siri_Glucose_Rising_Fast.caf,Siri_High_Glucose.caf,Siri_Low_Glucose.caf,Siri_Missed_Readings.caf,Siri_Transmitter_Battery_Low.caf,Siri_Urgent_High_Glucose.caf,Siri_Urgent_Low_Glucose.caf,Soft_Marimba_Pad_Positive.caf,Soft_Warm_Airy_Optimistic.caf,Soft_Warm_Airy_Reassuring.caf,Store_Door_Chime.caf,Sunny.caf,Thunder_Sound_FX.caf,Time_Has_Come.caf,Tornado_Siren.caf,Two_Turtle_Doves.caf,Unpaved.caf,Wake_Up_Will_You.caf,Win_Gain.caf,Wrong_Answer.caf";
+		
 		/* Display Objects */
 		private var alertName:TextInput;
 		private var enableSnoozeInNotification:Check;
@@ -134,7 +135,7 @@ package ui.screens.display.settings.alarms
 				alertNameValue = selectedAlertType.alarmName;
 				enableSnoozeInNotificationValue = selectedAlertType.snoozeFromNotification;
 				snoozeMinutesValue = selectedAlertType.defaultSnoozePeriodInMinutes;
-				enableRepeatValue = selectedAlertType.repeatInMinutes == TIME_5_MINUTES;
+				enableRepeatValue = selectedAlertType.repeatInMinutes == TimeSpan.TIME_5_MINUTES;
 				enableVibrationValue = selectedAlertType.enableVibration;
 				previousAlertName = selectedAlertType.alarmName;
 				selectedSoundNameValue = selectedAlertType.sound;
@@ -193,8 +194,8 @@ package ui.screens.display.settings.alarms
 			actionButtonsContainer.addChild(saveAlert);
 			
 			/* Setup Content */
-			var soundLabelsList:Array = ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"alert_sounds_names").split(",");
-			var soundFilesList:Array = ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"alert_sounds_files").split(",");
+			var soundLabelsList:Array = ALERT_NAMES_LIST.split(",");
+			var soundFilesList:Array = ALERT_SOUNDS_LIST.split(",");
 			var soundListProvider:ArrayCollection = new ArrayCollection();
 			soundAccessoriesList = [];
 			var previousSoundFileIndex:int = 0;
@@ -203,11 +204,11 @@ package ui.screens.display.settings.alarms
 			for (var i:int = 0; i < soundListLength; i++) 
 			{
 				/* Set Label */
-				var labelValue:String = soundLabelsList[i];
+				var labelValue:String = StringUtil.trim(soundLabelsList[i]);
 				
 				/* Set Accessory */
 				var accessoryValue:DisplayObject;
-				if (soundFilesList[i] == "no_sound" || soundFilesList[i] == "default")
+				if (StringUtil.trim(soundFilesList[i]) == "no_sound" || StringUtil.trim(soundFilesList[i]) == "default")
 					accessoryValue = new Sprite();
 				else
 				{
@@ -219,14 +220,14 @@ package ui.screens.display.settings.alarms
 				
 				/* Set Sound File */
 				var soundFileValue:String;
-				if (soundFilesList[i] != "no_sound" && soundFilesList[i] != "default")
-					soundFileValue = "../assets/sounds/" + soundFilesList[i];
+				if (StringUtil.trim(soundFilesList[i]) != "no_sound" && StringUtil.trim(soundFilesList[i]) != "default")
+					soundFileValue = "../assets/sounds/" + StringUtil.trim(soundFilesList[i]);
 				else
-					soundFileValue = soundFilesList[i];
+					soundFileValue = StringUtil.trim(soundFilesList[i]);
 				
 				soundListProvider.push( { label: labelValue, accessory: accessoryValue, soundFile: soundFileValue } );
 				
-				if (mode == "edit" && (labelValue == selectedSoundNameValue || (labelValue == ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"no_sound_name") && selectedSoundNameValue == "no_sound") || (labelValue == ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"default_sound_name") && selectedSoundNameValue == "default")))
+				if (mode == "edit" && ((soundFileValue == "../assets/sounds/" + selectedSoundNameValue || labelValue == selectedSoundNameValue) || (labelValue == "No Sound" && selectedSoundNameValue == "../assets/sounds/" + "no_sound") || (labelValue == "Default iOS" && selectedSoundNameValue == "../assets/sounds/" + "default")))
 					previousSoundFileIndex = i;
 			}
 			
@@ -250,7 +251,7 @@ package ui.screens.display.settings.alarms
 					{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations',"enabled"), accessory: alertEnabled },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"name_label"), accessory: alertName },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"snooze_notification_label"), accessory: enableSnoozeInNotification },
-					{ label: Constants.deviceModel != DeviceInfo.IPHONE_X ? ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"default_snooze_time_label") : ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"default_snooze_time_iphone_x_label"), accessory: snoozeMinutes },
+					{ label: Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"default_snooze_time_label") : ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"default_snooze_time_iphone_x_label"), accessory: snoozeMinutes },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"repeat_label"), accessory: enableRepeat },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"sound_label"), accessory: soundList },
 					{ label: ModelLocator.resourceManagerInstance.getString('alertsettingsscreen',"vibration_label"), accessory: enableVibration },
@@ -264,9 +265,11 @@ package ui.screens.display.settings.alarms
 				item.labelField = "label";
 				item.accessoryField = "accessory";
 				item.paddingRight = 0;
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 					item.paddingRight = -2;
 				item.accessoryOffsetX = -10;
+				item.accessoryLabelProperties.wordWrap = true;
+				item.defaultLabelProperties.wordWrap = true;
 					
 				return item;
 			};
@@ -330,11 +333,7 @@ package ui.screens.display.settings.alarms
 					else
 					{
 						//Create and save alert to the database
-						var sound:String;
-						if (soundList.selectedItem.soundFile == "no_sound" || soundList.selectedItem.soundFile == "default")
-							sound = soundList.selectedItem.soundFile;
-						else
-							sound = soundList.selectedItem.label;
+						var sound:String = soundList != null && soundList.selectedItem != null && soundList.selectedItem.soundFile != null ? (soundList.selectedItem.soundFile as String).replace("../assets/sounds/", "") : "";
 						
 						var newAlertType:AlertType = new AlertType
 						(
@@ -410,7 +409,7 @@ package ui.screens.display.settings.alarms
 			enableSnoozeInNotificationValue = enableSnoozeInNotification.isSelected;
 			snoozeMinutesValue = snoozeMinutes.value;
 			enableRepeatValue = enableRepeat.isSelected;
-			enableRepeatValue == true ? repeatInMinutes = TIME_5_MINUTES : repeatInMinutes = 0;
+			enableRepeatValue == true ? repeatInMinutes = TimeSpan.TIME_5_MINUTES : repeatInMinutes = 0;
 			enableVibrationValue = enableVibration.isSelected;
 			
 			saveAlert.isEnabled = true;
@@ -422,7 +421,7 @@ package ui.screens.display.settings.alarms
 			var selectedItemData:Object = DefaultListItemRenderer(Button(e.currentTarget).parent).data;
 			var soundFile:String = selectedItemData.soundFile;
 			if(soundFile != "" && soundFile != "default" && soundFile != "no_sound")
-				SpikeANE.playSound(soundFile);
+				SpikeANE.playSound(soundFile, Number.NaN, LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALARMS_USER_DEFINED_SYSTEM_VOLUME_ON) == "true" ? Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALARMS_USER_DEFINED_SYSTEM_VOLUME_VALUE)) : Number.NaN);
 		}
 		
 		private function onSoundListClose():void

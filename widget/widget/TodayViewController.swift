@@ -37,13 +37,15 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     var chart:PNLineChart! = nil
     var chartGlucoseValues = [Double]()
     var chartGlucoseTimes = [String]()
-    var fileUrl:URL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.spike-app.spike")!
+    var fileUrl:URL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.org.nightscoutfoundation.spike")!
     var externalData:[String : AnyObject] = [:]
     var latestWidgetUpdate:String = ""
     var latestGlucoseValue:String = ""
     var latestGlucoseSlopeArrow:String = ""
     var latestGlucoseDelta:String = ""
     var latestGlucoseTime:String = ""
+    var highString:String = ""
+    var lowString:String = ""
     var glucoseUnit:String = ""
     var glucoseUnitInternal:String = ""
     var chartData:String = ""
@@ -79,6 +81,10 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     var markerRadius:NSString = ""
     var IOB:String = "0.00U"
     var COB:String = "0.00g"
+    var IOBString:String = ""
+    var COBString:String = ""
+    var predictionsDuration:String = ""
+    var predictionsOutcome:String = ""
     
     //Constants
     let millisecondsInHour = 3600000
@@ -130,7 +136,10 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
          lineThickness = "2"
          markerRadius = "6"
          IOB = "6.05"
-         COB = "25.4"*/
+         COB = "25.4"
+         predictionsDuration = "1h30m"
+         predictionsOutcome = "101"
+         */
         
         
         //Widget Properties
@@ -173,7 +182,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     {
         //External Data
         //Define database file path
-        fileUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.spike-app.spike")!.appendingPathComponent("Library/Preferences/group.com.spike-app.spike.plist")
+        fileUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.org.nightscoutfoundation.spike")!.appendingPathComponent("Library/Preferences/group.org.nightscoutfoundation.spike.plist")
         
         //Check if file exists
         let fileManager = FileManager.default
@@ -229,7 +238,13 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             externalData["showMarkerLabel"] == nil ||
             externalData["showGridLines"] == nil ||
             externalData["lineThickness"] == nil ||
-            externalData["markerRadius"] == nil
+            externalData["markerRadius"] == nil ||
+            externalData["high"] == nil ||
+            externalData["low"] == nil ||
+            externalData["IOBString"] == nil ||
+            externalData["COBString"] == nil ||
+            externalData["predictionDuration"] == nil ||
+            externalData["predictionOutcome"] == nil
         {
             print("Missing data in database!")
             noData.text = "Missing data in database!"
@@ -266,6 +281,8 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         displayLabelsColor = (externalData["displayLabelsColor"] as? String)!
         hourAgo = (externalData["hourAgo"] as? String)!
         minAgo = (externalData["minAgo"] as? String)!
+        highString = (externalData["high"] as? String)!
+        lowString = (externalData["low"] as? String)!
         ago = (externalData["ago"] as? String)!
         now = (externalData["now"] as? String)!
         openSpike = (externalData["openSpike"] as? String)!
@@ -275,6 +292,11 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         showGridLines = (externalData["showGridLines"] as? String)!
         lineThickness = (externalData["lineThickness"] as? NSString)!
         markerRadius = (externalData["markerRadius"] as? NSString)!
+        IOBString = (externalData["IOBString"] as? String)!
+        COBString = (externalData["COBString"] as? String)!
+        predictionsDuration = (externalData["predictionDuration"] as? String)!
+        predictionsOutcome = (externalData["predictionOutcome"] as? String)!
+        
         if (externalData["IOB"] != nil)
         {
             IOB = (externalData["IOB"] as? String)!
@@ -317,9 +339,11 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             else if latestGlucoseValue == "LOW" || latestGlucoseValue == "??0" || latestGlucoseValue == "?SN" || latestGlucoseValue == "??2" || latestGlucoseValue == "?NA" || latestGlucoseValue == "?NC" || latestGlucoseValue == "?CD" || latestGlucoseValue == "?AD" || latestGlucoseValue == "?RF" || latestGlucoseValue == "???"
             {
                 glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgenLowColor)
+                glucoseDisplay.text = lowString + " " + latestGlucoseSlopeArrow
             }
             else if latestGlucoseValue == "HIGH"
             {
+                glucoseDisplay.text = highString + " " + latestGlucoseSlopeArrow
                 glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgentHighColor)
             }
             else if let latestGlucoseValueInteger = Int(latestGlucoseValue), let urgentLowThresholdInteger = Int(urgenLowThreshold), latestGlucoseValueInteger <= urgentLowThresholdInteger
@@ -352,10 +376,12 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             else if latestGlucoseValue == "LOW" || latestGlucoseValue == "??0" || latestGlucoseValue == "?SN" || latestGlucoseValue == "??2" || latestGlucoseValue == "?NA" || latestGlucoseValue == "?NC" || latestGlucoseValue == "?CD" || latestGlucoseValue == "?AD" || latestGlucoseValue == "?RF" || latestGlucoseValue == "???"
             {
                 glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgenLowColor)
+                glucoseDisplay.text = lowString + " " + latestGlucoseSlopeArrow
             }
             else if latestGlucoseValue == "HIGH"
             {
                 glucoseDisplay.textColor = UIColor.colorFromHex(hexString: urgentHighColor)
+                glucoseDisplay.text = highString + " " + latestGlucoseSlopeArrow
             }
             else if let latestGlucoseValueFloat = Float(latestGlucoseValue), let urgentLowThresholdFloat = Float(urgenLowThreshold), latestGlucoseValueFloat <= urgentLowThresholdFloat
             {
@@ -402,7 +428,13 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         openApp.setTitle(openSpike, for: .normal)
         openApp.setTitleColor(UIColor.colorFromHex(hexString: displayLabelsColor), for: .normal)
         
-        treatmentsLabel.text = "COB:" + COB + "   IOB:" + IOB
+        var predictValue:String = "";
+        if (predictionsOutcome != "-1")
+        {
+            predictValue = "   " + predictionsDuration + ":" + predictionsOutcome
+        }
+        
+        treatmentsLabel.text = COBString + ":" + COB + "   " + IOBString + ":" + IOB + predictValue
         treatmentsLabel.textColor = UIColor.colorFromHex(hexString: displayLabelsColor)
     }
     
@@ -419,6 +451,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         {
             chartGlucoseValues.removeAll()
             chartGlucoseTimes.removeAll()
+            
             let decoder = JSONDecoder()
             let externalDataJSON = try decoder.decode([ChartData].self, from: externalDataEncoded)
             for (chartData) in externalDataJSON
@@ -692,6 +725,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             if (parseChartData())
             {
                 setChart(chartSize: superview.frame.size.width + 10)
+                setChart(chartSize: superview.frame.size.width + 10)
             }
         }
     }
@@ -702,6 +736,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         
         if (parseChartData())
         {
+            setChart(chartSize: size.width + 10)
             setChart(chartSize: size.width + 10)
         }
     }

@@ -6,6 +6,7 @@
 /libs/
 /src/assets/theme/
 /src/distriqtkey/
+/src/cryptography/
 *.xcuserstate
 .actionScriptProperties
 .project
@@ -13,10 +14,15 @@
 /Native\ Extension/SpikeANE/build\ scripts/local.properties
 /widget/Spike.xcworkspace/xcuserdata/spike.xcuserdatad/UserInterfaceState.xcuserstate
 /Native\ Extension/iOS/NativeExtensioniOS/build/
+/Native Extension/iOS/NativeExtensioniOS/build/
 /Native\ Extension/iOS/NativeExtensioniOS/NativeExtensioniOS.xcodeproj/xcuserdata/
+/Native Extension/iOS/NativeExtensioniOS/NativeExtensioniOS.xcodeproj/xcuserdata/
 *.swc
 .DS_Store
 libNativeExtensioniOS.a
 /widget/Spike.xcworkspace/xcuserdata/spike.xcuserdatad/
 iPadDescriptor.txt
 iPhoneDescriptor.txt
+/crashlytics/
+/bin-release-temp/
+/app-center/

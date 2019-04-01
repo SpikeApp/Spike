@@ -2,7 +2,7 @@ package ui.screens
 {
 	import flash.system.System;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	
 	import feathers.controls.ScrollPolicy;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -64,7 +64,7 @@ package ui.screens
 		private function setupContent():void
 		{
 			//Tutorial Section
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 			{
 				tutorialSection = new TutorialList();
 				tutorialSection.addEventListener(Event.COMPLETE, onShowTutorial);
@@ -78,10 +78,10 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			if (!BlueToothDevice.isFollower())
-				AppInterface.instance.menu.selectedIndex = 4;
+			if (!CGMBlueToothDevice.isFollower())
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 6 : 5;
 			else
-				AppInterface.instance.menu.selectedIndex = 2;
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 3 : 2;
 		}
 		
 		/**

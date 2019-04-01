@@ -5,11 +5,14 @@ package network.httpserver.API
 	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
+	
+	import model.ModelLocator;
 	
 	import network.httpserver.ActionController;
 	
+	import treatments.Insulin;
 	import treatments.ProfileManager;
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
@@ -30,7 +33,7 @@ package network.httpserver.API
 		{
 			Trace.myTrace("SpikeTreatmentsController.as", "AddTreatment endpoint called!");
 			
-			if (BlueToothDevice.isFollower() && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
+			if (CGMBlueToothDevice.isFollower() && (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) != "Nightscout"))
 				return responseSuccess("Follower doesn't have enough privileges to add treatments!");
 			
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_ENABLED) != "true")
@@ -42,6 +45,9 @@ package network.httpserver.API
 			{
 				if (params != null)
 				{
+					trace("params");
+					trace(ObjectUtil.toString(params));
+					
 					//Define initial treatment properties
 					var treatmentTimestamp:Number = new Date().valueOf();
 					treatmentType = String(params.type);
@@ -51,6 +57,13 @@ package network.httpserver.API
 					var treatmentGlucose:Number = 0;
 					var treatmentNote:String = "";
 					var treatmentCarbDelayTime:Number = 20;
+					var treatmentDuration:Number = Number.NaN;
+					var treatmentExerciseIntensity:String = Treatment.EXERCISE_INTENSITY_MODERATE;
+					var basalAmount:Number = 0;
+					var basalDuration:Number = 30;
+					var isBasalAbsolute:Boolean = false;
+					var isBasalRelative:Boolean = false;
+					var isTempBasalEnd:Boolean = false;
 					
 					if (treatmentType == Treatment.TYPE_CORRECTION_BOLUS || treatmentType == Treatment.TYPE_BOLUS)
 					{
@@ -115,8 +128,120 @@ package network.httpserver.API
 						else
 							response = "ERROR";
 					}
+					else if (treatmentType == Treatment.TYPE_EXERCISE)
+					{
+						if (params.duration != null && !isNaN(params.duration))
+							treatmentDuration = Number(params.duration);
+						else
+							response = "ERROR";
+						
+						if (params.exerciseIntensity != null)
+						{
+							var selectedExerciseIntensity:Number = Number(params.exerciseIntensity);
+							if (selectedExerciseIntensity == 1)
+							{
+								treatmentExerciseIntensity = Treatment.EXERCISE_INTENSITY_LOW;
+							}
+							else if (selectedExerciseIntensity == 2)
+							{
+								treatmentExerciseIntensity = Treatment.EXERCISE_INTENSITY_MODERATE;
+							}
+							else if (selectedExerciseIntensity == 3)
+							{
+								treatmentExerciseIntensity = Treatment.EXERCISE_INTENSITY_HIGH;
+							}
+						}
+					}
+					else if (treatmentType == Treatment.TYPE_TEMP_BASAL)
+					{
+						if (params.duration != null && !isNaN(params.duration))
+							basalDuration = Number(params.duration);
+						else
+							response = "ERROR";
+						
+						if (params.amount != null && !isNaN(params.amount))
+							basalAmount = Number(params.amount);
+						else
+							response = "ERROR";
+						
+						if (params.basalType != null && String(params.basalType) != "")
+						{
+							if (String(params.basalType) == "absolute")
+								isBasalAbsolute = true;
+							else if (String(params.basalType) == "relative")
+								isBasalRelative = true;
+							
+							if (!isBasalAbsolute && !isBasalRelative)
+								isTempBasalEnd = true;
+						}
+						else
+							response = "ERROR";
+					}
+					else if (treatmentType == Treatment.TYPE_MDI_BASAL)
+					{
+						var basalInsulin:Insulin = ProfileManager.getBasalInsulin();
+						if (basalInsulin != null)
+						{
+							treatmentInsulinID = basalInsulin.ID;
+							basalDuration = basalInsulin.dia * 60;
+							
+							if (params.amount != null && !isNaN(params.amount))
+								basalAmount = Number(params.amount);
+							else
+								response = "ERROR";
+							
+							isBasalAbsolute = true;
+							isBasalRelative = false;
+							isTempBasalEnd = false;
+						}
+						else
+						{
+							response = "ERROR";
+						}
+					}
+					else if (treatmentType == Treatment.TYPE_TEMP_BASAL_END)
+					{
+						basalAmount = 0;
+						basalDuration = 30;
+						isBasalAbsolute = false;
+						isBasalRelative = false;
+						isTempBasalEnd = true;
+						
+						treatmentType = Treatment.TYPE_TEMP_BASAL;
+					}
 					
-					if ((treatmentType == Treatment.TYPE_BOLUS || treatmentType == Treatment.TYPE_CORRECTION_BOLUS || treatmentType == Treatment.TYPE_MEAL_BOLUS || treatmentType == Treatment.TYPE_CARBS_CORRECTION || treatmentType == Treatment.TYPE_GLUCOSE_CHECK || treatmentType == Treatment.TYPE_NOTE) && response == "OK")
+					if 
+					(
+						(
+							treatmentType == Treatment.TYPE_BOLUS 
+							||
+							treatmentType == Treatment.TYPE_CORRECTION_BOLUS 
+							|| 
+							treatmentType == Treatment.TYPE_MEAL_BOLUS 
+							|| 
+							treatmentType == Treatment.TYPE_CARBS_CORRECTION 
+							|| 
+							treatmentType == Treatment.TYPE_GLUCOSE_CHECK 
+							||
+							treatmentType == Treatment.TYPE_NOTE
+							||
+							treatmentType == Treatment.TYPE_EXERCISE
+							||
+							treatmentType == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE
+							||
+							treatmentType == Treatment.TYPE_PUMP_BATTERY_CHANGE
+							||
+							treatmentType == Treatment.TYPE_PUMP_SITE_CHANGE
+							||
+							treatmentType == Treatment.TYPE_TEMP_BASAL
+							||
+							treatmentType == Treatment.TYPE_MDI_BASAL
+							||
+							treatmentType == Treatment.TYPE_TEMP_BASAL_END
+						) 
+						&& 
+						response == "OK"
+					)
 					{
 						var treatment:Treatment = new Treatment
 						(
@@ -131,6 +256,50 @@ package network.httpserver.API
 							null,
 							treatmentCarbDelayTime
 						);
+						
+						if (treatmentType == Treatment.TYPE_EXERCISE)
+						{
+							treatment.duration = treatmentDuration;
+							treatment.exerciseIntensity = treatmentExerciseIntensity;
+						}
+						
+						if (treatmentType == Treatment.TYPE_TEMP_BASAL || treatmentType == Treatment.TYPE_MDI_BASAL || treatmentType == Treatment.TYPE_TEMP_BASAL_END)
+						{
+							if (isBasalAbsolute)
+							{
+								treatment.basalAbsoluteAmount = basalAmount;
+								treatment.basalPercentAmount = 0;
+							}
+							else if (isBasalRelative)
+							{
+								treatment.basalAbsoluteAmount = 0;
+								treatment.basalPercentAmount = basalAmount;
+							}
+							else if (isTempBasalEnd)
+							{
+								treatment.basalAbsoluteAmount = 0;
+								treatment.basalPercentAmount = 0;
+							}
+							
+							treatment.basalDuration = basalDuration;
+							treatment.isBasalAbsolute = isBasalAbsolute;
+							treatment.isBasalRelative = isBasalRelative;
+							treatment.isTempBasalEnd = isTempBasalEnd;
+						}
+						
+						if (treatmentType == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+						{
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_INSULIN_CARTRIDGE_CHANGE, String(treatmentTimestamp), true, false);
+						}
+						else if (treatmentType == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+						{
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_BATTERY_CHANGE, String(treatmentTimestamp), true, false);
+						}
+						else if (treatmentType == Treatment.TYPE_PUMP_SITE_CHANGE)
+						{
+							CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LAST_PUMP_SITE_CHANGE, String(treatmentTimestamp), true, false);
+						}
+						
 						TreatmentsManager.addExternalTreatment(treatment);
 					}
 					else

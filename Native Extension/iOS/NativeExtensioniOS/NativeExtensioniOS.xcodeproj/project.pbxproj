@@ -39,6 +39,9 @@
 		F849A87020C09BE800853F50 /* Trace.m in Sources */ = {isa = PBXBuildFile; fileRef = F849A86F20C09BE800853F50 /* Trace.m */; };
 		F86D5C4420B7275A009F0BD6 /* NativeExtensioniOS.m in Sources */ = {isa = PBXBuildFile; fileRef = F86D5C4320B7275A009F0BD6 /* NativeExtensioniOS.m */; };
 		F86D5C4F20BB2130009F0BD6 /* FPANEUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = F86D5C4E20BB2130009F0BD6 /* FPANEUtils.m */; };
+		F8C7F43B20EE34FF00D277D9 /* G5Api.m in Sources */ = {isa = PBXBuildFile; fileRef = F8C7F43920EE34FE00D277D9 /* G5Api.m */; };
+		F8C7F43E20EE35F800D277D9 /* G5BleManager.m in Sources */ = {isa = PBXBuildFile; fileRef = F8C7F43D20EE35F800D277D9 /* G5BleManager.m */; };
+		F8C7F44220EE3EFF00D277D9 /* G5ApiObject.m in Sources */ = {isa = PBXBuildFile; fileRef = F8C7F44120EE3EFF00D277D9 /* G5ApiObject.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -115,6 +118,13 @@
 		F86D5C4C20B76825009F0BD6 /* NativeExtensioniOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NativeExtensioniOS.h; sourceTree = "<group>"; };
 		F86D5C4D20BB212F009F0BD6 /* FPANEUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FPANEUtils.h; sourceTree = "<group>"; };
 		F86D5C4E20BB2130009F0BD6 /* FPANEUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FPANEUtils.m; sourceTree = "<group>"; };
+		F8C7F43920EE34FE00D277D9 /* G5Api.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = G5Api.m; sourceTree = "<group>"; };
+		F8C7F43A20EE34FE00D277D9 /* G5Api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = G5Api.h; sourceTree = "<group>"; };
+		F8C7F43C20EE35F800D277D9 /* G5BleManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = G5BleManager.h; sourceTree = "<group>"; };
+		F8C7F43D20EE35F800D277D9 /* G5BleManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = G5BleManager.m; sourceTree = "<group>"; };
+		F8C7F43F20EE365A00D277D9 /* G5HeaderDefine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = G5HeaderDefine.h; sourceTree = "<group>"; };
+		F8C7F44020EE3EFF00D277D9 /* G5ApiObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = G5ApiObject.h; sourceTree = "<group>"; };
+		F8C7F44120EE3EFF00D277D9 /* G5ApiObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = G5ApiObject.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -225,6 +235,13 @@
 				F86D5C4D20BB212F009F0BD6 /* FPANEUtils.h */,
 				F86D5C4E20BB2130009F0BD6 /* FPANEUtils.m */,
 				F86D5C4B20B72911009F0BD6 /* FlashRuntimeExtensions.h */,
+				F8C7F43A20EE34FE00D277D9 /* G5Api.h */,
+				F8C7F43920EE34FE00D277D9 /* G5Api.m */,
+				F8C7F44020EE3EFF00D277D9 /* G5ApiObject.h */,
+				F8C7F44120EE3EFF00D277D9 /* G5ApiObject.m */,
+				F8C7F43C20EE35F800D277D9 /* G5BleManager.h */,
+				F8C7F43D20EE35F800D277D9 /* G5BleManager.m */,
+				F8C7F43F20EE365A00D277D9 /* G5HeaderDefine.h */,
 				F849A83720C0745700853F50 /* MuteChecker.h */,
 				F849A83420C0745600853F50 /* MuteChecker.m */,
 				F849A83620C0745600853F50 /* Vibrate.h */,
@@ -302,6 +319,7 @@
 				F849A86320C08A5E00853F50 /* HealthKitStore.m in Sources */,
 				F849A87020C09BE800853F50 /* Trace.m in Sources */,
 				F849A86420C08A5E00853F50 /* FPANEUtils.m in Sources */,
+				F8C7F43E20EE35F800D277D9 /* G5BleManager.m in Sources */,
 				F849A86B20C08A5E00853F50 /* Vibrate.m in Sources */,
 				F849A83820C0745700853F50 /* MuteChecker.m in Sources */,
 				F849A83920C0745700853F50 /* Vibrate.m in Sources */,
@@ -314,6 +332,8 @@
 				F849A81B20BDDCF000853F50 /* FQToolsUtil.m in Sources */,
 				F849A85F20C08A5E00853F50 /* FQBleManager.m in Sources */,
 				F849A81920BDDCF000853F50 /* FQApiObject.m in Sources */,
+				F8C7F43B20EE34FF00D277D9 /* G5Api.m in Sources */,
+				F8C7F44220EE3EFF00D277D9 /* G5ApiObject.m in Sources */,
 				F849A81720BDDCF000853F50 /* FQBleManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -438,6 +458,7 @@
 		F86D5C4920B7275A009F0BD6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 8DKSZ5HNLB;
 				OTHER_LDFLAGS = "-ObjC";
@@ -450,6 +471,7 @@
 		F86D5C4A20B7275A009F0BD6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 8DKSZ5HNLB;
 				OTHER_LDFLAGS = "-ObjC";

@@ -76,7 +76,7 @@ package ui.screens
 		
 		protected function setupHeaderSize():void
 		{
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 			{
 				if (this.header != null)
 				{
@@ -127,7 +127,7 @@ package ui.screens
 			if(AppInterface.instance.navigator.activeScreenID == Screens.GLUCOSE_CHART)
 			{
 				//Select menu button from left menu
-				AppInterface.instance.menu.selectedIndex = 0;
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 1 : 0;
 			}
 			
 		}
@@ -173,6 +173,8 @@ package ui.screens
 			if (iconImage != null)
 			{
 				iconImage.removeFromParent();
+				if (iconImage.texture != null)
+					iconImage.texture.dispose();
 				iconImage.dispose();
 				iconImage = null;
 			}

@@ -1,5 +1,7 @@
 package database
 {
+	import com.hurlant.util.Base64;
+	
 	import flash.data.SQLConnection;
 	import flash.data.SQLMode;
 	import flash.data.SQLResult;
@@ -9,6 +11,7 @@ package database
 	import flash.events.SQLErrorEvent;
 	import flash.events.SQLEvent;
 	import flash.filesystem.File;
+	import flash.utils.ByteArray;
 	
 	import mx.collections.ArrayCollection;
 	
@@ -16,6 +19,7 @@ package database
 	import spark.collections.SortField;
 	
 	import events.DatabaseEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
@@ -23,11 +27,18 @@ package database
 	import services.TransmitterService;
 	
 	import stats.BasicUserStats;
+	import stats.StatsManager;
 	
+	import treatments.BasalRate;
 	import treatments.Insulin;
 	import treatments.Profile;
 	import treatments.Treatment;
+	import treatments.food.Food;
+	import treatments.food.Recipe;
 	
+	import ui.chart.helpers.GlucoseFactory;
+	
+	import utils.TimeSpan;
 	import utils.Trace;
 	
 	[ResourceBundle("alertsettingsscreen")]
@@ -48,9 +59,6 @@ package database
 		private static var databaseWasCopiedFromSampleFile:Boolean = true;
 		private static const debugMode:Boolean = true;
 		private static const MAX_DAYS_TO_STORE_BGREADINGS_IN_DATABASE:int = 90;
-		
-		//Time constants
-		private static const TIME_24_HOURS:Number = 24 * 60 * 60 * 1000;
 		
 		/**
 		 * create table to store the bluetooth device name and address<br>
@@ -155,6 +163,16 @@ package database
 			"note STRING, " +
 			"carbdelay REAL, " +
 			"basalduration REAL, " +
+			"children STRING, " +
+			"needsadjustment STRING, " +
+			"prebolus REAL, " +
+			"duration REAL, " +
+			"intensity STRING, " +
+			"isbasalabsolute STRING, " +
+			"isbasalrelative STRING, " +
+			"istempbasalend STRING, " +
+			"basalabsoluteamount REAL, " +
+			"basalpercentamount REAL, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_INSULINS:String = "CREATE TABLE IF NOT EXISTS insulins(" +
@@ -162,6 +180,8 @@ package database
 			"name STRING, " +
 			"dia REAL, " +
 			"type STRING, " +
+			"curve STRING, " +
+			"peak REAL, " +
 			"isdefault STRING, " +
 			"ishidden STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
@@ -175,11 +195,73 @@ package database
 			"carbsabsorptionrate REAL, " +
 			"basalrates STRING, " +
 			"targetglucoserates STRING, " +
+			"trendcorrections STRING, " +
 			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const CREATE_TABLE_HEALTHKIT_TREATMENTS:String = "CREATE TABLE IF NOT EXISTS healthkittreatments(" +
 			"id STRING PRIMARY KEY," +
 			"timestamp TIMESTAMP NOT NULL)";
+		
+		private static const CREATE_TABLE_FOODS:String = "CREATE TABLE IF NOT EXISTS foods(" +
+			"id STRING PRIMARY KEY," +
+			"name STRING, " +
+			"brand STRING, " +
+			"proteins STRING, " +
+			"carbs STRING, " +
+			"fiber STRING, " +
+			"fats STRING, " +
+			"calories STRING, " +
+			"servingsize STRING, " +
+			"servingunit STRING, " +
+			"link STRING, " +
+			"barcode STRING, " +
+			"source STRING, " +
+			"notes STRING, " +
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
+		
+		private static const CREATE_TABLE_RECIPES_LIST:String = "CREATE TABLE IF NOT EXISTS recipeslist(" +
+			"id STRING PRIMARY KEY," +
+			"name STRING, " +
+			"servingsize STRING, " +
+			"servingunit STRING, " +
+			"notes STRING, " +
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
+		
+		private static const CREATE_TABLE_RECIPES_FOODS:String = "CREATE TABLE IF NOT EXISTS recipesfoods(" +
+			"recipeid STRING," +
+			"foodid STRING," +
+			"name STRING, " +
+			"brand STRING, " +
+			"proteins STRING, " +
+			"carbs STRING, " +
+			"fiber STRING, " +
+			"substractfiber STRING, " +
+			"fats STRING, " +
+			"calories STRING, " +
+			"servingsize STRING, " +
+			"servingunit STRING, " +
+			"recipeservingsize STRING, " +
+			"recipeservingunit STRING, " +
+			"link STRING, " +
+			"barcode STRING, " +
+			"source STRING, " +
+			"notes STRING, " +
+			"defaultunit STRING, " +
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
+		
+		private static const CREATE_TABLE_IOB_COB_CACHES:String = "CREATE TABLE IF NOT EXISTS iobcobcaches(" +
+			"cob BLOB," +
+			"cobindexes BLOB," +
+			"iob BLOB," +
+			"iobindexes BLOB)";
+		
+		private static const CREATE_TABLE_BASAL_RATES:String = "CREATE TABLE IF NOT EXISTS basalrates(" +
+			"id STRING PRIMARY KEY," +
+			"time STRING, " +
+			"hours REAL, " +
+			"minutes REAL, " +
+			"rate REAL, " +
+			"lastmodifiedtimestamp TIMESTAMP NOT NULL)";
 		
 		private static const SELECT_ALL_BLUETOOTH_DEVICES:String = "SELECT * from bluetoothdevice";
 		private static const INSERT_DEFAULT_BLUETOOTH_DEVICE:String = "INSERT into bluetoothdevice (bluetoothdevice_id, name, address, lastmodifiedtimestamp) VALUES (:bluetoothdevice_id,:name, :address, :lastmodifiedtimestamp)";
@@ -212,7 +294,8 @@ package database
 		{
 			if (debugMode) trace("Database.init");
 			
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingEventReceived);
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution, false, -1000);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingEventReceived);
 
 			dbFile  = File.applicationStorageDirectory.resolvePath(dbFileName);
 			
@@ -494,7 +577,7 @@ package database
 		private static function insertBlueToothDevice():void {
 			sqlStatement.clearParameters();
 			sqlStatement.text = INSERT_DEFAULT_BLUETOOTH_DEVICE;
-			sqlStatement.parameters[":bluetoothdevice_id"] = BlueToothDevice.DEFAULT_BLUETOOTH_DEVICE_ID;
+			sqlStatement.parameters[":bluetoothdevice_id"] = CGMBlueToothDevice.DEFAULT_BLUETOOTH_DEVICE_ID;
 			sqlStatement.parameters[":name"] = ""; 
 			sqlStatement.parameters[":address"] = "";
 			sqlStatement.parameters[":lastmodifiedtimestamp"] = (new Date()).valueOf();
@@ -638,7 +721,213 @@ package database
 						sqlStatement.removeEventListener(SQLEvent.RESULT,check2Performed);
 						sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check2Error);
 						sqlStatement.clearParameters();
-						createInsulinsTable();
+						
+						//Check if table needs to be updated for new Spike format #2
+						sqlStatement.text = "SELECT children FROM treatments";
+						sqlStatement.addEventListener(SQLEvent.RESULT,check3Performed);
+						sqlStatement.addEventListener(SQLErrorEvent.ERROR,check3Error);
+						sqlStatement.execute();
+						
+						function check3Performed(se:SQLEvent):void 
+						{
+							sqlStatement.removeEventListener(SQLEvent.RESULT,check3Performed);
+							sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check3Error);
+							sqlStatement.clearParameters();
+							
+							//Check if table needs to be updated for new Spike format #2
+							sqlStatement.text = "SELECT needsadjustment FROM treatments";
+							sqlStatement.addEventListener(SQLEvent.RESULT,check4Performed);
+							sqlStatement.addEventListener(SQLErrorEvent.ERROR,check4Error);
+							sqlStatement.execute();
+							
+							function check4Performed(se:SQLEvent):void 
+							{
+								sqlStatement.removeEventListener(SQLEvent.RESULT,check4Performed);
+								sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check4Error);
+								sqlStatement.clearParameters();
+								
+								//Check if table needs to be updated for new Spike format #2
+								sqlStatement.text = "SELECT prebolus FROM treatments";
+								sqlStatement.addEventListener(SQLEvent.RESULT,check5Performed);
+								sqlStatement.addEventListener(SQLErrorEvent.ERROR,check5Error);
+								sqlStatement.execute();
+								
+								function check5Performed(se:SQLEvent):void 
+								{
+									sqlStatement.removeEventListener(SQLEvent.RESULT,check5Performed);
+									sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check5Error);
+									sqlStatement.clearParameters();
+									
+									//Check if table needs to be updated for new Spike format #2
+									sqlStatement.text = "SELECT duration FROM treatments";
+									sqlStatement.addEventListener(SQLEvent.RESULT,check6Performed);
+									sqlStatement.addEventListener(SQLErrorEvent.ERROR,check6Error);
+									sqlStatement.execute();
+									
+									function check6Performed(se:SQLEvent):void 
+									{
+										sqlStatement.removeEventListener(SQLEvent.RESULT,check6Performed);
+										sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check6Error);
+										sqlStatement.clearParameters();
+										
+										sqlStatement.text = "SELECT intensity FROM treatments";
+										sqlStatement.addEventListener(SQLEvent.RESULT,check7Performed);
+										sqlStatement.addEventListener(SQLErrorEvent.ERROR,check7Error);
+										sqlStatement.execute();
+										
+										function check7Performed(se:SQLEvent):void 
+										{
+											sqlStatement.removeEventListener(SQLEvent.RESULT,check7Performed);
+											sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check7Error);
+											sqlStatement.clearParameters();
+											
+											sqlStatement.text = "SELECT isbasalabsolute FROM treatments";
+											sqlStatement.addEventListener(SQLEvent.RESULT,check8Performed);
+											sqlStatement.addEventListener(SQLErrorEvent.ERROR,check8Error);
+											sqlStatement.execute();
+											
+											function check8Performed(se:SQLEvent):void 
+											{
+												sqlStatement.removeEventListener(SQLEvent.RESULT,check8Performed);
+												sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check8Error);
+												sqlStatement.clearParameters();
+												
+												sqlStatement.text = "SELECT isbasalrelative FROM treatments";
+												sqlStatement.addEventListener(SQLEvent.RESULT,check9Performed);
+												sqlStatement.addEventListener(SQLErrorEvent.ERROR,check9Error);
+												sqlStatement.execute();
+												
+												function check9Performed(se:SQLEvent):void 
+												{
+													sqlStatement.removeEventListener(SQLEvent.RESULT,check9Performed);
+													sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check9Error);
+													sqlStatement.clearParameters();
+													
+													sqlStatement.text = "SELECT istempbasalend FROM treatments";
+													sqlStatement.addEventListener(SQLEvent.RESULT,check10Performed);
+													sqlStatement.addEventListener(SQLErrorEvent.ERROR,check10Error);
+													sqlStatement.execute();
+													
+													function check10Performed(se:SQLEvent):void 
+													{
+														sqlStatement.removeEventListener(SQLEvent.RESULT,check10Performed);
+														sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check10Error);
+														sqlStatement.clearParameters();
+														
+														sqlStatement.text = "SELECT basalabsoluteamount FROM treatments";
+														sqlStatement.addEventListener(SQLEvent.RESULT,check11Performed);
+														sqlStatement.addEventListener(SQLErrorEvent.ERROR,check11Error);
+														sqlStatement.execute();
+														
+														function check11Performed(se:SQLEvent):void 
+														{
+															sqlStatement.removeEventListener(SQLEvent.RESULT,check11Performed);
+															sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check11Error);
+															sqlStatement.clearParameters();
+															
+															sqlStatement.text = "SELECT basalpercentamount FROM treatments";
+															sqlStatement.addEventListener(SQLEvent.RESULT,check12Performed);
+															sqlStatement.addEventListener(SQLErrorEvent.ERROR,check12Error);
+															sqlStatement.execute();
+															
+															function check12Performed(se:SQLEvent):void 
+															{
+																sqlStatement.removeEventListener(SQLEvent.RESULT,check12Performed);
+																sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check12Error);
+																sqlStatement.clearParameters();
+																
+																//All checks performed. Continue with next table
+																createInsulinsTable();
+															}
+															
+															function check12Error(see:SQLErrorEvent):void 
+															{
+																if (debugMode) trace("Database.as : basalpercentamount column not found in treatments table (old version of Spike). Updating table...");
+																sqlStatement.clearParameters();
+																sqlStatement.text = "ALTER TABLE treatments ADD COLUMN basalpercentamount REAL;";
+																sqlStatement.execute();
+															}
+														}
+														
+														function check11Error(see:SQLErrorEvent):void 
+														{
+															if (debugMode) trace("Database.as : basalabsoluteamount column not found in treatments table (old version of Spike). Updating table...");
+															sqlStatement.clearParameters();
+															sqlStatement.text = "ALTER TABLE treatments ADD COLUMN basalabsoluteamount REAL;";
+															sqlStatement.execute();
+														}
+													}
+													
+													function check10Error(see:SQLErrorEvent):void 
+													{
+														if (debugMode) trace("Database.as : istempbasalend column not found in treatments table (old version of Spike). Updating table...");
+														sqlStatement.clearParameters();
+														sqlStatement.text = "ALTER TABLE treatments ADD COLUMN istempbasalend STRING;";
+														sqlStatement.execute();
+													}
+												}
+												
+												function check9Error(see:SQLErrorEvent):void 
+												{
+													if (debugMode) trace("Database.as : isbasalrelative column not found in treatments table (old version of Spike). Updating table...");
+													sqlStatement.clearParameters();
+													sqlStatement.text = "ALTER TABLE treatments ADD COLUMN isbasalrelative STRING;";
+													sqlStatement.execute();
+												}
+											}
+											
+											function check8Error(see:SQLErrorEvent):void 
+											{
+												if (debugMode) trace("Database.as : isbasalabsolute column not found in treatments table (old version of Spike). Updating table...");
+												sqlStatement.clearParameters();
+												sqlStatement.text = "ALTER TABLE treatments ADD COLUMN isbasalabsolute STRING;";
+												sqlStatement.execute();
+											}
+										}
+										
+										function check7Error(see:SQLErrorEvent):void 
+										{
+											if (debugMode) trace("Database.as : intensity column not found in treatments table (old version of Spike). Updating table...");
+											sqlStatement.clearParameters();
+											sqlStatement.text = "ALTER TABLE treatments ADD COLUMN intensity STRING;";
+											sqlStatement.execute();
+										}
+									}
+									
+									function check6Error(see:SQLErrorEvent):void 
+									{
+										if (debugMode) trace("Database.as : duration column not found in treatments table (old version of Spike). Updating table...");
+										sqlStatement.clearParameters();
+										sqlStatement.text = "ALTER TABLE treatments ADD COLUMN duration REAL;";
+										sqlStatement.execute();
+									}
+								}
+								
+								function check5Error(see:SQLErrorEvent):void 
+								{
+									if (debugMode) trace("Database.as : prebolus column not found in treatments table (old version of Spike). Updating table...");
+									sqlStatement.clearParameters();
+									sqlStatement.text = "ALTER TABLE treatments ADD COLUMN prebolus REAL;";
+									sqlStatement.execute();
+								}
+							}
+							
+							function check4Error(see:SQLErrorEvent):void 
+							{
+								if (debugMode) trace("Database.as : needsadjustment column not found in treatments table (old version of Spike). Updating table...");
+								sqlStatement.clearParameters();
+								sqlStatement.text = "ALTER TABLE treatments ADD COLUMN needsadjustment STRING;";
+								sqlStatement.execute();
+							}
+						}
+						
+						function check3Error(see:SQLErrorEvent):void 
+						{
+							if (debugMode) trace("Database.as : children column not found in treatments table (old version of Spike). Updating table...");
+							sqlStatement.clearParameters();
+							sqlStatement.text = "ALTER TABLE treatments ADD COLUMN children STRING;";
+							sqlStatement.execute();
+						}
 					}
 					
 					function check2Error(see:SQLErrorEvent):void 
@@ -681,22 +970,65 @@ package database
 				
 				sqlStatement.clearParameters();
 				
-				//Check if table needs to be updated for new Spike format
+				//Check if table needs to be updated for new Spike format #1
 				sqlStatement.text = "SELECT ishidden FROM insulins";
-				sqlStatement.addEventListener(SQLEvent.RESULT,checkPerformed);
-				sqlStatement.addEventListener(SQLErrorEvent.ERROR,checkError);
+				sqlStatement.addEventListener(SQLEvent.RESULT,check1Performed);
+				sqlStatement.addEventListener(SQLErrorEvent.ERROR,check1Error);
 				sqlStatement.execute();
 				
-				function checkPerformed(se:SQLEvent):void 
+				function check1Performed(se:SQLEvent):void 
 				{
-					sqlStatement.removeEventListener(SQLEvent.RESULT,checkPerformed);
-					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,checkPerformed);
+					sqlStatement.removeEventListener(SQLEvent.RESULT,check1Performed);
+					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check1Error);
 					sqlStatement.clearParameters();
 					
-					createProfilesTable();
+					//Check if table needs to be updated for new Spike format #2
+					sqlStatement.text = "SELECT curve FROM insulins";
+					sqlStatement.addEventListener(SQLEvent.RESULT,check2Performed);
+					sqlStatement.addEventListener(SQLErrorEvent.ERROR,check2Error);
+					sqlStatement.execute();
+					
+					function check2Performed(se:SQLEvent):void 
+					{
+						sqlStatement.removeEventListener(SQLEvent.RESULT,check2Performed);
+						sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check2Error);
+						sqlStatement.clearParameters();
+						
+						//Check if table needs to be updated for new Spike format #3
+						sqlStatement.text = "SELECT peak FROM insulins";
+						sqlStatement.addEventListener(SQLEvent.RESULT,check3Performed);
+						sqlStatement.addEventListener(SQLErrorEvent.ERROR,check3Error);
+						sqlStatement.execute();
+						
+						function check3Performed(se:SQLEvent):void 
+						{
+							sqlStatement.removeEventListener(SQLEvent.RESULT,check3Performed);
+							sqlStatement.removeEventListener(SQLErrorEvent.ERROR,check3Error);
+							sqlStatement.clearParameters();
+							
+							//All checks performed. Continue with next table
+							createProfilesTable();
+						}
+						
+						function check3Error(see:SQLErrorEvent):void 
+						{
+							if (debugMode) trace("Database.as : peak column not found in insulins table (old version of Spike). Updating table...");
+							sqlStatement.clearParameters();
+							sqlStatement.text = "ALTER TABLE insulins ADD COLUMN peak REAL;";
+							sqlStatement.execute();
+						}
+					}
+					
+					function check2Error(see:SQLErrorEvent):void 
+					{
+						if (debugMode) trace("Database.as : curve column not found in insulins table (old version of Spike). Updating table...");
+						sqlStatement.clearParameters();
+						sqlStatement.text = "ALTER TABLE insulins ADD COLUMN curve STRING;";
+						sqlStatement.execute();
+					}
 				}
 				
-				function checkError(see:SQLErrorEvent):void 
+				function check1Error(see:SQLErrorEvent):void 
 				{
 					if (debugMode) trace("Database.as : ishidden column not found in insulins table (old version of Spike). Updating table...");
 					sqlStatement.clearParameters();
@@ -723,7 +1055,32 @@ package database
 			function tableCreated(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				createHealthKitTreatmentsTable();
+				
+				sqlStatement.clearParameters();
+				
+				//Check if table needs to be updated for new Spike format #1
+				sqlStatement.text = "SELECT trendcorrections FROM profiles";
+				sqlStatement.addEventListener(SQLEvent.RESULT,checkProfilesPerformed);
+				sqlStatement.addEventListener(SQLErrorEvent.ERROR,checkProfilesError);
+				sqlStatement.execute();
+				
+				function checkProfilesPerformed(se:SQLEvent):void 
+				{
+					sqlStatement.removeEventListener(SQLEvent.RESULT,checkProfilesPerformed);
+					sqlStatement.removeEventListener(SQLErrorEvent.ERROR,checkProfilesError);
+					sqlStatement.clearParameters();
+					
+					createHealthKitTreatmentsTable();
+				}
+				
+				function checkProfilesError(see:SQLErrorEvent):void 
+				{
+					if (debugMode) trace("Database.as : trendcorrections column not found in profiles table (old version of Spike). Updating table...");
+					sqlStatement.clearParameters();
+					sqlStatement.clearParameters();
+					sqlStatement.text = "ALTER TABLE profiles ADD COLUMN trendcorrections STRING;";
+					sqlStatement.execute();
+				}
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {
@@ -744,7 +1101,7 @@ package database
 			function tableCreated(se:SQLEvent):void {
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
-				finishedCreatingTables();
+				createFoodsTable();
 			}
 			
 			function tableCreationError(see:SQLErrorEvent):void {
@@ -752,6 +1109,111 @@ package database
 				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
 				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
 				dispatchInformation('failed_to_create_healthkittreatments_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createFoodsTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_FOODS;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				createRecipesListTable();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create foods table");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_foods_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createRecipesListTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_RECIPES_LIST;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				createRecipesFoodsTable();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create recipes list table");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_recipes_list_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createRecipesFoodsTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_RECIPES_FOODS;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				createIOBCOBCachesTable();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create recipes foods table");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_recipes_foods_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createIOBCOBCachesTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_IOB_COB_CACHES;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				createBasalRatesTable();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create iobcobcaches table.");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_iobcobcaches_table', see != null ? see.error.message:null);
+			}
+		}
+		
+		private static function createBasalRatesTable():void {
+			sqlStatement.clearParameters();
+			sqlStatement.text = CREATE_TABLE_BASAL_RATES;
+			sqlStatement.addEventListener(SQLEvent.RESULT,tableCreated);
+			sqlStatement.addEventListener(SQLErrorEvent.ERROR,tableCreationError);
+			sqlStatement.execute();
+			
+			function tableCreated(se:SQLEvent):void {
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				finishedCreatingTables();
+			}
+			
+			function tableCreationError(see:SQLErrorEvent):void {
+				if (debugMode) trace("Database.as : Failed to create basalrates table.");
+				sqlStatement.removeEventListener(SQLEvent.RESULT,tableCreated);
+				sqlStatement.removeEventListener(SQLErrorEvent.ERROR,tableCreationError);
+				dispatchInformation('failed_to_create_basalrates_table', see != null ? see.error.message:null);
 			}
 		}
 		
@@ -780,7 +1242,7 @@ package database
 		 * synchronous, no returnvalue, will simply overwrite the bluetoothdevice attributes (which is a single instance)<br>
 		 */
 		public static function getBlueToothDevice():void {
-			var returnValue:BlueToothDevice;
+			var returnValue:CGMBlueToothDevice;
 			try {
 				var conn:SQLConnection = new SQLConnection();
 				conn.open(dbFile, SQLMode.READ);
@@ -793,9 +1255,9 @@ package database
 				conn.close();
 				var numResults:int = result.data.length;
 				if (numResults == 1) {
-					BlueToothDevice.name = result.data[0].name;
-					BlueToothDevice.address = result.data[0].address;
-					BlueToothDevice.setLastModifiedTimestamp(result.data[0].lastmodifiedtimestamp); 
+					CGMBlueToothDevice.name = result.data[0].name;
+					CGMBlueToothDevice.address = result.data[0].address;
+					CGMBlueToothDevice.setLastModifiedTimestamp(result.data[0].lastmodifiedtimestamp); 
 				} else {
 					dispatchInformation('error_while_getting_bluetooth_device_in_db', 'resulting amount of bluetoothdevices should be 1 but is ' + numResults);
 				}
@@ -2080,7 +2542,7 @@ package database
 		}
 		
 		/**
-		 * Get treatments synchronously
+		 * Get treatments synchronously. Basals NOT included.
 		 * From: Starting timestamp.
 		 * Until: Ending timestamp.
 		 * Columns: Data columns to be retrieved from database.
@@ -2095,9 +2557,15 @@ package database
 				var getRequest:SQLStatement = new SQLStatement();
 				getRequest.sqlConnection = conn;
 				if (maxCount == 1)
-					getRequest.text =  "SELECT " + columns + " FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + from + " AND " + until + " ORDER BY lastmodifiedtimestamp DESC";
+				{
+					//getRequest.text =  "SELECT " + columns + " FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + from + " AND " + until + " ORDER BY lastmodifiedtimestamp DESC";
+					getRequest.text =  "SELECT " + columns + " FROM treatments WHERE (lastmodifiedtimestamp BETWEEN " + from + " AND " + until + ") AND (type != '" + Treatment.TYPE_MDI_BASAL + "' AND type != '" + Treatment.TYPE_TEMP_BASAL + "' AND type != '" + Treatment.TYPE_TEMP_BASAL_END + "') ORDER BY lastmodifiedtimestamp DESC";
+				}
 				else
-					getRequest.text =  "SELECT " + columns + " FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + from + " AND " + until +  " ORDER BY lastmodifiedtimestamp ASC LIMIT " + maxCount;
+				{
+					//getRequest.text =  "SELECT " + columns + " FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + from + " AND " + until +  " ORDER BY lastmodifiedtimestamp ASC LIMIT " + maxCount;
+					getRequest.text =  "SELECT " + columns + " FROM treatments WHERE (lastmodifiedtimestamp BETWEEN " + from + " AND " + until +  ") AND (type != '" + Treatment.TYPE_MDI_BASAL + "' AND type != '" + Treatment.TYPE_TEMP_BASAL + "' AND type != '" + Treatment.TYPE_TEMP_BASAL_END + "') ORDER BY lastmodifiedtimestamp ASC LIMIT " + maxCount;
+				}
 				getRequest.execute();
 				var result:SQLResult = getRequest.getResult();
 				conn.close();
@@ -2115,6 +2583,45 @@ package database
 			}
 		}
 		
+		/**
+		 * Get basals synchronously. Treatments NOT included.
+		 * From: Starting timestamp.
+		 * Until: Ending timestamp.
+		 * Columns: Data columns to be retrieved from database.
+		 * MaxCount: Maximum of records returned from database (if applicable). 1 means all.
+		 */
+		public static function getBasalsSynchronous(from:Number, until:Number, columns:String = "*", maxCount:int = 1):Array {
+			var returnValue:Array = new Array();
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				if (maxCount == 1)
+				{
+					getRequest.text = "SELECT " + columns + " FROM treatments WHERE ((lastmodifiedtimestamp + (basalduration * 60 * 1000)) >= " + from + ") AND (lastmodifiedtimestamp <= " + until + ") AND (type == '" + Treatment.TYPE_MDI_BASAL + "' OR type == '" + Treatment.TYPE_TEMP_BASAL + "' OR type == '" + Treatment.TYPE_TEMP_BASAL_END + "') ORDER BY lastmodifiedtimestamp DESC";
+				}
+				else
+				{
+					getRequest.text = "SELECT " + columns + " FROM treatments WHERE ((lastmodifiedtimestamp + (basalduration * 60 * 1000)) >= " + from + ") AND (lastmodifiedtimestamp <= " + until + ") AND (type == '" + Treatment.TYPE_MDI_BASAL + "' OR type == '" + Treatment.TYPE_TEMP_BASAL + "' OR type == '" + Treatment.TYPE_TEMP_BASAL_END + "') ORDER BY lastmodifiedtimestamp ASC LIMIT " + maxCount;
+				}
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+					returnValue = result.data;
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_treatments', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_treatments',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnValue;
+			}
+		}
 		
 		/**
 		 * inserts a treatment in the database<br>
@@ -2141,7 +2648,17 @@ package database
 				text += "note, ";
 				text += "lastmodifiedtimestamp, ";
 				text += "carbdelay, ";
-				text += "basalduration) ";
+				text += "basalduration, ";
+				text += "children, ";
+				text += "prebolus, ";
+				text += "duration, ";
+				text += "intensity, ";
+				text += "isbasalabsolute, ";
+				text += "isbasalrelative, ";
+				text += "istempbasalend, ";
+				text += "basalabsoluteamount, ";
+				text += "basalpercentamount, ";
+				text += "needsadjustment) ";
 				text += "VALUES (";
 				text += "'" + treatment.ID + "', ";
 				text += "'" + treatment.type + "', ";
@@ -2153,18 +2670,30 @@ package database
 				text += "'" + treatment.note + "', ";
 				text += treatment.timestamp + ", ";
 				text += treatment.carbDelayTime + ", ";
-				text += treatment.basalDuration + ")";
+				text += treatment.basalDuration + ", ";
+				text += "'" + treatment.extractChildren() + "', ";
+				text += (!isNaN(treatment.preBolus) ? treatment.preBolus : "NULL") + ", ";
+				text += (!isNaN(treatment.duration) ? treatment.duration : "NULL") + ", ";
+				text += "'" + treatment.exerciseIntensity + "', ";
+				text += "'" + String(treatment.isBasalAbsolute) + "', ";
+				text += "'" + String(treatment.isBasalRelative) + "', ";
+				text += "'" + String(treatment.isTempBasalEnd) + "', ";
+				text += treatment.basalAbsoluteAmount + ", ";
+				text += treatment.basalPercentAmount + ", ";
+				text += "'" + String(treatment.needsAdjustment) + "')";
 				
 				insertRequest.text = text;
 				insertRequest.execute();
 				conn.commit();
 				conn.close();
+				
 			} catch (error:SQLError) {
 				if (conn.connected) {
 					conn.rollback();
 					conn.close();
 				}
 				dispatchInformation('error_while_inserting_treatment_in_db', error.message + " - " + error.details);
+				trace("ERROR ADDING TREATMENT  TO DABATASE!!!!",  error.message + " - " + error.details);
 			}
 		}
 		
@@ -2193,7 +2722,17 @@ package database
 				"note = '" + treatment.note + "', " +
 				"lastmodifiedtimestamp = " + treatment.timestamp + ", " +
 				"carbdelay = " + treatment.carbDelayTime + ", " +
-				"basalduration = " + treatment.basalDuration + " " +
+				"basalduration = " + treatment.basalDuration + ", " +
+				"children = '" + treatment.extractChildren() + "', " +
+				"prebolus = " + (!isNaN(treatment.preBolus) ? treatment.preBolus : "NULL") + ", " +
+				"duration = " + (!isNaN(treatment.duration ) ? treatment.duration : "NULL") + ", " +
+				"intensity = '" + treatment.exerciseIntensity + "', " +
+				"isbasalabsolute = '" + String(treatment.isBasalAbsolute) + "', " +
+				"isbasalrelative = '" + String(treatment.isBasalRelative) + "', " +
+				"istempbasalend = '" + String(treatment.isTempBasalEnd) + "', " +
+				"basalabsoluteamount = " + treatment.basalAbsoluteAmount + ", " +
+				"basalpercentamount = " + treatment.basalPercentAmount + ", " +
+				"needsadjustment = '" + String(treatment.needsAdjustment) + "' " +
 				"WHERE id = '" + treatment.ID + "'";
 				updateRequest.execute();
 				conn.commit();
@@ -2222,12 +2761,36 @@ package database
 				deleteRequest.execute();
 				conn.commit();
 				conn.close();
+				
 			} catch (error:SQLError) {
 				if (conn.connected) {
 					conn.rollback();
 					conn.close();
 				}
 				dispatchInformation('error_while_deleting_treatment_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Deletes treatments older than 3 months (not needed anymore)
+		 */
+		public static function deleteOldTreatments():void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from treatments WHERE lastmodifiedtimestamp < " + (new Date().valueOf() - (95 * 24 * 60 * 60 * 1000));
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_old_treatments_in_db', error.message + " - " + error.details);
 			}
 		}
 		
@@ -2280,6 +2843,8 @@ package database
 				text += "name, ";
 				text += "dia, ";
 				text += "type, ";
+				text += "curve, ";
+				text += "peak, ";
 				text += "isdefault, ";
 				text += "ishidden, ";
 				text += "lastmodifiedtimestamp) ";
@@ -2288,6 +2853,8 @@ package database
 				text += "'" + insulin.name + "', ";
 				text += insulin.dia + ", ";
 				text += "'" + insulin.type + "', ";
+				text += "'" + insulin.curve + "', ";
+				text += insulin.peak + ", ";
 				text += "'" + insulin.isDefault + "', ";
 				text += "'" + insulin.isHidden + "', ";
 				text += insulin.timestamp + ")";
@@ -2324,6 +2891,8 @@ package database
 					"name = '" + insulin.name + "', " +
 					"dia = " + insulin.dia + ", " +
 					"type = '" + insulin.type + "', " +
+					"curve = '" + insulin.curve + "', " +
+					"peak = " + insulin.peak + ", " +
 					"isdefault = '" + insulin.isDefault + "', " +
 					"ishidden = '" + insulin.isHidden + "', " +
 					"lastmodifiedtimestamp = " + insulin.timestamp + " " +
@@ -2417,6 +2986,7 @@ package database
 				text += "carbsabsorptionrate, ";
 				text += "basalrates, ";
 				text += "targetglucoserates, ";
+				text += "trendcorrections, ";
 				text += "lastmodifiedtimestamp) ";
 				text += "VALUES (";
 				text += "'" + profile.ID + "', ";
@@ -2427,6 +2997,7 @@ package database
 				text += profile.carbsAbsorptionRate + ", ";
 				text += "'" + profile.basalRates + "', ";
 				text += "'" + profile.targetGlucoseRates + "', ";
+				text += "'" + profile.trendCorrections + "', ";
 				text += profile.timestamp + ")";
 				
 				insertRequest.text = text;
@@ -2465,6 +3036,7 @@ package database
 					"carbsabsorptionrate = " + profile.carbsAbsorptionRate + ", " +
 					"basalrates = '" + profile.basalRates + "', " +
 					"targetglucoserates = '" + profile.targetGlucoseRates + "', " +
+					"trendcorrections = '" + profile.trendCorrections + "', " +
 					"lastmodifiedtimestamp = " + profile.timestamp + " " +
 					"WHERE id = '" + profile.ID + "'";
 				updateRequest.execute();
@@ -2504,18 +3076,152 @@ package database
 		}
 		
 		/**
-		 * Returns pie chart stats: Average Glucose, Number Low Readings, Number In Range Readings, Number High Readings and Number Total Readings.<br>
-		 * Between two dates, in a combined query for faster processing.<br>
-		 * Readings without calibration are ignored.
+		 * Get Basal Rates Synchronously
 		 */
-		public static function getBasicUserStats():BasicUserStats 
+		public static function getBasalRatesSynchronous():Array {
+			var returnValue:Array = new Array();
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				getRequest.text =  "SELECT * FROM basalrates";
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+					returnValue = result.data;
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_basal_rates', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_basal_rates',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnValue;
+			}
+		}
+		
+		/**
+		 * inserts a basal rate in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function insertBasalRateSynchronous(basalRate:BasalRate):void 
 		{
-			var userStats:BasicUserStats = new BasicUserStats();
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				var text:String = "INSERT INTO basalrates (";
+				text += "id, ";
+				text += "time, ";
+				text += "hours, ";
+				text += "minutes, ";
+				text += "rate, ";
+				text += "lastmodifiedtimestamp) ";
+				text += "VALUES (";
+				text += "'" + basalRate.ID + "', ";
+				text += "'" + basalRate.startTime + "', ";
+				text += basalRate.startHours + ", ";
+				text += basalRate.startMinutes + ", ";
+				text += basalRate.basalRate + ", ";
+				text += basalRate.timestamp + ")";
+				
+				insertRequest.text = text;
+				insertRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_inserting_basal_rate_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * updates a basal rate in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function updateBasalRateSynchronous(basalRate:BasalRate):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var updateRequest:SQLStatement = new SQLStatement();
+				updateRequest.sqlConnection = conn;
+				updateRequest.text = "UPDATE basalrates SET " +
+					"id = '" + basalRate.ID + "', " +
+					"time = '" + basalRate.startTime + "', " +
+					"hours = " + basalRate.startHours + ", " +
+					"minutes = " + basalRate.startMinutes + ", " +
+					"rate = " + basalRate.basalRate + ", " +
+					"lastmodifiedtimestamp = " + basalRate.timestamp + " " +
+					"WHERE id = '" + basalRate.ID + "'";
+				updateRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_updating_basal_rate_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * deletes a basal rate in the database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function deleteBasalRateSynchronous(basalRate:BasalRate):void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from basalrates WHERE id = " + "'" + basalRate.ID + "'";
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_basal_rate_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Returns pie chart stats for glucose distribution, glucose variability and tratments.<br>
+		 * Between two dates, in a combined query for faster processing.<br>
+		 * Readings without calibration are ignored.<br>
+		 * Has option to only query and return different sections of stats.
+		 */
+		public static function getBasicUserStats(fromTime:Number = Number.NaN, untilTime:Number = Number.NaN, page:String = "all"):BasicUserStats 
+		{
+			var userStats:BasicUserStats = new BasicUserStats(page);
 			var a1cOffset:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_OFFSET));
 			var avgOffset:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_AVG_OFFSET));
 			var rangesOffset:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_RANGES_OFFSET));
+			var variabilityOffSet:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_VARIABILITY_OFFSET));
+			var treatmentsOffSet:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_TREATMENTS_OFFSET));
 			var lowThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));;
 			var highThreshold:Number = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+			var userType:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI);
 			var now:Number = new Date().valueOf();
 			
 			try 
@@ -2525,65 +3231,160 @@ package database
 				conn.begin();
 				var getRequest:SQLStatement = new SQLStatement();
 				getRequest.sqlConnection = conn;
-				var sqlQuery:String = "";
-				sqlQuery += "SELECT AVG(calculatedValue) AS `averageGlucose`, "
-				sqlQuery +=	"(SELECT AVG(calculatedValue) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (now - a1cOffset) + " AND " + now + ") AS `averageGlucoseA1C`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (now - TIME_24_HOURS) + " AND " + now + ") AS `numReadingsDay`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (now - rangesOffset) + " AND " + now + ") AS `numReadingsTotal`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue <= " + lowThreshold + " AND timestamp BETWEEN " + (now - rangesOffset) + " AND " + now + ") AS `numReadingsLow`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue > " + lowThreshold + " AND calculatedValue < " + highThreshold + " AND timestamp BETWEEN " + (now - rangesOffset) + " AND " + now + ") AS `numReadingsInRange`, ";
-				sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue >= " + highThreshold + " AND timestamp BETWEEN " + (now - rangesOffset) + " AND " + now + ") AS `numReadingsHigh` ";
-				sqlQuery +=	"FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (now - avgOffset) + " AND " + now;
-				getRequest.text = sqlQuery;
-				getRequest.execute();
-				var result:SQLResult = getRequest.getResult();
+				
+				if (page == BasicUserStats.PAGE_ALL || page == BasicUserStats.PAGE_BG_DISTRIBUTION)
+				{
+					var sqlQuery:String = "";
+					sqlQuery += "SELECT AVG(calculatedValue) AS `averageGlucose`, ";
+					sqlQuery +=	"(SELECT AVG(calculatedValue) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - a1cOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `averageGlucoseA1C`, ";
+					sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - TimeSpan.TIME_24_HOURS) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsDay`, ";
+					sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsTotal`, ";
+					sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue <= " + lowThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsLow`, ";
+					sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue > " + lowThreshold + " AND calculatedValue < " + highThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsInRange`, ";
+					sqlQuery +=	"(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue >= " + highThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - rangesOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsHigh` ";
+					sqlQuery +=	"FROM bgreading WHERE calibrationid != '-' AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - avgOffset) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime);
+					getRequest.text = sqlQuery;
+					getRequest.execute();
+					var resultBasic:SQLResult = getRequest.getResult();
+				}
+				
+				if (page == BasicUserStats.PAGE_ALL || page == BasicUserStats.PAGE_VARIABILITY)
+				{
+					getRequest.clearParameters();
+					getRequest.text = "SELECT calculatedValue, timestamp, ";
+					getRequest.text += "(SELECT COUNT(bgreadingid) FROM bgreading WHERE calibrationid != '-' AND calculatedValue > " + lowThreshold + " AND calculatedValue < " + highThreshold + " AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - variabilityOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `numReadingsInRangeForVariability`, ";
+					getRequest.text += "(SELECT ((COUNT(*)*(SUM(calculatedValue * calculatedValue)) - (SUM(calculatedValue)*SUM(calculatedValue)) )/((COUNT(*)-1)*(COUNT(*))) ) from bgreading WHERE calibrationid != '-' AND calculatedValue > 38 AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - variabilityOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `stdDeviation` ";
+					getRequest.text += "FROM bgreading WHERE calibrationid != '-' AND calculatedValue > 38 AND timestamp BETWEEN " + (isNaN(fromTime) ? (now - variabilityOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime);
+					getRequest.execute();
+					var resultVariability:SQLResult = getRequest.getResult();
+				}
+				
+				if (page == BasicUserStats.PAGE_ALL || page == BasicUserStats.PAGE_TREATMENTS)
+				{
+					getRequest.clearParameters();
+					getRequest.text = "SELECT SUM(insulinamount) AS `totalBolus`, ";
+					getRequest.text +=	"(SELECT SUM(carbs) FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + (isNaN(fromTime) ? (now - treatmentsOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `totalCarbs`, ";
+					if (userType == "mdi")
+					{
+						getRequest.text +=	"(SELECT SUM(basalabsoluteamount) FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + (isNaN(fromTime) ? (now - treatmentsOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `totalBasal`, ";
+					}
+					getRequest.text +=	"(SELECT SUM(duration) FROM treatments WHERE type == '" + Treatment.TYPE_EXERCISE + "' AND lastmodifiedtimestamp BETWEEN " + (isNaN(fromTime) ? (now - treatmentsOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime) + ") AS `totalExercise` ";
+					getRequest.text += "FROM treatments WHERE lastmodifiedtimestamp BETWEEN " + (isNaN(fromTime) ? (now - treatmentsOffSet) : fromTime) + " AND " + (isNaN(untilTime) ? now : untilTime);
+					getRequest.execute();
+					var resultTreatments:SQLResult = getRequest.getResult();
+				}
+				
 				conn.close();
 				
-				if 
-				(
-					result.data != null && 
-					result.data is Array && 
-					result.data[0] != null && 
-					(result.data[0]["averageGlucose"] != null && !isNaN(result.data[0]["averageGlucose"])) &&    
-					(result.data[0]["numReadingsDay"] != null && !isNaN(result.data[0]["numReadingsDay"])) &&    
-					(result.data[0]["numReadingsTotal"] != null && !isNaN(result.data[0]["numReadingsTotal"])) &&    
-					(result.data[0]["numReadingsLow"] != null && !isNaN(result.data[0]["numReadingsLow"])) &&    
-					(result.data[0]["numReadingsInRange"] != null && !isNaN(result.data[0]["numReadingsInRange"])) &&    
-					(result.data[0]["numReadingsHigh"] != null && !isNaN(result.data[0]["numReadingsHigh"])) && 
-					(result.data[0]["averageGlucoseA1C"] != null && !isNaN(result.data[0]["averageGlucoseA1C"]))  
+				//Glucose Distribution
+				if ((page == BasicUserStats.PAGE_ALL || page == BasicUserStats.PAGE_BG_DISTRIBUTION)
+					&&
+					resultBasic != null
+					&&
+					resultBasic.data != null 
+					&& 
+					resultBasic.data is Array 
+					&& 
+					resultBasic.data[0] != null 
+					&& 
+					(resultBasic.data[0]["averageGlucose"] != null && !isNaN(resultBasic.data[0]["averageGlucose"])) 
+					&&    
+					(resultBasic.data[0]["numReadingsDay"] != null && !isNaN(resultBasic.data[0]["numReadingsDay"])) 
+					&&    
+					(resultBasic.data[0]["numReadingsTotal"] != null && !isNaN(resultBasic.data[0]["numReadingsTotal"])) 
+					&&    
+					(resultBasic.data[0]["numReadingsLow"] != null && !isNaN(resultBasic.data[0]["numReadingsLow"])) 
+					&&    
+					(resultBasic.data[0]["numReadingsInRange"] != null && !isNaN(resultBasic.data[0]["numReadingsInRange"])) 
+					&&       
+					(resultBasic.data[0]["numReadingsHigh"] != null && !isNaN(resultBasic.data[0]["numReadingsHigh"])) 
+					&& 
+					(resultBasic.data[0]["averageGlucoseA1C"] != null && !isNaN(resultBasic.data[0]["averageGlucoseA1C"]))
 				)
 				{
-					userStats.averageGlucose = ((Number(result.data[0]["averageGlucose"]) * 10 + 0.5)  >> 0) / 10;
+					userStats.averageGlucose = ((Number(resultBasic.data[0]["averageGlucose"]) * 10 + 0.5)  >> 0) / 10;
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) != "true") userStats.averageGlucose = Math.round(((BgReading.mgdlToMmol((userStats.averageGlucose))) * 10)) / 10;
-					userStats.numReadingsDay = Number(result.data[0]["numReadingsDay"]);
-					userStats.numReadingsTotal = Number(result.data[0]["numReadingsTotal"]);
-					userStats.numReadingsLow = Number(result.data[0]["numReadingsLow"]);
-					userStats.numReadingsInRange = Number(result.data[0]["numReadingsInRange"]);
-					userStats.numReadingsHigh = Number(result.data[0]["numReadingsHigh"]);
-					userStats.a1c = ((((46.7 + (((Number(result.data[0]["averageGlucoseA1C"]) * 10 + 0.5)  >> 0) / 10)) / 28.7) * 10 + 0.5)  >> 0) / 10;
+					userStats.numReadingsDay = Number(resultBasic.data[0]["numReadingsDay"]);
+					userStats.numReadingsTotal = Number(resultBasic.data[0]["numReadingsTotal"]);
+					userStats.numReadingsLow = Number(resultBasic.data[0]["numReadingsLow"]);
+					userStats.numReadingsInRange = Number(resultBasic.data[0]["numReadingsInRange"]);
+					userStats.numReadingsHigh = Number(resultBasic.data[0]["numReadingsHigh"]);
+					userStats.a1c = ((((46.7 + (((Number(resultBasic.data[0]["averageGlucoseA1C"]) * 10 + 0.5)  >> 0) / 10)) / 28.7) * 10 + 0.5)  >> 0) / 10;
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) == "true")
 						userStats.a1c = ((((userStats.a1c - 2.15) * 10.929) * 10 + 0.5)  >> 0) / 10; //IFCC support
 					userStats.percentageHigh = (userStats.numReadingsHigh * 100) / userStats.numReadingsTotal;
 					userStats.percentageHighRounded = ((userStats.percentageHigh * 10 + 0.5)  >> 0) / 10;
 					userStats.percentageInRange = (userStats.numReadingsInRange * 100) / userStats.numReadingsTotal;
 					userStats.percentageInRangeRounded = ((userStats.percentageInRange * 10 + 0.5)  >> 0) / 10;
-					var preLow:Number = Math.round((userStats.numReadingsLow * 100) / userStats.numReadingsTotal) * 10 / 10;
-					var percentageLow:Number;
-					var percentageLowRounded:Number;
-					if (preLow != 0 && !isNaN(preLow))
-					{
-						userStats.percentageLow = 100 - userStats.percentageInRange - userStats.percentageHigh;
-						userStats.percentageLowRounded = Math.round ((100 - userStats.percentageInRangeRounded - userStats.percentageHighRounded) * 10) / 10;
-					}
+					userStats.percentageLow = 100 - userStats.percentageInRange - userStats.percentageHigh;
+					userStats.percentageLowRounded = Math.round((100 - userStats.percentageHighRounded - userStats.percentageInRangeRounded) * 10) / 10;
 					userStats.captureRate = ((((userStats.numReadingsDay * 100) / 288) * 10 + 0.5)  >> 0) / 10;
 					if (userStats.captureRate > 100) userStats.captureRate = 100;
 				}
+				
+				//Glucose Variability
+				if ((page == BasicUserStats.PAGE_ALL || page == BasicUserStats.PAGE_VARIABILITY)
+					&&
+					resultVariability != null
+					&&
+					resultVariability.data != null 
+					&& 
+					resultVariability.data is Array 
+					&& 
+					resultVariability.data[0] != null 
+					&& 
+					(resultVariability.data[0]["stdDeviation"] != null && !isNaN(resultVariability.data[0]["stdDeviation"]))
+					&& 
+					(resultVariability.data[0]["numReadingsInRangeForVariability"] != null && !isNaN(resultVariability.data[0]["numReadingsInRangeForVariability"]))
+				)
+				{
+					var variabilityInRangePct:Number = (resultVariability.data[0]["numReadingsInRangeForVariability"] * 100) / resultVariability.data.length;
+					var advancedStats:Object = GlucoseFactory.calculateAdvancedStats(resultVariability.data, variabilityInRangePct);
+					userStats.standardDeviation = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(Math.sqrt(resultVariability.data[0]["stdDeviation"]) * 10) / 10 : Math.round(BgReading.mgdlToMmol(Math.sqrt(resultVariability.data[0]["stdDeviation"])) * 100) / 100;
+					userStats.gvi = advancedStats.GVI != null && !isNaN(advancedStats.GVI) ? advancedStats.GVI : Number.NaN;
+					userStats.pgs = advancedStats.PGS != null && !isNaN(advancedStats.PGS) ? advancedStats.PGS : Number.NaN;
+					userStats.hourlyChange = advancedStats.meanHourlyChange != null && !isNaN( advancedStats.meanHourlyChange) ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? Math.round(advancedStats.meanHourlyChange * 10) / 10 : Math.round(advancedStats.meanHourlyChange * 100) / 100 : Number.NaN;
+					userStats.fluctuation5 = advancedStats.timeInFluctuation != null && !isNaN(advancedStats.timeInFluctuation) ? advancedStats.timeInFluctuation : Number.NaN;
+					userStats.fluctuation10 = advancedStats.timeInRapidFluctuation != null && !isNaN(advancedStats.timeInRapidFluctuation) ? advancedStats.timeInRapidFluctuation : Number.NaN;
+				}
+				
+				//Treatments
+				if ((page == BasicUserStats.PAGE_ALL || page == BasicUserStats.PAGE_TREATMENTS)
+					&&
+					resultTreatments != null
+					&&
+					resultTreatments.data != null 
+					&& 
+					resultTreatments.data is Array 
+					&& 
+					resultTreatments.data[0] != null 
+					&& 
+					(resultTreatments.data[0]["totalBolus"] != null && !isNaN(resultTreatments.data[0]["totalBolus"]))
+					&& 
+					(resultTreatments.data[0]["totalCarbs"] != null && !isNaN(resultTreatments.data[0]["totalCarbs"]))
+				)
+				{
+					userStats.bolus = Math.round(resultTreatments.data[0]["totalBolus"] * 100) / 100;
+					userStats.carbs = Math.round(resultTreatments.data[0]["totalCarbs"] * 10) / 10;
+					userStats.exercise = resultTreatments.data[0]["totalExercise"] != null && !isNaN(resultTreatments.data[0]["totalExercise"]) ? Math.round(resultTreatments.data[0]["totalExercise"]) : 0;
+					if (userType == "pump")
+					{
+						StatsManager.performBasalCalculations(userStats);
+					}
+					else if (userType == "mdi")
+					{
+						if (resultTreatments.data[0]["totalBasal"] != null)
+						{
+							userStats.basal = !isNaN(resultTreatments.data[0]["totalBasal"]) ? resultTreatments.data[0]["totalBasal"] : 0;
+						}
+					}
+				}
 			} catch (error:SQLError) {
 				if (conn.connected) conn.close();
-				dispatchInformation('error_while_getting_bgreadings_for_spike_server', error.message + " - " + error.details);
+				dispatchInformation('error_while_getting_user_stats', error.message + " - " + error.details);
 			} catch (other:Error) {
 				if (conn.connected) conn.close();
-				dispatchInformation('error_while_getting_bgreadings_for_spike_server',other.getStackTrace().toString());
+				dispatchInformation('error_while_getting_user_stats',other.getStackTrace().toString());
 			} finally {
 				if (conn.connected) conn.close();
 				return userStats;
@@ -2676,6 +3477,653 @@ package database
 			}
 		}
 		
+		/**
+		 * Get foods by name synchronously
+		 */
+		public static function getFavoriteFoodSynchronous(foodName:String, page:int):Object {
+			
+			var returnObject:Object = {};
+			var foodsList:Array = new Array();
+			var foodBatchAmount:int = 50;
+			var foodOffSet:int = (page - 1) * foodBatchAmount;
+			
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				var sqlQuery:String = "";
+				sqlQuery += "SELECT *, ";
+				sqlQuery += "(SELECT COUNT(id) FROM foods WHERE name LIKE '%" + foodName + "%') AS `totalRecords` ";
+				sqlQuery += "FROM foods WHERE name LIKE '%" + foodName + "%' ORDER BY name COLLATE NOCASE ASC LIMIT " + foodBatchAmount + " OFFSET " + foodOffSet;
+				getRequest.text = sqlQuery;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+				{
+					returnObject.foodsList = result.data;
+					returnObject.totalRecords = result.data[0]["totalRecords"] != null ? int(result.data[0]["totalRecords"]) : 0;
+				}
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_profiles', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_profiles',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnObject;
+			}
+		}
+		
+		/**
+		 * Get foods by barcode synchronously
+		 */
+		public static function getFavoriteFoodByBarcodeSynchronous(barCode:String):Array {
+			
+			var foodsList:Array = new Array();
+			
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				getRequest.text = "SELECT * FROM foods WHERE barcode LIKE '%" + barCode + "%'";
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+				{
+					foodsList = result.data;
+				}
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_profiles', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_profiles',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return foodsList;
+			}
+		}
+		
+		/**
+		 * inserts a food in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function insertFoodSynchronous(food:Food):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				var text:String = "INSERT INTO foods (";
+				text += "id, ";
+				text += "name, ";
+				text += "brand, ";
+				text += "proteins, ";
+				text += "carbs, ";
+				text += "fiber, ";
+				text += "fats, ";
+				text += "calories, ";
+				text += "servingsize, ";
+				text += "servingunit, ";
+				text += "link, ";
+				text += "barcode, ";
+				text += "source, ";
+				text += "notes, ";
+				text += "lastmodifiedtimestamp) ";
+				text += "VALUES (";
+				text += "'" + food.id + "', ";
+				text += "'" + food.name.replace(/'/g, "''") + "', ";
+				text += "'" + food.brand.replace(/'/g, "''") + "', ";
+				text += "'" + food.proteins + "', ";
+				text += "'" + food.carbs + "', ";
+				text += "'" + food.fiber + "', ";
+				text += "'" + food.fats + "', ";
+				text += "'" + food.kcal + "', ";
+				text += "'" + food.servingSize + "', ";
+				text += "'" + food.servingUnit.replace(/'/g, "''") + "', ";
+				text += "'" + food.link + "', ";
+				text += "'" + food.barcode + "', ";
+				text += "'" + food.source + "', ";
+				text += "'" + food.note + "', ";
+				text += food.timestamp + ")";
+				
+				insertRequest.text = text;
+				insertRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_inserting_food_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * updates a food in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function updateFoodSynchronous(food:Food):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var updateRequest:SQLStatement = new SQLStatement();
+				updateRequest.sqlConnection = conn;
+				updateRequest.text = "UPDATE foods SET " +
+					"id = '" + food.id + "', " +
+					"name = '" + food.name.replace(/'/g, "''") + "', " +
+					"brand = '" + food.brand.replace(/'/g, "''") + "', " +
+					"proteins = '" + food.proteins + "', " +
+					"carbs = '" + food.carbs + "', " +
+					"fiber = '" + food.fiber + "', " +
+					"fats = '" + food.fats + "', " +
+					"calories = '" + food.kcal + "', " +
+					"servingsize = '" + food.servingSize + "', " +
+					"servingunit = '" + food.servingUnit.replace(/'/g, "''") + "', " +
+					"link = '" + food.link + "', " +
+					"barcode = '" + food.barcode + "', " +
+					"source = '" + food.source + "', " +
+					"source = '" + food.note + "', " +
+					"lastmodifiedtimestamp = " + food.timestamp + " " +
+					"WHERE id = '" + food.id + "'";
+				updateRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_updating_food_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Deletes a food in the database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function deleteFoodSynchronous(food:Food):void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from foods WHERE id = " + "'" + food.id + "'";
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_food_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Checks if food is saved in Database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function isFoodFavoriteSynchronous(food:Food):Boolean 
+		{
+			var foodFound:Boolean = false;
+			
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				var sqlQuery:String = "";
+				sqlQuery +=	"SELECT id FROM foods WHERE id = '" + food.id + "'";
+				getRequest.text = sqlQuery;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				
+				if (result.data != null && result.data is Array && result.data.length > 0)
+				{
+					foodFound = true;
+				}
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_checking_if_food_is_favourite', error.message + " - " + error.details);
+				return foodFound;
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_checking_if_food_is_favourite',other.getStackTrace().toString());
+				return foodFound;
+			} finally {
+				if (conn.connected) conn.close();
+				return foodFound;
+			}
+		}
+		
+		/**
+		 * inserts a recipe in the database<br>
+		 * synchronous<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function insertRecipeSynchronous(recipe:Recipe):void 
+		{
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				
+				var text:String;
+				
+				//Add Recipe
+				text = "INSERT INTO recipeslist (";
+				text += "id, ";
+				text += "name, ";
+				text += "servingsize, ";
+				text += "servingunit, ";
+				text += "notes, ";
+				text += "lastmodifiedtimestamp) ";
+				text += "VALUES (";
+				text += "'" + recipe.id + "', ";
+				text += "'" + recipe.name + "', ";
+				text += "'" + recipe.servingSize + "', ";
+				text += "'" + recipe.servingUnit.replace(/'/g, "''") + "', ";
+				text += "'" + recipe.notes + "', ";
+				text += recipe.timestamp + ")";
+				insertRequest.text = text;
+				insertRequest.execute();
+				
+				//Add Foods
+				for (var i:int = 0; i < recipe.foods.length; i++) 
+				{
+					var food:Food = recipe.foods[i];
+					text = "INSERT INTO recipesfoods (";
+					text += "recipeid, ";
+					text += "foodid, ";
+					text += "name, ";
+					text += "brand, ";
+					text += "proteins, ";
+					text += "carbs, ";
+					text += "fiber, ";
+					text += "substractfiber, ";
+					text += "fats, ";
+					text += "calories, ";
+					text += "servingsize, ";
+					text += "servingunit, ";
+					text += "recipeservingsize, ";
+					text += "recipeservingunit, ";
+					text += "link, ";
+					text += "barcode, ";
+					text += "source, ";
+					text += "notes, ";
+					text += "defaultunit, ";
+					text += "lastmodifiedtimestamp) ";
+					text += "VALUES (";
+					text += "'" + recipe.id + "', ";
+					text += "'" + food.id + "', ";
+					text += "'" + food.name.replace(/'/g, "''") + "', ";
+					text += "'" + food.brand.replace(/'/g, "''") + "', ";
+					text += "'" + food.proteins + "', ";
+					text += "'" + food.carbs + "', ";
+					text += "'" + food.fiber + "', ";
+					text += "'" + food.substractFiber + "', ";
+					text += "'" + food.fats + "', ";
+					text += "'" + food.kcal + "', ";
+					text += "'" + food.servingSize + "', ";
+					text += "'" + food.servingUnit.replace(/'/g, "''") + "', ";
+					text += "'" + recipe.servingSize + "', ";
+					text += "'" + recipe.servingUnit.replace(/'/g, "''") + "', ";
+					text += "'" + food.link + "', ";
+					text += "'" + food.barcode + "', ";
+					text += "'" + food.source + "', ";
+					text += "'" + food.note + "', ";
+					text += "'" + food.defaultUnit + "', ";
+					text += food.timestamp + ")";
+					
+					insertRequest.text = text;
+					insertRequest.execute();
+				}
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_inserting_recipe_or_food_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Get recipes by name synchronously
+		 */
+		public static function getRecipesSynchronous(recipeName:String, page:int):Object {
+			
+			var returnObject:Object = {};
+			var recipesList:Array = [];
+			var recipeBatchAmount:int = 50;
+			var recipeOffSet:int = (page - 1) * recipeBatchAmount;
+			
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				var sqlQuery:String = "";
+				sqlQuery += "SELECT *, ";
+				sqlQuery += "(SELECT COUNT(id) FROM recipeslist WHERE name LIKE '%" + recipeName + "%') AS `totalRecords` ";
+				sqlQuery += "FROM recipeslist WHERE name LIKE '%" + recipeName + "%' ORDER BY name COLLATE NOCASE ASC LIMIT " + recipeBatchAmount + " OFFSET " + recipeOffSet;
+				getRequest.text = sqlQuery;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				
+				if (result.data != null && result.data is Array)
+				{
+					returnObject.totalRecords = result.data[0]["totalRecords"] != null ? int(result.data[0]["totalRecords"]) : 0;
+					
+					var foundRecipesList:Array = result.data;
+					var numRecipes:int = foundRecipesList.length;
+					
+					for (var i:int = 0; i < numRecipes; i++) 
+					{
+						var tempRecipe:Object = foundRecipesList[i] as Object;
+						var recipesFoods:Array = [];
+						
+						var recipe:Recipe = new Recipe
+						(
+							tempRecipe.id,
+							tempRecipe.name,
+							tempRecipe.servingsize,
+							tempRecipe.servingunit,
+							recipesFoods,
+							tempRecipe.lastmodifiedtimestamp,
+							tempRecipe.notes
+						);
+						
+						//Query database for foods belonging to this recipe
+						var recipeSQLQuery:String = "SELECT * FROM recipesfoods WHERE recipeid LIKE '%" + tempRecipe.id + "%' ORDER BY name COLLATE NOCASE ASC";
+						getRequest.text = recipeSQLQuery;
+						getRequest.execute();
+						var recipeResult:SQLResult = getRequest.getResult();
+						
+						if (recipeResult.data != null && recipeResult.data is Array)
+						{
+							var tempRecipesFoodsList:Array = recipeResult.data;
+							var numRecipeFoods:int = tempRecipesFoodsList.length;
+							
+							for (var j:int = 0; j < numRecipeFoods; j++) 
+							{
+								var tempFood:Object = tempRecipesFoodsList[j] as Object;
+								var food:Food = new Food
+								(
+									tempFood.foodid,
+									tempFood.name,
+									Number(tempFood.proteins),
+									Number(tempFood.carbs),
+									Number(tempFood.fats),
+									Number(tempFood.calories),
+									Number(tempFood.servingsize),
+									tempFood.servingunit,
+									tempFood.lastmodifiedtimestamp,
+									Number(tempFood.fiber),
+									tempFood.brand,
+									tempFood.link,
+									tempFood.source,
+									tempFood.barcode,
+									tempFood.substractfiber == "true" ? true : false,
+									Number(tempFood.recipeservingsize),
+									tempFood.recipeservingunit,
+									tempFood.notes,
+									tempFood.defaultunit == "true" ? true : false
+								);
+								
+								recipesFoods.push(food);
+							}
+						}
+						
+						recipe.performCalculations();
+						recipesList.push(recipe);
+					}
+					
+					returnObject.recipesList = recipesList;
+				}
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_recipes', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_recipes',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnObject;
+			}
+		}
+		
+		/**
+		 * Checks if a recipe is saved in Database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function isRecipeFavoriteSynchronous(recipe:Recipe):Boolean 
+		{
+			var recipeFound:Boolean = false;
+			
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				var sqlQuery:String = "";
+				sqlQuery +=	"SELECT id FROM recipeslist WHERE id = '" + recipe.id + "'";
+				getRequest.text = sqlQuery;
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				
+				if (result.data != null && result.data is Array && result.data.length > 0)
+				{
+					recipeFound = true;
+				}
+				
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_checking_if_recipe_is_favourite', error.message + " - " + error.details);
+				return recipeFound;
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_checking_if_recipe_is_favourite',other.getStackTrace().toString());
+				return recipeFound;
+			} finally {
+				if (conn.connected) conn.close();
+				return recipeFound;
+			}
+		}
+		
+		/**
+		 * Deletes a recipe and all it's foods from the database<br>
+		 * dispatches info if anything goes wrong 
+		 */
+		public static function deleteRecipeSynchronous(recipe:Recipe):void {
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE from recipeslist WHERE id = " + "'" + recipe.id + "'";
+				deleteRequest.execute();
+				deleteRequest.text = "DELETE from recipesfoods WHERE recipeid = " + "'" + recipe.id + "'";
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_recipe_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Get IOB/COB Caches
+		 */
+		public static function getIOBCOBCachesSynchronous():Array {
+			var returnValue:Array = [];
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.READ);
+				conn.begin();
+				var getRequest:SQLStatement = new SQLStatement();
+				getRequest.sqlConnection = conn;
+				getRequest.text =  "SELECT * FROM iobcobcaches";
+				getRequest.execute();
+				var result:SQLResult = getRequest.getResult();
+				conn.close();
+				if (result.data != null)
+					returnValue = result.data;
+			} catch (error:SQLError) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_iobcobcaches', error.message + " - " + error.details);
+			} catch (other:Error) {
+				if (conn.connected) conn.close();
+				dispatchInformation('error_while_getting_iobcobcaches',other.getStackTrace().toString());
+			} finally {
+				if (conn.connected) conn.close();
+				return returnValue;
+			}
+		}
+		
+		/**
+		 * Updates COB/IOB caches<br>
+		 * Synchronous
+		 */
+		public static function updateIOBCOBCachesSynchronous(iob:String, iobIndexes:String, cob:String, cobIndexes:String):void 
+		{
+			try  {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var updateRequest:SQLStatement = new SQLStatement();
+				updateRequest.sqlConnection = conn;
+				updateRequest.text = "UPDATE iobcobcaches SET " +
+					"iob = '" + iob + "'," +
+					"iobindexes = '" + iobIndexes + "'," +
+					"cob = '" + cob + "'," +
+					"cobindexes = '" + cobIndexes + "'"; 
+				updateRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_updating_iob_cob_caches', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Creates Default cached objects in the database 
+		 */
+		public static function insertEmptyIOBCOBCaches():void 
+		{
+			//Empty dummy object
+			var emptyObject:Object = {};
+			var emptyObjectBytes:ByteArray = new ByteArray();
+			emptyObjectBytes.writeObject(emptyObject);
+			var emptyObjectSerialized:String = Base64.encodeByteArray(emptyObjectBytes);
+			
+			//Empty dummy array
+			var emptyArray:Array = [];
+			var emptyArrayBytes:ByteArray = new ByteArray();
+			emptyArrayBytes.writeObject(emptyArray);
+			var emptyArraySerialized:String = Base64.encodeByteArray(emptyArrayBytes);
+			
+			try 
+			{
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var insertRequest:SQLStatement = new SQLStatement();
+				insertRequest.sqlConnection = conn;
+				var text:String = "INSERT INTO iobcobcaches (";
+				text += "cob, ";
+				text += "cobindexes, ";
+				text += "iob, ";
+				text += "iobindexes) ";
+				text += "VALUES (";
+				text += "'" + emptyObjectSerialized + "', ";
+				text += "'" + emptyArraySerialized + "', ";
+				text += "'" + emptyObjectSerialized + "', ";
+				text += "'" + emptyArraySerialized + "')";
+				
+				insertRequest.text = text;
+				insertRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_inserting_empty_iobcobcaches_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Deletes all IOB/COB caches
+		 */
+		public static function deleteAllIOBCOBCachesSynchronous():void 
+		{
+			try {
+				var conn:SQLConnection = new SQLConnection();
+				conn.open(dbFile, SQLMode.UPDATE);
+				conn.begin();
+				var deleteRequest:SQLStatement = new SQLStatement();
+				deleteRequest.sqlConnection = conn;
+				deleteRequest.text = "DELETE * from iobcobcaches";
+				deleteRequest.execute();
+				conn.commit();
+				conn.close();
+			} catch (error:SQLError) {
+				if (conn.connected) {
+					conn.rollback();
+					conn.close();
+				}
+				dispatchInformation('error_while_deleting_all_iob_cob_caches_in_db', error.message + " - " + error.details);
+			}
+		}
+		
+		/**
+		 * Spike Settings
+		 */
 		public static function updateCommonSetting(settingId:int,newValue:String, lastModifiedTimeStamp:Number = Number.NaN):void {
 			if (newValue == null || newValue == "") newValue = "-";
 			try {
@@ -2810,6 +4258,31 @@ package database
 					dispatcher.dispatchEvent(new DatabaseEvent(DatabaseEvent.ERROR_EVENT));
 				}
 			}
+		}
+		
+		/**
+		 * Closes connection to the database. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			Trace.myTrace("Database.as", "Closing connection to database...");
+			
+			if (aConn != null && aConn.connected)
+			{
+				aConn.addEventListener(SQLEvent.CLOSE, onConnClosed);
+				aConn.close();
+			}
+			else
+			{
+				Trace.myTrace("Database.as", "Connection to database closed!");
+				_instance.dispatchEvent( new DatabaseEvent(DatabaseEvent.DATABASE_CLOSED_EVENT) );
+			}
+		}
+		
+		private static function onConnClosed(e:SQLEvent):void
+		{
+			Trace.myTrace("Database.as", "Connection to database closed!");
+			_instance.dispatchEvent( new DatabaseEvent(DatabaseEvent.DATABASE_CLOSED_EVENT) );
 		}
 		
 		private static function dispatchInformation(informationResourceName:String, additionalInfo:String = null):void {

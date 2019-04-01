@@ -46,8 +46,8 @@ package network
 			//Create the URL Loader
 			var urlLoader:URLLoader = new URLLoader();
 			urlLoader.dataFormat = URLLoaderDataFormat.TEXT;
-			urlLoader.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus, false, 0, true);
-			urlLoader.addEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus, false, 0, true);
+			//urlLoader.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus, false, 0, true);
+			//urlLoader.addEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus, false, 0, true);
 			
 			var finalCompleteHandler:Function;
 			var finalIOHandler:Function;
@@ -94,8 +94,8 @@ package network
 			//Create the URL Loader
 			var urlLoader:URLLoader = new URLLoader();
 			urlLoader.dataFormat = URLLoaderDataFormat.TEXT;
-			urlLoader.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus, false, 0, true);
-			urlLoader.addEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus, false, 0, true);
+			//urlLoader.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus, false, 0, true);
+			//urlLoader.addEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus, false, 0, true);
 			
 			var finalCompleteHandler:Function;
 			var finalIOHandler:Function;
@@ -168,6 +168,115 @@ package network
 			catch (error:Error) 
 			{
 				manageConnectionError(urlLoader, error, finalCompleteHandler, finalIOHandler, errorHandler);
+			}
+		}
+		
+		public static function createGlotConnector(URL:String, token:String, method:String, parameters:String = null, mode:String = null, completeHandler:Function = null, errorHandler:Function = null):void
+		{
+			//Create the URL Request
+			var request:URLRequest = new URLRequest(URL);
+			request.useCache = false;
+			request.cacheResponse = false;
+			request.method = method;
+			if (parameters != null)
+			{
+				request.data = parameters;
+				request.contentType = "application/json";
+			}
+			
+			//Create Headers
+			var noChacheHeader:URLRequestHeader = new URLRequestHeader("pragma", "no-cache");
+			request.requestHeaders.push(noChacheHeader);
+			if (token != null)
+			{
+				var apiSecretHeader:URLRequestHeader = new URLRequestHeader("Authorization", "Token " + token);
+				request.requestHeaders.push(apiSecretHeader);
+			}
+			
+			//Create the URL Loader
+			var urlLoader:URLLoader = new URLLoader();
+			urlLoader.dataFormat = URLLoaderDataFormat.TEXT;
+			//urlLoader.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus, false, 0, true);
+			//urlLoader.addEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus, false, 0, true);
+			
+			var finalCompleteHandler:Function;
+			var finalIOHandler:Function;
+			if (completeHandler != null)
+			{
+				finalCompleteHandler = completeHandler;
+				finalIOHandler = completeHandler;
+			}
+			else
+			{
+				finalCompleteHandler = localCompleteHandler;
+				finalIOHandler = localIOErrorHandler;
+			}
+			
+			urlLoader.addEventListener(Event.COMPLETE, finalCompleteHandler, false, 0, true);
+			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, finalIOHandler, false, 0, true);
+			
+			//Perform connection
+			try 
+			{ 
+				urlLoader.load(request); 
+			}  
+			catch (error:Error) 
+			{
+				manageConnectionError(urlLoader, error, finalCompleteHandler, finalIOHandler, errorHandler, mode);
+			}
+		}
+		
+		public static function createAppCenterConnector(URL:String, apiSecret:String, method:String, parameters:String = null, mode:String = null, completeHandler:Function = null, errorHandler:Function = null):void
+		{
+			//Create the URL Request
+			var request:URLRequest = new URLRequest(URL);
+			request.useCache = false;
+			request.cacheResponse = false;
+			request.method = method;
+			if (parameters != null)
+			{
+				request.data = parameters;
+				request.contentType = "application/json";
+			}
+			
+			//Create Headers
+			var apiSecretHeader:URLRequestHeader = new URLRequestHeader("X-API-Token", apiSecret);
+			request.requestHeaders.push(apiSecretHeader);
+			var acceptHeader:URLRequestHeader = new URLRequestHeader("accept", "application/json");
+			request.requestHeaders.push(acceptHeader);
+			var contenTypeHeader:URLRequestHeader = new URLRequestHeader("Content-Type", "application/json");
+			request.requestHeaders.push(contenTypeHeader);
+			
+			//Create the URL Loader
+			var urlLoader:URLLoader = new URLLoader();
+			urlLoader.dataFormat = URLLoaderDataFormat.TEXT;
+			//urlLoader.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, localHTTPStatus, false, 0, true);
+			//urlLoader.addEventListener(HTTPStatusEvent.HTTP_STATUS, localHTTPStatus, false, 0, true);
+			
+			var finalCompleteHandler:Function;
+			var finalIOHandler:Function;
+			if (completeHandler != null)
+			{
+				finalCompleteHandler = completeHandler;
+				finalIOHandler = completeHandler;
+			}
+			else
+			{
+				finalCompleteHandler = localCompleteHandler;
+				finalIOHandler = localIOErrorHandler;
+			}
+			
+			urlLoader.addEventListener(Event.COMPLETE, finalCompleteHandler, false, 0, true);
+			urlLoader.addEventListener(IOErrorEvent.IO_ERROR, finalIOHandler, false, 0, true);
+			
+			//Perform connection
+			try 
+			{ 
+				urlLoader.load(request); 
+			}  
+			catch (error:Error) 
+			{
+				manageConnectionError(urlLoader, error, finalCompleteHandler, finalIOHandler, errorHandler, mode);
 			}
 		}
 		

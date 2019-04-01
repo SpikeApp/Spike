@@ -2,6 +2,8 @@ package utils
 {
 	import flash.display.Stage;
 	
+	import database.CommonSettings;
+	
 	import feathers.controls.Button;
 	
 	import starling.core.Starling;
@@ -26,6 +28,9 @@ package utils
 		public static var isPortrait:Boolean = true;
 		public static var currentOrientation:String = "default";
 		public static var headerHeight:Number = Number.NaN;
+		public static var systemLocale:String = "";
+		public static var systemDate:Date;
+		public static var systemTimeZoneOffset:int;
 		
 		/* Tutorial */
 		public static var mainMenuButton:Button;
@@ -38,6 +43,22 @@ package utils
 			_scaleFactor = Starling.contentScaleFactor;
 			_appStage = stage;
 			_noLockEnabled = false;
+			
+			systemDate = new Date();
+			systemTimeZoneOffset = systemDate.getTimezoneOffset() / 60;
+		}
+		
+		public static function getUserLocale(useUnderscore:Boolean = false):String
+		{
+			var userLocale:String = systemLocale;
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE) != "en_US")
+				userLocale = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE).replace("_", "-");
+			
+			if (useUnderscore)
+				userLocale.replace("-", "_");
+			
+			return userLocale;
 		}
 		
 		public static function get stageWidth():int 

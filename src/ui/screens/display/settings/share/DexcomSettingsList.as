@@ -1,8 +1,21 @@
 package ui.screens.display.settings.share
 {
-	import database.BlueToothDevice;
+	import com.adobe.images.PNGEncoder;
+	import com.adobe.utils.StringUtil;
+	import com.distriqt.extension.networkinfo.NetworkInfo;
+	
+	import flash.display.BitmapData;
+	import flash.events.Event;
+	import flash.events.IOErrorEvent;
+	import flash.net.URLLoader;
+	import flash.net.URLRequestMethod;
+	
+	import cryptography.Keys;
+	
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
+	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
 	import feathers.controls.Check;
@@ -19,28 +32,38 @@ package ui.screens.display.settings.share
 	import feathers.events.FeathersEventType;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
+	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
 	
+	import network.NetworkConnector;
+	
+	import org.qrcode.QRCode;
+	
 	import services.DexcomShareService;
 	
 	import starling.core.Starling;
+	import starling.display.Image;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
+	import starling.textures.Texture;
 	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
+	import ui.popups.EmailFileSender;
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
 	import ui.screens.display.dexcomshare.DexcomShareFollowersList;
 	
 	import utils.Constants;
+	import utils.Cryptography;
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("sharesettingsscreen")]
+	[ResourceBundle("maintenancesettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 
 	public class DexcomSettingsList extends SpikeList 
@@ -60,6 +83,11 @@ package ui.screens.display.settings.share
 		private var followerManagerContainer:ScrollContainer;
 		private var nonDexcomInstructions:Label;
 		private var wifiSyncOnlyCheck:Check;
+		private var qrCodeBitmapData:BitmapData;
+		private var qrCodeImage:Image;
+		private var qrCodePopup:Alert;
+		private var qrCodeContainer:LayoutGroup;
+		private var qrCodeExplanation:Label;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -103,43 +131,52 @@ package ui.screens.display.settings.share
 			/* Get data from database */
 			isDexcomEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ON) == "true";
 			selectedUsername = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME);
-			selectedPassword = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD);
+			selectedPassword = Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD));
 			selectedServerCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL) == "true" ? "us" : "non-us";
-			selectedDexcomShareSerialNumber = !BlueToothDevice.isDexcomG5() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER).toUpperCase() : "";
+			selectedDexcomShareSerialNumber = !CGMBlueToothDevice.isDexcomG5() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER).toUpperCase() : "";
 			isSyncWifiOnly = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_WIFI_ONLY_UPLOADER_ON) == "true";
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_US_URL) == "true")
+				selectedServerCode = "us";
+			else
+				selectedServerCode = "non-us";
+			
+			if (!CGMBlueToothDevice.isDexcomG5() && !CGMBlueToothDevice.isDexcomG6())
+				selectedDexcomShareSerialNumber = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER).toUpperCase();
+			else
+				selectedDexcomShareSerialNumber = "";	
 		}
 		
 		private function setupContent():void
 		{
 			//On/Off Toggle
 			dsToggle = LayoutFactory.createToggleSwitch(isDexcomEnabled);
-			dsToggle.addEventListener( Event.CHANGE, onDexcomShareOnOff );
+			dsToggle.addEventListener( starling.events.Event.CHANGE, onDexcomShareOnOff );
 			
 			//Username
-			dsUsername = LayoutFactory.createTextInput(false, false, Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140, HorizontalAlign.RIGHT);
+			dsUsername = LayoutFactory.createTextInput(false, false, Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? 120 : 140, HorizontalAlign.RIGHT);
 			if (!Constants.isPortrait) dsUsername.width += 100;
 			if (DeviceInfo.isTablet()) dsUsername.width += 100;
 			dsUsername.text = selectedUsername;
 			dsUsername.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
-			dsUsername.addEventListener(Event.CHANGE, onTextInputChanged);
+			dsUsername.addEventListener(starling.events.Event.CHANGE, onTextInputChanged);
 			
 			//Password
-			dsPassword = LayoutFactory.createTextInput(true, false, Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140, HorizontalAlign.RIGHT);
+			dsPassword = LayoutFactory.createTextInput(true, false, Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? 120 : 140, HorizontalAlign.RIGHT);
 			if (!Constants.isPortrait) dsPassword.width += 100;
 			if (DeviceInfo.isTablet()) dsPassword.width += 100;
 			dsPassword.text = selectedPassword;
 			dsPassword.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
-			dsPassword.addEventListener(Event.CHANGE, onTextInputChanged);
+			dsPassword.addEventListener(starling.events.Event.CHANGE, onTextInputChanged);
 			
 			//Serial
-			if (!BlueToothDevice.isDexcomG5())
+			if (!CGMBlueToothDevice.isDexcomG5() && !CGMBlueToothDevice.isDexcomG6())
 			{
-				dsSerial = LayoutFactory.createTextInput(false, false, Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140, HorizontalAlign.RIGHT);
+				dsSerial = LayoutFactory.createTextInput(false, false, Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? 120 : 140, HorizontalAlign.RIGHT);
 				if (!Constants.isPortrait) dsSerial.width += 100;
 				if (DeviceInfo.isTablet()) dsSerial.width += 100;
 				dsSerial.text = selectedDexcomShareSerialNumber;
 				dsSerial.addEventListener( FeathersEventType.ENTER, onTextInputEnter );
-				dsSerial.addEventListener(Event.CHANGE, onTextInputChanged);
+				dsSerial.addEventListener(starling.events.Event.CHANGE, onTextInputChanged);
 			}
 			
 			/* Server */
@@ -152,8 +189,8 @@ package ui.screens.display.settings.share
 			var dataLength:int = serversLabelsList.length;
 			for (var i:int = 0; i < dataLength; i++) 
 			{
-				dsServerList.push({ label: serversLabelsList[i], code: serversCodeList[i] });
-				if (selectedServerCode == serversCodeList[i])
+				dsServerList.push({ label: StringUtil.trim(serversLabelsList[i]), code: StringUtil.trim(serversCodeList[i]) });
+				if (selectedServerCode == StringUtil.trim(serversCodeList[i]))
 					selectedServerIndex = i;
 			}
 			
@@ -169,11 +206,11 @@ package ui.screens.display.settings.share
 				
 				return list;
 			};
-			dsServer.addEventListener(Event.CHANGE, onSettingsChanged);
+			dsServer.addEventListener(starling.events.Event.CHANGE, onSettingsChanged);
 			
 			//Wi-Fi Sync Only
 			wifiSyncOnlyCheck = LayoutFactory.createCheckMark(isSyncWifiOnly);
-			wifiSyncOnlyCheck.addEventListener(Event.CHANGE, onSettingsChanged);
+			wifiSyncOnlyCheck.addEventListener(starling.events.Event.CHANGE, onSettingsChanged);
 			
 			//Actions Container
 			var actionsLayout:HorizontalLayout = new HorizontalLayout();
@@ -185,12 +222,12 @@ package ui.screens.display.settings.share
 			
 			//Invite Follower
 			manageFollowers = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','manage_followers_button_label'));
-			manageFollowers.addEventListener( Event.TRIGGERED, onManageFollowers );
+			manageFollowers.addEventListener( starling.events.Event.TRIGGERED, onManageFollowers );
 			actionsContainer.addChild(manageFollowers);
 			
 			//Login
 			dsLogin = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','login_button_label'));
-			dsLogin.addEventListener( Event.TRIGGERED, onDexcomShareLogin );
+			dsLogin.addEventListener( starling.events.Event.TRIGGERED, onDexcomShareLogin );
 			actionsContainer.addChild(dsLogin);
 			
 			//Non dexcom instructions
@@ -219,11 +256,12 @@ package ui.screens.display.settings.share
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_ACCOUNTNAME, selectedUsername);
 			
 			//Password
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD) != selectedPassword)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD, selectedPassword);
+			var passwordToSave:String = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, selectedPassword);
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD) != passwordToSave)
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD, passwordToSave);
 			
 			//Serial
-			if (!BlueToothDevice.isDexcomG5() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER) != selectedDexcomShareSerialNumber.toUpperCase())
+			if (!CGMBlueToothDevice.isDexcomG5() && !CGMBlueToothDevice.isDexcomG6() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER) != selectedDexcomShareSerialNumber.toUpperCase())
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_SERIALNUMBER, selectedDexcomShareSerialNumber.toUpperCase());
 			
 			//Server
@@ -251,12 +289,12 @@ package ui.screens.display.settings.share
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','enabled_label'), accessory: dsToggle });
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_username_label'), accessory: dsUsername });
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_password_label'), accessory: dsPassword });
-				if (!BlueToothDevice.isDexcomG5())
+				if (!CGMBlueToothDevice.isDexcomG5() && !CGMBlueToothDevice.isDexcomG6())
 					listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','serial_label'), accessory: dsSerial });
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_server_label'), accessory: dsServer });
 				listDataProviderItems.push({ label: ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','wifi_only_sync_label'), accessory: wifiSyncOnlyCheck });
 				listDataProviderItems.push({ label: "", accessory: actionsContainer });
-				if (!BlueToothDevice.isDexcomG4() && !BlueToothDevice.isDexcomG5())
+				if (!CGMBlueToothDevice.isDexcomG4() && !CGMBlueToothDevice.isDexcomG5() && !CGMBlueToothDevice.isDexcomG6())
 					listDataProviderItems.push({ label: "", accessory: nonDexcomInstructions });
 				
 				dataProvider = new ArrayCollection(listDataProviderItems);
@@ -283,7 +321,7 @@ package ui.screens.display.settings.share
 				yPos = Constants.headerHeight - 10;
 			else
 			{
-				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 					yPos = 68;
 				else
 					yPos = Constants.isPortrait ? 98 : 68;
@@ -296,7 +334,7 @@ package ui.screens.display.settings.share
 		/**
 		 * Event Listeners
 		 */
-		private function onTextInputChanged(e:Event):void
+		private function onTextInputChanged(e:starling.events.Event):void
 		{
 			//Update internal values
 			selectedUsername = dsUsername.text;
@@ -307,7 +345,7 @@ package ui.screens.display.settings.share
 			needsSave = true;
 		}
 		
-		private function onSettingsChanged(e:Event):void
+		private function onSettingsChanged(e:starling.events.Event):void
 		{
 			selectedServerCode = dsServer.selectedItem.code;
 			isSyncWifiOnly = wifiSyncOnlyCheck.isSelected;
@@ -315,7 +353,7 @@ package ui.screens.display.settings.share
 			needsSave = true;
 		}
 		
-		private function onTextInputEnter(event:Event):void
+		private function onTextInputEnter(event:starling.events.Event):void
 		{
 			//Clear focus to dismiss the keyboard
 			dsUsername.clearFocus();
@@ -324,7 +362,7 @@ package ui.screens.display.settings.share
 				dsSerial.clearFocus();
 		}
 		
-		private function onDexcomShareOnOff(event:Event):void
+		private function onDexcomShareOnOff(event:starling.events.Event):void
 		{
 			isDexcomEnabled = dsToggle.isSelected;
 			
@@ -333,7 +371,7 @@ package ui.screens.display.settings.share
 			needsSave = true;
 		}
 		
-		private function onDexcomShareLogin(event:Event):void
+		private function onDexcomShareLogin(event:starling.events.Event):void
 		{
 			//Workaround for duplicate checking
 			DexcomShareService.ignoreSettingsChanged = true;
@@ -345,24 +383,21 @@ package ui.screens.display.settings.share
 			DexcomShareService.testDexcomShareCredentials(true);
 		}
 		
-		private function onManageFollowers(e:Event):void
+		private function onManageFollowers(e:starling.events.Event):void
 		{
 			if(DexcomShareService.isAuthorized())
 			{
-				//SessionID exists, show followers
-				setupCalloutPosition();
-				
-				//Create Followers List
-				followerManager = new DexcomShareFollowersList();
-				followerManager.addEventListener(Event.CANCEL, onFollowerCancel);
-				followerManagerContainer = new ScrollContainer();
-				followerManagerContainer.addChild(followerManager);
-				
-				//Display Callout
-				followerManagerCallout = new Callout();
-				followerManagerCallout.content = followerManagerContainer;
-				followerManagerCallout.origin = positionHelper;
-				PopUpManager.addPopUp(followerManagerCallout, false, false);
+				var alert:Alert = AlertManager.showActionAlert
+				(
+					ModelLocator.resourceManagerInstance.getString("globaltranslations","info_alert_title"),
+					ModelLocator.resourceManagerInstance.getString("sharesettingsscreen","select_dexcom_follower_app_popup_body"),
+					Number.NaN,
+					[
+						{ label: "DEXCOM FOLLOW", triggered: onOfficialDexcomFollower },
+						{ label: "SPIKE", triggered: onSpikeDexcomFollower }
+					]
+				);
+				alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
 			}
 			else
 			{
@@ -375,9 +410,254 @@ package ui.screens.display.settings.share
 					HorizontalAlign.CENTER
 				);
 			}
+			
+			function onOfficialDexcomFollower(e:starling.events.Event):void
+			{
+				//SessionID exists, show followers
+				setupCalloutPosition();
+				
+				//Create Followers List
+				followerManager = new DexcomShareFollowersList();
+				followerManager.addEventListener(starling.events.Event.CANCEL, onFollowerCancel);
+				followerManagerContainer = new ScrollContainer();
+				followerManagerContainer.addChild(followerManager);
+				
+				//Display Callout
+				followerManagerCallout = new Callout();
+				followerManagerCallout.content = followerManagerContainer;
+				followerManagerCallout.origin = positionHelper;
+				PopUpManager.addPopUp(followerManagerCallout, false, false);
+			}
+			
+			function onSpikeDexcomFollower(e:starling.events.Event):void
+			{
+				//Validation
+				if (!NetworkInfo.networkInfo.isReachable())
+				{
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','no_network_connection')
+					);
+					
+					return;
+				}
+				
+				//Master settings object
+				var masterSettings:Object = {};
+				masterSettings.followerService = "Dexcom";
+				masterSettings.username = selectedUsername;
+				masterSettings.password = selectedPassword;
+				masterSettings.server = selectedServerCode;
+				masterSettings.urgentHigh = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK));
+				masterSettings.high = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+				masterSettings.low = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
+				masterSettings.urgentLow = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_LOW_MARK));
+				
+				//Encode master settings
+				try
+				{
+					var masterSettingsString:String = JSON.stringify(masterSettings);
+				} 
+				catch(error:Error) 
+				{
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','parse_settings_error')
+					);
+					
+					return;
+				}
+				
+				//Encrypt master settings
+				var masterSettingsEncrypted:String = Cryptography.encryptStringStrong(Keys.STRENGTH_256_BIT, masterSettingsString);
+				
+				//Upload them (anonymously and privatly)
+				var parameters:Object = {};
+				parameters.language = "plaintext";
+				parameters.title = "SpikeFollowerSettings";
+				parameters["public"] = false;
+				parameters.files = [ { name: "follower.txt", content: masterSettingsEncrypted } ];
+				
+				NetworkConnector.createGlotConnector("https://snippets.glot.io/snippets", null, URLRequestMethod.POST, JSON.stringify(parameters), null, onMasterSettingsUploaded, onSettingsUploadError);
+			}
 		}
-
-		private function onFollowerCancel(e:Event):void
+		
+		private function onMasterSettingsUploaded(e:flash.events.Event):void
+		{
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
+			
+			if (loader == null || loader.data == null)
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','error_backing_up_master_settings')
+				);
+				
+				return;
+			}
+			
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(flash.events.Event.COMPLETE, onMasterSettingsUploaded);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onSettingsUploadError);
+			loader = null;
+			
+			//Parse response and extract link
+			try
+			{
+				var responseJSON:Object = JSON.parse(response);
+			} 
+			catch(error:Error) 
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','error_backing_up_master_settings')
+				);
+				
+				return;
+			}
+			
+			if (responseJSON != null && responseJSON.url != null)
+			{
+				var url:String = String(responseJSON.url);
+				if (url.indexOf("https://snippets.glot.io") != -1)
+				{
+					var encryptedURL:String = Cryptography.encryptStringStrong(Keys.STRENGTH_256_BIT, url);
+					try
+					{
+						//Create QR Code
+						var masterSettingsQRCode:QRCode = new QRCode();
+						masterSettingsQRCode.encode(encryptedURL);
+						
+						if (qrCodeBitmapData != null) qrCodeBitmapData.dispose();
+						qrCodeBitmapData = masterSettingsQRCode.bitmapData;
+						
+						if (qrCodeBitmapData == null)
+						{
+							AlertManager.showSimpleAlert
+							(
+								ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+								ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','error_creating_qr_code')
+							);
+						}
+						else
+						{
+							if (qrCodeContainer != null) qrCodeContainer.dispose();
+							qrCodeContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.TOP, 15);
+							
+							if (qrCodeImage != null) 
+							{
+								if (qrCodeImage.texture != null) qrCodeImage.texture.dispose();
+								qrCodeImage.dispose();
+							}
+							qrCodeImage = new Image(Texture.fromBitmapData(qrCodeBitmapData));
+							qrCodeContainer.addChild(qrCodeImage);
+							
+							if (qrCodeExplanation != null) qrCodeExplanation.dispose();
+							qrCodeExplanation = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','follower_invitation_in_app_instructions'), HorizontalAlign.JUSTIFY);
+							qrCodeExplanation.wordWrap = true;
+							
+							if (qrCodePopup != null) qrCodePopup.removeFromParent(true);
+							qrCodePopup = AlertManager.showActionAlert
+							(
+								ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','qr_code'),
+								"",
+								Number.NaN,
+								[
+									{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() },
+									{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','email_button_label').toUpperCase(), triggered: sendQRCodeByEmail }
+								],
+								HorizontalAlign.JUSTIFY,
+								qrCodeContainer
+							);
+							qrCodePopup.validate();
+							qrCodeContainer.width = qrCodePopup.width;
+							qrCodeExplanation.width = qrCodeContainer.width;
+							qrCodeContainer.addChild(qrCodeExplanation);
+							
+							qrCodePopup.gap = 0;
+							qrCodePopup.headerProperties.maxHeight = 30;
+							qrCodePopup.buttonGroupProperties.paddingTop = -10;
+							qrCodePopup.buttonGroupProperties.gap = 10;
+							qrCodePopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+							
+							function sendQRCodeByEmail(e:starling.events.Event):void
+							{
+								//Close popup
+								if (qrCodePopup != null)
+								{
+									qrCodePopup.removeFromParent(true);
+								}
+								
+								//Send QR Code by Email
+								EmailFileSender.instance.addEventListener(starling.events.Event.COMPLETE, onFileSenderClosed);
+								EmailFileSender.instance.addEventListener(starling.events.Event.CANCEL, onFileSenderClosed);
+								EmailFileSender.sendFile
+								(
+									ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','dexcom_share_invitation_email_subject'),
+									ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','follower_invitation_email_body'),
+									"SpikeDexcomShareQRCode.png",
+									PNGEncoder.encode(qrCodeBitmapData),
+									"image/png",
+									ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','follower_qr_code_email_sent_success_message'),
+									ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_sent_error_message'),
+									"",
+									ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','follower_email_address_popup_title')
+								);
+							}
+						}
+					} 
+					catch(error:Error) 
+					{
+						AlertManager.showSimpleAlert
+						(
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','error_creating_qr_code')
+						);
+					}
+				}
+				else
+				{
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+						ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','error_backing_up_master_settings')
+					);
+				}
+			}
+			else
+			{
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','error_backing_up_master_settings')
+				);
+			}
+		}
+		
+		private function onFileSenderClosed(e:starling.events.Event):void
+		{
+			EmailFileSender.instance.removeEventListener(starling.events.Event.COMPLETE, onFileSenderClosed);
+			EmailFileSender.instance.removeEventListener(starling.events.Event.CANCEL, onFileSenderClosed);
+		}
+		
+		private function onSettingsUploadError(error:Error):void
+		{
+			AlertManager.showSimpleAlert
+			(
+				ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+				ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','error_backing_up_master_settings')
+			);
+		}
+		
+		private function onFollowerCancel(e:starling.events.Event):void
 		{
 			if (PopUpManager.isPopUp(followerManagerCallout))
 				PopUpManager.removePopUp(followerManagerCallout);
@@ -396,7 +676,7 @@ package ui.screens.display.settings.share
 			
 			if (nonDexcomInstructions != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 					nonDexcomInstructions.width = width - 40;
 				else
 					nonDexcomInstructions.width = width - 10;
@@ -405,7 +685,7 @@ package ui.screens.display.settings.share
 			if (dsUsername != null)
 			{
 				SystemUtil.executeWhenApplicationIsActive( dsUsername.clearFocus );
-				dsUsername.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140;
+				dsUsername.width = Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? 120 : 140;
 				if (!Constants.isPortrait) dsUsername.width += 100;
 				if (DeviceInfo.isTablet()) dsUsername.width += 100;
 			}
@@ -413,7 +693,7 @@ package ui.screens.display.settings.share
 			if (dsPassword != null)
 			{
 				SystemUtil.executeWhenApplicationIsActive( dsPassword.clearFocus );
-				dsPassword.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140;
+				dsPassword.width = Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? 120 : 140;
 				if (!Constants.isPortrait) dsPassword.width += 100;
 				if (DeviceInfo.isTablet()) dsPassword.width += 100;
 			}
@@ -421,7 +701,7 @@ package ui.screens.display.settings.share
 			if (dsSerial != null)
 			{
 				SystemUtil.executeWhenApplicationIsActive( dsSerial.clearFocus );
-				dsSerial.width = Constants.deviceModel == DeviceInfo.IPHONE_X ? 120 : 140;
+				dsSerial.width = Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr ? 120 : 140;
 				if (!Constants.isPortrait) dsSerial.width += 100;
 				if (DeviceInfo.isTablet()) dsSerial.width += 100;
 			}
@@ -445,6 +725,9 @@ package ui.screens.display.settings.share
 		
 		override public function dispose():void
 		{
+			EmailFileSender.instance.removeEventListener(starling.events.Event.COMPLETE, onFileSenderClosed);
+			EmailFileSender.instance.removeEventListener(starling.events.Event.CANCEL, onFileSenderClosed);
+			
 			if(dsUsername != null)
 			{
 				dsUsername.removeEventListener( FeathersEventType.ENTER, onTextInputEnter );
@@ -454,40 +737,40 @@ package ui.screens.display.settings.share
 			if(dsPassword != null)
 			{
 				dsPassword.removeEventListener( FeathersEventType.ENTER, onTextInputEnter );
-				dsPassword.removeEventListener(Event.CHANGE, onTextInputChanged);
+				dsPassword.removeEventListener(starling.events.Event.CHANGE, onTextInputChanged);
 				dsPassword.dispose();
 				dsPassword = null;
 			}
 			if(dsServer != null)
 			{
-				dsServer.removeEventListener(Event.CHANGE, onSettingsChanged);
+				dsServer.removeEventListener(starling.events.Event.CHANGE, onSettingsChanged);
 				dsServer.dispose();
 				dsServer = null;
 			}
 			if(dsToggle != null)
 			{
-				dsToggle.removeEventListener( Event.CHANGE, onDexcomShareOnOff );
+				dsToggle.removeEventListener( starling.events.Event.CHANGE, onDexcomShareOnOff );
 				dsToggle.dispose();
 				dsToggle = null;
 			}
 			if(dsSerial != null)
 			{
 				dsSerial.removeEventListener( FeathersEventType.ENTER, onTextInputEnter );
-				dsSerial.removeEventListener(Event.CHANGE, onTextInputChanged);
+				dsSerial.removeEventListener(starling.events.Event.CHANGE, onTextInputChanged);
 				dsSerial.dispose();
 				dsSerial = null;
 			}
 			if(dsLogin != null)
 			{
 				actionsContainer.removeChild(dsLogin);
-				dsLogin.removeEventListener( Event.TRIGGERED, onDexcomShareLogin );
+				dsLogin.removeEventListener( starling.events.Event.TRIGGERED, onDexcomShareLogin );
 				dsLogin.dispose();
 				dsLogin = null;
 			}
 			if(manageFollowers != null)
 			{
 				actionsContainer.removeChild(manageFollowers);
-				manageFollowers.removeEventListener( Event.TRIGGERED, onManageFollowers );
+				manageFollowers.removeEventListener( starling.events.Event.TRIGGERED, onManageFollowers );
 				manageFollowers.dispose();
 				manageFollowers = null;
 			}
@@ -530,9 +813,47 @@ package ui.screens.display.settings.share
 			}
 			if(wifiSyncOnlyCheck != null)
 			{
-				wifiSyncOnlyCheck.removeEventListener(Event.CHANGE, onSettingsChanged);
+				wifiSyncOnlyCheck.removeEventListener(starling.events.Event.CHANGE, onSettingsChanged);
 				wifiSyncOnlyCheck.dispose();
 				wifiSyncOnlyCheck = null;
+			}
+			
+			if (qrCodeExplanation != null)
+			{
+				qrCodeExplanation.removeFromParent();
+				qrCodeExplanation.dispose();
+				qrCodeExplanation = null;
+			}
+			
+			if (qrCodeImage != null)
+			{
+				qrCodeImage.removeFromParent();
+				if (qrCodeImage.texture != null)
+				{
+					qrCodeImage.texture.dispose();
+				}
+				qrCodeImage.dispose();
+				qrCodeImage = null;
+			}
+			
+			if (qrCodeBitmapData != null)
+			{
+				qrCodeBitmapData.dispose();
+				qrCodeBitmapData = null;
+			}
+			
+			if (qrCodeContainer != null)
+			{
+				qrCodeContainer.removeFromParent();
+				qrCodeContainer.dispose();
+				qrCodeContainer = null;
+			}
+			
+			if (qrCodePopup != null)
+			{
+				qrCodePopup.removeFromParent();
+				qrCodePopup.dispose();
+				qrCodePopup = null;
 			}
 			
 			super.dispose();

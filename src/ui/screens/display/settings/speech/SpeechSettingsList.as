@@ -1,15 +1,23 @@
 package ui.screens.display.settings.speech
 {
+	import com.adobe.utils.StringUtil;
+	
 	import database.BgReading;
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
 	import feathers.controls.Alert;
+	import feathers.controls.Label;
+	import feathers.controls.LayoutGroup;
 	import feathers.controls.NumericStepper;
 	import feathers.controls.PickerList;
+	import feathers.controls.Slider;
 	import feathers.controls.ToggleSwitch;
 	import feathers.controls.popups.VerticalCenteredPopUpContentManager;
 	import feathers.data.ArrayCollection;
+	import feathers.layout.HorizontalAlign;
+	import feathers.layout.VerticalAlign;
+	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
 	import model.ModelLocator;
@@ -24,6 +32,7 @@ package ui.screens.display.settings.speech
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("speechsettingsscreen")]
+	[ResourceBundle("alarmsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
 
 	public class SpeechSettingsList extends SpikeList 
@@ -37,6 +46,10 @@ package ui.screens.display.settings.speech
 		private var glucoseThresholdsToggle:ToggleSwitch;
 		private var highGlucoseStepper:NumericStepper;
 		private var lowGlucoseStepper:NumericStepper;
+		private var controlSystemVolumeToggle:ToggleSwitch;
+		private var volumeSliderContainer:LayoutGroup;
+		private var customSystemValueLabel:Label;
+		private var systemVolumeSlider:Slider;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -51,6 +64,8 @@ package ui.screens.display.settings.speech
 		private var glucoseThresholdHigh:Number;
 		private var glucoseThresholdLow:Number;
 		private var glucoseUnit:String;
+		private var isSystemVolumeUserDefined:Boolean;
+		private var userDefinedSystemVolume:Number;
 		
 		public function SpeechSettingsList()
 		{
@@ -94,6 +109,8 @@ package ui.screens.display.settings.speech
 			if (glucoseUnit != "mgdl") glucoseThresholdHigh = Math.round(BgReading.mgdlToMmol(glucoseThresholdHigh) * 10) / 10;
 			glucoseThresholdLow = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_LOW) == "0" ? Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK)) : Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_LOW));
 			if (glucoseUnit != "mgdl") glucoseThresholdLow = Math.round(BgReading.mgdlToMmol(glucoseThresholdLow) * 10) / 10;
+			isSystemVolumeUserDefined = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_ON) == "true";
+			userDefinedSystemVolume = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_VALUE));
 		}
 		
 		private function setupContent():void
@@ -126,22 +143,44 @@ package ui.screens.display.settings.speech
 			speechInterval.value = selectedInterval;
 			speechInterval.addEventListener( Event.CHANGE, onSettingsChanged);
 			
+			//System Volume
+			controlSystemVolumeToggle = LayoutFactory.createToggleSwitch(isSystemVolumeUserDefined);
+			controlSystemVolumeToggle.addEventListener(Event.CHANGE, onSystemVolumeToggleChanged);
+			var volumeSliderLayout:VerticalLayout = new VerticalLayout();
+			volumeSliderLayout.horizontalAlign = HorizontalAlign.RIGHT;
+			volumeSliderLayout.gap = 0;
+			volumeSliderContainer = new LayoutGroup();
+			volumeSliderContainer.layout = volumeSliderLayout;
+			customSystemValueLabel = LayoutFactory.createLabel(userDefinedSystemVolume + "%", HorizontalAlign.CENTER, VerticalAlign.TOP, 12);
+			volumeSliderContainer.addChild(customSystemValueLabel);
+			systemVolumeSlider = new Slider();
+			systemVolumeSlider.minimum = 0;
+			systemVolumeSlider.maximum = 100;
+			systemVolumeSlider.step = 1;
+			systemVolumeSlider.value = userDefinedSystemVolume;
+			volumeSliderContainer.addChild(systemVolumeSlider);
+			systemVolumeSlider.addEventListener(Event.CHANGE, onSettingsChanged);
+			
 			/* Language Picker */
 			languagePicker = LayoutFactory.createPickerList();
 			languagePicker.pivotX = -3;
 			
 			//Temp Data Objects
 			var languagesLabelsList:Array = ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','ttslanguagelistdescription').split(",");
-			var languagesCodesList:Array = ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','ttslanguagelistcodes').split(",");
-			var languagePickerList:ArrayCollection = new ArrayCollection();
+			var languagesCodesList:Array = "zh-CN,zh-HK,zh-TW,da-DK,nl-BE,nl-NL,en-AU,en-IE,en-ZA,en-GB,en-US,fi-FI,fr-CA,fr-FR,de-DE,it-IT,no-NO,pl-PL,pt-BR,pt-PT,ru-RU,sl-SL,es-MX,es-ES,sv-SE".split(",");
+			var languagePickerList:Array = new Array();
 			var dataLength:int = languagesLabelsList.length;
 			for (var i:int = 0; i < dataLength; i++) 
 			{
-				languagePickerList.push({ label: languagesLabelsList[i], code: languagesCodesList[i] });
-				if (selectedLanguageCode == languagesCodesList[i])
+				languagePickerList.push({ label: StringUtil.trim(languagesLabelsList[i]), code: StringUtil.trim(languagesCodesList[i]) });
+			}
+			languagePickerList.sortOn(["label"], Array.CASEINSENSITIVE);
+			for (i = 0; i < languagePickerList.length; i++) 
+			{
+				var object:Object = languagePickerList[i];
+				if (StringUtil.trim(selectedLanguageCode) == object.code)
 					selectedLanguageIndex = i;
 			}
-			
 			languagesLabelsList.length = 0;
 			languagesLabelsList = null
 			languagesCodesList.length = 0;
@@ -149,7 +188,7 @@ package ui.screens.display.settings.speech
 			
 			// Populate data and define renderers
 			languagePicker.labelField = "label";
-			languagePicker.dataProvider = languagePickerList;
+			languagePicker.dataProvider = new ArrayCollection(languagePickerList);
 			languagePicker.selectedIndex = selectedLanguageIndex;
 			var languagePopUp:VerticalCenteredPopUpContentManager = new VerticalCenteredPopUpContentManager();
 			languagePopUp.margin = 10;
@@ -163,8 +202,8 @@ package ui.screens.display.settings.speech
 		{
 			/* Save data to database */
 			//Language Code
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE) != selectedLanguageCode)
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE, selectedLanguageCode);
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE) != StringUtil.trim(selectedLanguageCode))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE, StringUtil.trim(selectedLanguageCode));
 			
 			//Speak Interval
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEAK_READINGS_INTERVAL) != String(selectedInterval))
@@ -192,6 +231,13 @@ package ui.screens.display.settings.speech
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_LOW) != String(glucoseUnit == "mgdl" ? glucoseThresholdLow : Math.round(BgReading.mmolToMgdl(glucoseThresholdLow))))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_LOW, String(glucoseUnit == "mgdl" ? glucoseThresholdLow : Math.round(BgReading.mmolToMgdl(glucoseThresholdLow))));
 			
+			//System Volume
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_ON) != String(isSystemVolumeUserDefined))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_ON, String(isSystemVolumeUserDefined));
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_VALUE) != String(userDefinedSystemVolume))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_VALUE, String(userDefinedSystemVolume));
+			
 			needsSave = false;
 		}
 		
@@ -209,6 +255,11 @@ package ui.screens.display.settings.speech
 				{
 					data.push( { label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','high_threshold_label'), accessory: highGlucoseStepper } );
 					data.push( { label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','low_threshold_label'), accessory: lowGlucoseStepper } );
+				}
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"override_system_volume_label"), accessory: controlSystemVolumeToggle } );
+				if(isSystemVolumeUserDefined)
+				{
+					data.push( { label: ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"custom_system_volume_label"), accessory: volumeSliderContainer } );
 				}
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','speak_bg_readings_language_title'), accessory: languagePicker } );
 				
@@ -233,8 +284,17 @@ package ui.screens.display.settings.speech
 			isDeltaEnabled = deltaToggle.isSelected;
 			selectedInterval = speechInterval.value;
 			selectedLanguageCode = languagePicker.selectedItem.code;
+			userDefinedSystemVolume = systemVolumeSlider.value;
+			customSystemValueLabel.text = userDefinedSystemVolume + "%";
 			
 			needsSave = true;
+		}
+		
+		private function onSystemVolumeToggleChanged(E:Event):void
+		{
+			isSystemVolumeUserDefined = controlSystemVolumeToggle.isSelected;
+			
+			if(speechToggle.isSelected) reloadSpeechSettings(true);
 		}
 		
 		private function onGlucoseThresholdToggleChanged(E:Event):void
@@ -266,7 +326,7 @@ package ui.screens.display.settings.speech
 			
 			if (glucoseThresholdLow >= glucoseThresholdHigh)
 			{
-				glucoseThresholdHigh = glucoseThresholdHigh + (glucoseUnit == "mgdl" ? 1 : 0.1);
+				glucoseThresholdHigh = glucoseThresholdLow + (glucoseUnit == "mgdl" ? 1 : 0.1);
 				highGlucoseStepper.value = glucoseThresholdHigh;
 			}
 				
@@ -295,7 +355,7 @@ package ui.screens.display.settings.speech
 							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','ok_alert_button_label') }
 						]
 					);
-					if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+					if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 						alert.height = 320;
 					
 					initialInstructionsDisplayed = true;
@@ -363,6 +423,36 @@ package ui.screens.display.settings.speech
 				lowGlucoseStepper.removeEventListener( Event.CHANGE, onGlucoseThresholdLowChanged);	
 				lowGlucoseStepper.dispose();
 				lowGlucoseStepper = null;
+			}
+			
+			if (controlSystemVolumeToggle != null)
+			{
+				controlSystemVolumeToggle.removeEventListener(Event.CHANGE, onSystemVolumeToggleChanged);
+				controlSystemVolumeToggle.removeFromParent();
+				controlSystemVolumeToggle.dispose();
+				controlSystemVolumeToggle = null;
+			}
+			
+			if (systemVolumeSlider != null)
+			{
+				systemVolumeSlider.removeEventListener(Event.CHANGE, onSettingsChanged);
+				systemVolumeSlider.removeFromParent();
+				systemVolumeSlider.dispose();
+				systemVolumeSlider = null;
+			}
+			
+			if (customSystemValueLabel != null)
+			{
+				customSystemValueLabel.removeFromParent();
+				customSystemValueLabel.dispose();
+				customSystemValueLabel = null;
+			}
+			
+			if (volumeSliderContainer != null)
+			{
+				volumeSliderContainer.removeFromParent();
+				volumeSliderContainer.dispose();
+				volumeSliderContainer = null;
 			}
 			
 			super.dispose();

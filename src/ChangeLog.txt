@@ -1,5 +1,243 @@
-2.2.2
-FEATURE: Multilanguage support!
+3.6.0
+FEATURE: Basal support is here! Pen users can now log their basal injections in Spike. Pump users can also add their basal rates to Spike as well as temp basal treatments. All basals are rendered at the bottom of the main Spike chart. Main features are: Bidirectional sync to Nightscout, support for pen/mdi as well as pump basals, support for pump basal rates, edit basals directly on the chart, customize size and colors, etc. Spike will now behave and display different treatments depending if the user is on Pen/MDI or a pump so IT'S IMPERATIVE THAT AFTER INSTALLING THIS UPDATE ALL USERS GO TO SETTINGS > TREATMENTS -> PROFILE AND DEFINE THE CORRECT USER TYPE. To learn how to use basals please read the new updated wiki at https://github.com/SpikeApp/Spike/wiki/Treatments (Miguel)
+FEATURE: New Workflow/Shortcuts screen at Settings -> Integration -> Workflow/Shortcuts. All Workflow/Shortcuts configurations are now listed in this new screen and can be added directly from Spike without having to be emailed first. (Miguel)
+FEATURE: Support for adding new treatments directly from the Wokflow/Shortcuts app (Today Widget + Apple Watch): Exercise, Pen/MDI Basal, Temp Basal Start & Temp Basal End. 
+FEATURE: New Pebble screen at Settings -> Integration -> Pebble. In this screen the user will find instructions and links to Pebble apps that allow to insert treatments into Spike. (Miguel)
+FEATURE: Complication support for Apple Watch Series 4 / WatchOS 5. You can now select the Spike complication directly from the Watch app on your home screen or by force touching your Apple Watch and selecting customize. It supports all watch faces (Infograph Modular, Infograph, etc). The Spike complication is a shortcut to the Spike Watch app. (Miguel)
+ENHANCEMENT: When sending Spike's database to an email address (Settings > Maintenance -> Database Backup/Restore), if the database is bigger than 15mb, Spike will zip it first before sending to avoid email sending errors. (Miguel)
+ENHANCEMENT: Support for importing databases into Spike that reside inside a zip file. (Miguel)
+ENHANCEMENT: When the IFFFT option "Separate IFTTT Events For Each Glucose Threshold" is enabled, besides firing the correspondent threshold event Spike will also always fire the "spike-bgreading" event. (Miguel)
+ENHANCEMENT: Improvements in the Finnish, Italian, Dutch, Turkish and Chinese translations. (Translators) 
+FIX: More bug fixes for low/in range/high percentage calculations for the lower glucose distribution stats to avoid the NaN error. (Miguel)
+FIX: Addresses a layout issue on the Today Widgets that sometimes would show some labels out of place. (Miguel)
+FIX: As usual, several other small bug fixes and improvements. (Miguel)
+
+3.5.3
+FIX: Addresses an issue that prevents the glucose distribution pie chart from being rendered and the percentage in low range from being properly calculated.
+
+3.5.2
+FEATURE: Dexcom Share follower mode. Besides being able to use Spike to follow a Nightscout site, users can now also use Spike to follow a Dexcom Share account. The Dexcom Share server only supports sharing glucose data, this means treatments are not synced between the master and the follower. Masters can generate QR Codes and send them to followers. The follower only needs to scan the QR Code to configure Spike. Wiki available here: https://github.com/SpikeApp/Spike/wiki/Dexcom-Share-Follower-Mode (Miguel)
+FEATURE: QR Code support for Nightscout followers. Spike masters can now generate QR Codes and invite followers. With Nightscout, when generating an invitation QR Code the master also has the option to include permissions for the follower to add treatments and can also include his complete profile (insulins, ISF, I:C, etc...) so the follower has the same insulins available when inserting treatments and the same profile data for predictions. QR Codes can also be sent by email. Wiki here: https://github.com/SpikeApp/Spike/wiki/Spike-Follower-Mode#configure-spike-follower-by-qr-code (Miguel)
+FEATURE: Extended/Combo bolus treatment support. Available with the bolus, meal and bolus wizard treatments. After adding a combo/extended bolus treatments, pressing it with your finger on the chart will show a callout telling you how much insulin has already been administered and how much still remains. (Miguel)
+FEATURE: New Exercise, Insulin Cartridge Change, Pump Battery Change and Pump Site Change treatments. Add these new treatments by going to the upper right + menu (small screen devices might need to scroll the menu to view all available treatments). All new treatments have bidirectional Nightscout sync support and will update their respective pills (IAGE, BAGE & CAGE). Support for IFTTT has also been added for all new treatments. Updated Wiki here: https://github.com/SpikeApp/Spike/wiki/Treatments (Miguel)
+FEATURE: New advanced glucose variability & treatments stats. Scroll the lower stats (next to the pie chart) to the left to access them. New stats include: standard deviation, glycemic variability index (GVI), patient glycemic status (PBS), mean change per hour, time in fluctuation, total bolus, total carbs,  total exercise. Time ranges for these new stats can be changed in Settings > Chart. Wiki available here: https://github.com/SpikeApp/Spike/wiki/Statistics (Miguel)
+FEATURE: Trigger different IFTTT events based on glucose thresholds (urgent high, high, in range, low, urgent low). This allows to set different colors for your smart bulbs (e.g. Philips Hue) based on your glucose levels. Head over to Settings > Integration > IFTTT, turn on "All Glucose Readings" and "Separate IFTTT Events For Each Glucose Threshold". This will trigger the following events: spike-bgreading-urgent-high, spike-bgreading-high, spike-bgreading-in-range, spike-bgreading-low and spike-bgreading-urgent-low. Updated wiki here: https://github.com/SpikeApp/Spike/wiki/IFTTT#fine-tuning-your-ifttt-recipes (Miguel)
+ENHANCEMENT: Ability to set I:C ratio with 0.1 increments in Settings > Treatments > Profile. (Miguel)
+ENHANCEMENT: Added ability to add treatments with a future time/date. (Miguel)
+ENHANCEMENT: Improved download logic when using Spike to follow a Nightscout site. Should be much more reliable now. (Miguel)
+ENHANCEMENT: Small improvements to Spike to Spike follower mode. (Miguel)
+ENHANCEMENT: Spike will automatically delete treatments older than 3 months from its internal database to keep the file as small as possible. (Miguel)
+ENHANCEMENT: Improved connection and parsing logic when syncing Nightscout treatments. (Miguel)
+FIX: Important fix for the initial calibration. Addresses the LOW values seen after adding an initial calibration. (Github issue #30) (Johan)
+FIX: Addresses a bug that could sometimes not display the correct insulin name when editing a treatment by going to + menu > treatments > pencil icon. (Miguel)
+FIX: Addresses a bug when editing a meal treatment with a carb delay that would prevent insulin and/or carbs to be set to zero. (Github issue #141) (Miguel)
+FIX: BG value inside the OpenAPS pill in Nightscout is now correctly converted for mmol/L users. (Miguel) 
+FIX: Attempt to fix the header that lists all predictions curves being cut off on iPhone XR phones. Untested, please report back. (Miguel)
+FIX: As usual, a lot of other small bug fixes and enhancements to improve overall experience. (Miguel)
+
+3.5.1
+FEATURE: Ability to press on prediction markers located on the chart to visualize details. (Miguel)
+ENHANCEMENT: Ability to set ISF with 0.2 increments in Settings > Treatments > Profile. (Miguel)
+ENHANCEMENT: Improvements to Turkish, Norwegian, Russian, French & Finnish translations. (Translators) 
+FIX: Small bug fixes to the predictions pill. (Miguel)
+FIX: Don't show the treatments menu (upper right + button) when not needed. (Miguel)
+FIX: Fixes a bug that made predictions temporarily disappear from the scroller graph after a calibration. (Miguel)
+FIX: Fixes a bug that created an empty gap of readings on the chart when enabling/disabling predictions if there was less than 24h of readings in Spike. (Miguel)
+FIX: Attempt to fix an issue with the main left menu on iPad Pro 12" in landscape. This fix is untested. (Miguel)
+FIX: A LOT of other small bug fixes and improvements that should increase overall app stability and speed. (Miguel)
+
+3.5.0
+FEATURE: Glucose predictions are here! (Miguel)
+1) Spike now incorporates a heavily modified and optimized version of the oref0 (OpenAPS) algorithm bringing the power of Artificial Pancreas Systems to the end user.
+2) Users now have access to glucose predictions of up to 4h using a single prediction curve or multiple prediction curves (IOB, COB, UAG and ZT).
+3) Available prediction curves:
+- IOB: This is a predicted BG curve that is based on insulin only. If no IOB is present, this predicted BG curve will only take into account the current BG trend and things like "BG momentum".
+- COB: Uses carbs and insulin (if available) together in predicting the BG curve.
+- UAG: Spike is able to automatically detect "floating carbs" (unlogged carbs or glucose output originating from stress, adrenaline, etc.) and use it along insulin (if available) together in predicting the BG curve. This means that even if you eat carbs and don't log them, Spike will still be able to automatically detect them and account for them when calculating predictions.
+- ZT: Prediction BG curve representing a scenario when a zero temp is given (zero basal insulin). ZT predicts how BG SHOULD behave in the absence of basal insulin.
+4) New prediction pill available in the chart screen that provides a plethora of new information to the user:
+- Time until glucose reaches the user's high/low threshold.
+- Treatments outcome: Final BG outcome of all active insulin/carbs treatments. This is the same outcome given by the Bolus Calculator. 
+- BG velocity per minute.
+- Several prediction settings like enable/disable, duration, include/exclude IOB/COB, etc.
+- Extra information like deviation, BG impact, eventual BG, etc.
+5) Some of the colors used to display the prediction curves can be changed in Settings > Chart.
+6) Predictions are also available in the fullscreen view, today widget, apple watch complication and apple watch dedicated app.
+7) Ability to upload predictions to Nightscout and visualize them directly from the browser. 
+8) Predictions are available to masters and followers as well as Loop/OpenAPS Users that have the "Loop/OpenAPS User" option enabled in Settings > Treatments (please continue to have this option enabled).
+9) Much, much more! Please read the WiKi here: https://github.com/SpikeApp/Spike/wiki/Glucose-Predictions
+FEATURE: New IOB & COB algorithms! Spike can now use exponential insulin curves as well as the OpenAPS (oref0) COB algorithm. (Miguel).
+1) Users can still choose between the current IOB/COB algorithm (ported from Nightscout) or the new (more precise) oref0 IOB/COB algorithm. Head over to Settings > Treatments > Profile to choose. The OpenAPS (oref0) algorithm is highly recommended due to improved accuracy.
+2) The new IOB algorithm supports bilinear and exponential curves. Exponential curves are MUCH more precise and VERY close to the same insulin curves observed in trials.
+3) When using the exponential curve the user can customize the DIA and PEAK time of the insulin, meaning it can fully customize the insulin curve to his/her desire. Customization is done in real time while Spike draws the insulin curve based on the user's DIA and PEAK for a realistic visual representation.
+4) When using the exponential curve Spike now comes bundled with some predefined presets for Apidra, Humalog, Novolog, Novorapid, etc. Both for adults and children. Choose your preset and Spike will automatically draw your insulin curve.
+5) Please read a detailed explanation of the new IOB algorithm and the benefits of the new insulin curves in Settings > Treatments > Profile > Algorithm > Show Details.
+6) The new COB algorithm (heavily modified oref0) now analyzes in real time glucose trends to determine how much carbs have been absorbed. Instead of assuming a linear absorption model like the Nightscout algorithm, the new COB algorithm is intelligent enough to determine how much carbs have been absorbed by constantly analyzing the glucose trend in real time.
+7) More info available in the new IOB/COB wiki available here: https://github.com/SpikeApp/Spike/wiki/IOB-COB-Algorithms
+FEATURE: Due to the increased complexity of the new IOB/COB algorithm as well as glucose predictions and in order to avoid constant mathematical calculations that would decrease battery life, a new (from scratch) intelligent cache system has been coded so calculations are only done once and then cached and ready to be sent to all the different services inside Spike. Caches are also saved in Spike's internal database so they can survive app/system restarts. They can be cleared by going to Settings > Maintenance > Internal Cache > Clear although there should be no need to do it as Spike creates and clears caches automatically. (Miguel) 
+FEATURE: Completely redesigned insulin absorption curves, the ones available when pressing the IOB/COB pills in the main chart. When pressing the IOB the user now has 2 absorption curves, the IOB one that was already present in previous versions and a new one that represents insulin activity and even tells the user how much insulin is being absorbed per minute as well as how close/far the user is from the insulin peak. New absorption curves wiki here: https://github.com/SpikeApp/Spike/wiki/IOB-COB-Absorption-Curves (Miguel)
+FEATURE: Sensor noise! Spike can now detect sensor noise (clean, light, medium, heavy). To check the current sensor noise just press the +Info pill on the main chart. To check sensor noise of past glucose readings just scroll back to the desired reading and press the +Info pill. Sensor noise is also uploaded to Nightscout and is available to both masters and followers. (Miguel)
+FEATURE: Also added BAGE to the +Info pill. (Miguel)
+FEATURE: Added Turkish Translation. Special thanks to Mustafa Gülcan. 
+ENHANCEMENT: Improved alarm snoozer popup. When an alarm fires the user now has more options to choose from in the alarm snoozer popup as well as a better layout. (Miguel).
+ENHANCEMENT: Some improvements have been made to the connection logic between the dedicated Apple Watch app and the iOS app. (Miguel)
+ENHANCEMENT: For Loop/OpenAPS users, Spike can now display negative values in the IOB pill. Useful for zero-temp (no basal) scenarios. (Miguel)
+ENHANCEMENT: Reverted back the /Pebble endpoint to also display in mmol as it seems some Pebble watch faces don't do the conversion automatically. (Miguel)
+ENHANCEMENT: Upgraded Spike's internal Dexcom Share server to add compatibility with new Loop versions (collector name, manufacturer, fw version, etc. are now also sent to Loop). (Miguel)
+ENHANCEMENT: Added a warning to the readings screen. If by some reason the user has more than 500 readings in the last 24h, Spike will only display the latest 500 readings in order to avoid crashes. (Miguel)
+ENHANCEMENT: Added insulin precision of 0.05U to the Bolus Calculator. Available in Settings > Treatments > Bolus Calculator. (Miguel)
+ENHANCEMENT: When scanning foods, if Spike only returns one hit it will auto select that food from the search results list to speed up the workflow process. (Miguel)
+ENHANCEMENT: Bolus Calculator popup can now be dismissed when pressing anywhere outside. (Miguel)
+ENHANCEMENT: Improvements to the Russian and Norwegian translations. Special thanks to our beloved translators!
+ENHANCEMENT: Improvements on how the treatments menu and the +info menu are rendered and positioned on small screen devices (eg: iPhone 4s). (Miguel)
+ENHANCEMENT: When pressing a treatment on the chart the approximate BG value recorded at the time the treatment was inserted is now displayed on the popup. (Miguel)
+ENHANCEMENT: Added a button on the Help screen (main menu) that links to all available Spike wikis. (Miguel)
+FIX: Bolus Calculator popup should now display correctly when switching from portrait to landscape and vice-versa. (Miguel)
+FIX: Several small bug fixes in the Bolus Calculator logic to address some bugs reported by users. (Miguel)
+FIX: When using Spike in Italian, languages were not listed correctly in the speech output settings (e.g. instead of Italian, it was Portuguese). (Sascha)
+FIX: Many more small fixes and improvements. Too many to list here. (Miguel)
+
+3.0.2
+ENHANCEMENT: Optimizations to the IOB algorithm that will slightly increase overall battery life.
+FIX: One more small fix for the logic behind selecting the current active profile in specific timezones.
+
+3.0.1
+FIX: Addresses an issue that made Spike crash on some devices. Sorry about that! (Miguel)
+FIX: Fixes an issue that might prevent Spike from getting the correct profile on some timezones. (Miguel)
+
+3.0.0
+FEATURE: Bolus Calculator! Spike now comes bundled with a bolus calculator with the following features: (Miguel)
+1) Ability to tell you how much carbs are needed to correct a low.
+2) Ability to tell you how much insulin is needed to correct a high.
+3) Ability to tell you how much insulin is needed to cover carbs in a meal you're about to eat.
+4) All calculations take into account current blood glucose level, glucose trend arrow, current IOB and COB. User has the option, in real time, to enable or disable any of these options.
+5) If adding carbs to the calculator, user has the ability to choose carb type (fast, medium, slow) and a carb offset in minutes in case he/she plans to eat the carbs before or after the insulin bolus.
+6) Ability to choose between multiple insulin types when insulin is required for the final treatment suggested by the calculator.
+7) Ability to make adjustments to the final calculations for before/after exercise. Before and after exercise insulin requirements decrease (more insulin sensitivity). User can select, in the calculator, if he/she is adding the treatment before or after performing exercise, the intensity of the exercise (low, moderate, high) as well as the duration of the exercise bout. Spike will give a suggested insulin % reduction for the final calculations. User has the option to tweak the suggestion to his/her liking and the calculator will learn from it so the user doesn't have to tweak it again for subsequent treatments.
+8) Ability to make adjustments to the final calculations for sickness periods. During sickness insulin requirements increase (more insulin resistance). User has the option to add an increase % of insulin to the final calculations. The increase amount is completely customizable.
+10) Ability to ask Spike to notify the user for an extended bolus. Normally, when consuming high fat foods, an extended bolus is required some time afterwards (ex: pizza). Just ask Spike to notify you at a specific time. User can also select any sound available in the alarms library for the extended bolus notification.
+11) The calculator is smart enough to tell the user the glucose outcome without the suggested treatment (carbs/insulin) and the projected glucose outcome with the calculator suggested treatment.
+12) If the calculator only suggests insulin to the final treatment, it will be added as a bolus. Only carbs will be added as a carb treatment. Insulin and carbs will be added as a meal. All automatically after pressing the ADD button.
+13) Final suggestion given can be tweaked by the user if he/she so chooses to. As the user changes the suggested insulin/carbs given by the calculator it will be shown, in real time, the glucose outcome of the changes.
+14) Several settings are available for the calculator like insulin precision (0.1, 0.5, 1.0) for users with pumps or more/less precise pens. Same for carbs (0.5, 1.0). There's also settings for colors, layout, etc.
+15) WiKi on how to use the calculator is available here: https://github.com/SpikeApp/Spike/wiki/Bolus-Calculator
+
+FEATURE: Food Manager! Spike now comes bundled with a food manager with access to one million foods worldwide (not just US). Some features: (Miguel)
+1) Ability to search nutritional information from 3 online databases: FatSecret, Open Food Facts & USDA.
+2) Ability to scan food barcodes directly from your phone's camera. Point your camera to the food barcode and Spike will list you all nutritional information so you can easily add the food to your final treatment,
+3) Ability to save foods to Spike's local database for offline use.
+4) Ability to create recipes that can easily be added over and over to your treatments.
+5) Ability to manually add your own custom foods to Spike.
+6) Ability to select multiple serving sizes for each food. Spike will do nutritional calculations in real time based on the serving size and unit.
+7) Spike will show detailed nutritional information like proteins, fats, carbs, fiber, etc.
+8) Ability to subtract fiber from your final carb calculations. You can subtract the entire fiber or just half the fiber.
+10) Ability, after selecting a food, to visit the food's webpage with additional information and photos.
+11) The food manager can be accessed directly when adding a meal, carb or bolus calculator treatment. After your select the foods you want to eat Spike will automatically calculate total carbs and add them to the treatment. All your foods as well as quantity can also be imported to the treatment's notes, automatically.
+10) Several settings available in a dedicated settings screen like subtract entire or just half fiber (when the user so chooses to), automatically search foods as you type, preferred food database, etc.
+11) Wiki on how to use the food manager is available here: https://github.com/SpikeApp/Spike/wiki/Food-Manager
+
+FEATURE: Extended profile in Spike with ability to use different profiles for different times of the day. The profile now supports: (Miguel)
+1) Start time. The profile will end at the start time of the next profile. If only one profile is added then that profile will be active for the entire day.
+2) ISF (Insulin Sensitivity Factor), I:C (Insulin-To-Carb Ratio) and desired BG target. All these parameters are needed for the bolus calculator to work.
+3) Set how much insulin is needed to correct a 45º upward arrow, 90º upward arrow, double 90º upward arrows.  All this will be used by the bolus calculator.
+4) Set how much carbs are needed to correct a 45º downward arrow, 90º downward arrow, double 90º downward arrows.  All this will be used by the bolus calculator.
+5) User now has the option to display the current BG target of the active profile in the main chart using a new horizontal dashed line. This line can have a different color than the normal threshold lines. Change it in settings -> chart.
+
+FEATURE: Ability to set a quiet time for App Center in-app updates. If device is in quiet time Spike will not warn you if a new App Center update is available. Configure the quiet time in settings -> maintenance. (Miguel) 
+FEATURE: Added Danish, Finnish, Noreweigan and Swedish languages to the speech functionality. Available in settings -> speech. (Miguel)
+FEATURE: Ability to snooze all alarms from the popup that appears after a single alarm is fired. (Miguel)
+FEATURE: Ability to show/hide glucose threshold lines on the main chart (urgent low, low, target, high, urgent high). Options availabe in settings -> chart. (Miguel)
+FEATURE: Ability to change glucose line thickness when the main chart is set to line. Change it in settings -> chart. (Miguel)
+ENHANCEMENT: Improvements to Spike's internal COB algorithm to be more in sync with Nightscout's algorithm. This also makes Spike's COB algorithm behave better when multiple carb treatments are stacked. Spike and Nightscout COB algorithms will only be in sync for treatments that use a carb type with an absorption delay of 20 minutes. This is because Nightscout only supports absorption delays of 20min while Spike supports multiple absorption delays (fast, medium and slow available in Settings -> Treatments -> Profile). You might notice a small difference of up to 0.5 in the COB result between Spike and Nightscout, this is due to the fact that Spike refreshes COB calculations at different paces than Nightscout. It's strongly advised that all users set a ISF and I:C in Settings -> Treatments -> Profile to make COB calculations more accurate. (Miguel)
+ENHANCEMENT: Spike will now respect the override system volume setting when previewing alert sounds in settings -> alert types. (Miguel)
+ENHANCEMENT: Some enhancements to the chart layout in Spike's Apple Watch app. (Miguel)
+ENHANCEMENT: Glucose values in the readings screen (three dots menu -> readings) now also display delta. (Miguel)
+FIX: The Pebble endpoint on Spike's internal server now returns the sgv value always in mg/dL. (Miguel)
+FIX: Workaround for the need to swipe twice from the screen bottom on iPhone X or above to close Spike. (Miguel)
+FIX: Fix for needing to restart phone the first time the user tries to connect to a MiaoMiao device. (Johan)
+FIX: Fix for default insulin not always being displayed first when adding treatments. (Sascha)
+FIX: New sensors starts uploaded to Nightscout would not persist after 24/48h (SAGE). All should be fixed now. (Miguel)
+FIX: Treatments deleted by Masters or directly in Nightscout were not being removed from Spike's main chart until Spike was restarted. All is fixed now. (Miguel) 
+FIX: Fixes a bug that would incorrectly select the active main menu button after rotating the device. (Miguel)
+FIX: Fixes an issue in speech where positive deltas where incorrectly spoken when using certain voices bundled with iOS. (Miguel)
+FIX: As usual, a lot of other small bug fixes and enhancements. (Miguel)
+
+2.5.3
+ENHANCEMENT: Full iPhone Xr & Xs Max support. Spike is now compatible with all new iPhone and Apple Watch models. (Miguel)
+FIX: Fixes an issue where Spike would overwrite combo bolus treatments inserted in Nightscout. (Miguel)
+FIX: Fixes an issue that prevented some users to modify alarm values. (Miguel)
+
+2.5.2
+FEATURE: Spike will now automatically check for new updates in App Center and notify the user only if the App Center version is newer than the one currently installed. The user will be presented with a pop up showing options to download the update, ignore it or remind later. This feature is enabled by default for all users but can be disabled in Settings -> Maintenance -> Check For Updates. (Miguel) 
+FEATURE: Spike can now override the device volume when playing alarms. You can set a custom volume in Settings -> Alarms -> Override System Volume. Before playing an alarm sound Spike will change your device volume to the value you defined in Settings, play the alarm and then restore the device volume to how it was before. This feature should avoid missing alarms when your device volume is too low or set to zero. (Miguel)
+FEATURE: Spike can also override the device volume when speaking glucose readings. Activate this option in Settings -> Speech -> Override System Volume. Everything stated in the item above also applies to the Speech feature. (Miguel)
+FEATURE: Added Finnish translation. (Miguel & Translators)
+ENHANCEMENT: Added support for iPhone Xs. Support for Xs Max and Xr will come in a later update. (Miguel)
+ENHANCEMENT: Added support for Apple Watch Series 4 40 & 44 mm. (Miguel)
+ENHANCEMENT: Updated Adobe Air framework to version 31. (Miguel)
+ENHANCEMENT: Added a button, for convenience, to terminate Spike in the pop up that appears after a successful database restore. This avoids having to restart the phone or closing Spike from the app switcher. (Miguel)
+
+2.5.1
+FEATURE: Added Dutch language. (Translators)
+ENHANCEMENTS: Some enhancements to several languages. (Translators)
+FIX: Coded a workaround for Loop authentication. Some users were not able to connect Loop to Spike's internal Dexcom Share server. This workaround makes everything work as expected. (Miguel)
+
+2.5.0
+FEATURE: Ability to backup/restore settings or clone settings to another device! Just go to Settings -> Maintenance -> Settings and press backup. Spike will generate and display a QR Code with all your settings encoded and will also give you the option to email the QR Code to yourself or another user. To import settings go to the same screen, press restore and scan the QR Code with your device's camera. Everything else is done automatically. The QR Code and settings are encrypted using the AES 256-bit algorithm and only Spike has the key to decrypt it, making it virtually unbreakable. (Miguel) 
+FEATURE: Ability to backup/restore the entire Spike database to iCloud (this includes settings AND data like past readings, treatments, etc.). User also has the option to enable automatic iCloud backups (daily, weekly and monthly) as well as sending the entire Spike database to his/her e-mail address or to another user's. A previously exported database can also be imported into Spike, just read instructions included in the e-mail you received when you exported the database. Importing databases saved to iCloud can be done directly in Spike and all devices logged into the same iCloud account can share database backups/restores. All these features are available in Settings -> Maintenance -> Database. (Miguel)
+FEATURE: Added Danish, Norwegian, Russian and Swedish translations. Enable them in Settings -> General -> Language. A big thanks to our translators! (Miguel & Translators)
+ENHANCEMENT: Because database can now be sent by e-mail, from now on all passwords like (Nightscout API, Dexcom Share password, etc.) will be encrypted. As soon as you update Spike to this version Spike will automatically encrypt all your existing passwords in the database. (Miguel)
+ENHANCEMENT: Gap Fix is enabled by default for followers and MiaoMiao users. This makes the calendar event on the Watch complication last 10 minutes instead of 5 and works better for followers and MiaoMiao users. (Miguel)
+ENHANCEMENT: Removed iPhone 7/SE transmitter battery drain warning. This issue has been fixed since version 2.2.4. (Miguel)
+ENHANCEMENT: Added alarms snoozed times to the status.json endpoint in Spike's internal HTTP server so 3rd party developers can include them in their watch apps. The goal is for the user to snooze and alarm in Spike and the watch app respects that snooze. Endpoint can be reached at http://127.0.0.1:1979/api/v1/status.json (Miguel)
+ENHANCEMENT: Added count variable to the pebble endpoint in Spike's internal HTTP Server for better integration with 3rd party apps. Endpoint can be reached at http://127.0.0.1:1979/pebble (Miguel) 
+ENHANCEMENT: Lots of optimizations under the hood regarding file and email management. (Miguel)
+ENHANCEMENT: Several enhancements to calibration popups that hopefully will make them more reliable and avoid situations where the calibration was not accepted by Spike. (Miguel)
+ENHANCEMENT: Better handling of raw calculation when plotted to the main chart. (Miguel)
+ENHANCEMENT: Improved G5/G6 disconnection strategy. This should hopefully improve Bluetooth connection when the transmitter is also connected to a receiver. (Johan) 
+FIX: Sensor Start events are now correctly uploaded to Nightscout. (Miguel)
+FIX: Optimal calibration notifications should now fire the default iOS sound and respect the mute switch. Also made improvements and fixes to Optimal Calibration notes uploaded to Nightscout, including not sending repeated notes. (Miguel)
+FIX: Incorrect placement of latest glucose marker on main chart after adding a calibration. Also addresses some wrong scaling of the chart axis. (Miguel)
+FIX: Attempt to fix an issue where not all readings deleted in the Readings Management screen where actually being deleted from the chart and database. (Miguel)
+FIX: Several fixes and enhancements on how Spike handles and saves transmitter's MAC addresses. Should also fix an issue that forces the user to forget and scan MiaoMiao to reconnect it to Spike. (Johan & Miguel) 
+FIX: Attempt to fix an issue that prevented Spike from displaying the latest glucose value in the main chart when brought to the foreground. (Miguel)
+FIX: Several fixes for the main menu. Should not select the wrong buttons anymore. (Miguel)
+FIX: 12h dates are now displayed correctly. (Miguel)
+FIX: Effect and outcome on the +info pill are now converted correctly depending on Spike and Nightscout unit setting. Thanks to Sebastian Holmqvist for reporting this issue. (Miguel)
+FIX: Still some more fixes for not displaying full 24h of data on the main chart for MiaoMiao followers. (Miguel)
+FIX: Fixes an issue where followers, after pressing Login to test Nightscout credentials, would need to restart Spike in order to display Nightscout data. (Miguel)
+
+2.2.5
+ENHANCEMENT: Better initial Nightscout readings fetch strategy for followers that might have a master with MiaoMiao and a lot of readings on-demand on their Nightscout site, hence more than 288 readings in a time span of 24h. This will make Spike follower display 24h of data, independently of the amount of readings present in Nightscout. (Miguel)
+ENHANCEMENT: Made some changes to be able to fit a menu button on the History screen as it seemed to be causing confusion to some users. The button is not available for iPhone 4S/5/SE devices due to lack of space, users can still swipe from the left edge of the screen to the right to access the main menu. (Miguel)
+ENHANCEMENT: Some enhancements in the code logic that renders raw values on the main chart for Dexcom users. (Miguel)
+FIX: Fixes an issue with MiaoMiao that would incorrectly display the line on the main chart. (Miguel)
+FIX: A few corrections for Spanish, French and German translations. (Miguel & Translators)
+
+2.2.4
+FEATURE: Dexcom G6 support! No 10 day sensor expiration, no transmitter expiration, ability to skip warm-ups, ability to reset transmitter, ability to use refurbished transmitters, etc. G6 is set up in Spike exactly the same way as the G5. G6 still requires calibrations although after the first 2-3 days there's no need to calibrate every day. If the sensor is healthy you can calibrate 1-2 times a week, or even less. Ability to have G6 without calibrations will come in a future update. (Miguel)
+FEATURE: Multilanguage support! Spike is now also available in Portuguese, Spanish, French, Polish, German, Italian and Chinese. More languages coming soon. Many thanks to our translators listed in the Disclaimer screen! <3 Select your desired language in Settings -> General -> Language. (Miguel & Translators)
+FEATURE: Historical data! You will now be able to see historical data by pressing the new History button on the main menu, this feature is only available to masters. Spike can show up to 3 months of past data, day by day. Users that have Spike connected to a Nightscout site will notice that a lot of past treatments are missing when browsing past days, this is due to an obscure bug I found when coding the history feature. This bug has been fixed and all treatments added from now on will appear in the history screen. This bug does not affect users that don't have Spike connected to a Nightscout site and does not affect glucose data, only treatments. Past treatments continue to be available on the user's Nightscout site. (Miguel)
+FEATURE: Ability to plot raw values directly on the main chart. Available only for Dexcom G4, G5 and G6 users. Activate/deactivate this option by pressing on the "Raw" checkmark at the bottom of the graph. Users can also change the color of the raw data by going to Settings -> Chart. (Miguel)
+FEATURE: Ability to skip sensor warm-ups completely without having to manually insert a previous sensor start date/time. Works with all sensors and transmitters brands. Activate this setting in Main Menu -> Sensor -> Advanced. Once activated it will be applied to all future sensors, unless deactivated again. (Miguel)
+FEATURE: Ability to upload a note to Nightscout when optimal conditions for calibration have been met. Useful for caregivers that act as followers. Activate this option in Settings -> Share -> Nightscout. (Miguel)
+ENHANCEMENT: New Bluetooth library for Dexcom G5 and G6 transmitters, done from scratch! Johan put a lot of work and skill into this. Huge huge thanks to Johan for the outstanding work! This new library may overcome the premature G5 transmitter battery drain on some iPhone 7/SE but we need more user feedback to make sure. It should also make BT connections a bit more stable. (Johan)
+ENHANCEMENT: A lot of changes where made under the hood to make Spike better, especially in the way it handles new readings arriving from the transmitter and propagating them to different services inside the app for further processing. (Johan).
+ENHANCEMENT: Ability to select a custom battery level when adding "Transmitter Low Battery" alarms. Defaults: G6 -> 290 (Voltage A), G5 -> 300 (Voltage A), G4 -> 210, MiaoMiao -> 30, BlueReader/TransmitterPL/Limitter -> 20. This option is not available for BluCon users because BluCon doesn't report battery levels, it reports either 100% (OK) or less than 5% (about to die). With BluCon the alarm will always trigger when battery goes below 5%. (Miguel) 
+ENHANCEMENT: Ability to only fire the Fast Rise or Fast Drop alarms if glucose is within a low and high glucose threshold defined by the user in Settings -> Alarms -> Fast Rise / Fast Drop. (Miguel)
+ENHANCEMENT: MiaoMiao users can now press the "time ago" pill on the main chart or the "time ago" label on the fullscreen view to request a reading on-demand. (Miguel)
+ENHANCEMENT: Added support for Nightscout Combo Bolus treatments. (Miguel)
+ENHANCEMENT; Added ability to test Nightscout credentials when in follower mode. Settings -> General -> Data Collection -> Login. (Miguel)
+ENHANCEMENT: All dates and times displayed in Spike like sensor start time, etc. should now respect the user's locale. Same with all date/time selector components. (Miguel)
+ENHANCEMENT: Added Siri sounds for Fast Drop/Rise alarms. (Miguel)
+ENHANCEMENT: Added Spike's logo to main menu. (Miguel)
+ENHANCEMENT: Main chart is now fixed size as default for new installations. (Miguel)
+ENHANCEMENT: Several small layout adjustments overall. (Miguel)
+REGRESSION: Removed raw values for Libre users on the +info pill until we can make this feature work correctly. This only affects Libre users. (Miguel)
+FIX: Workaround for an iOS bug that sometimes prevented the Chart Today Widget from rendering correctly. (Miguel)
+FIX: Small cosmetic fix on the treatment inserter popup. (Miguel)
+FIX: Fix a bug for MiaoMiao users that could make the chart display less than 24h of data at a time. (Miguel)
+FIX: As usual, many other small bug fixes and improvements. (Miguel)
 
 2.2.1
 ENHANCEMENT: Force PayPal donation page to always display in English. (Miguel)

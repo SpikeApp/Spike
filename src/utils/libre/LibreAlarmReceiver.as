@@ -7,11 +7,13 @@ package utils.libre
 	import flash.utils.ByteArray;
 	
 	import database.BgReading;
+	import database.Calibration;
 	import database.CommonSettings;
 	import database.Sensor;
 	
 	import model.ModelLocator;
 	
+	import services.CalibrationService;
 	import services.TransmitterService;
 	
 	import utils.Trace;
@@ -31,7 +33,7 @@ package utils.libre
 		/**
 		 * returns true if a new reading is created
 		 */
-		public static function CalculateFromDataTransferObject(bgReadings:Array):Boolean {
+		public static function CalculateFromDataTransferObject(readingsAndCalibrations:Array):Boolean {
 			myTrace("in CalculateFromDataTransferObject");
 			var timeStampLastBgReadingBeforeStart:Number = 0;
 			
@@ -43,46 +45,74 @@ package utils.libre
 			 * latest reading in bgReadings that was not added because time difference with previous added reading was too narrow.
 			 */
 			var lastReadingNotAdded:GlucoseData = null;
-			if (bgReadings != null) {
-				if (bgReadings.length > 0) {
-					var thisSensorAge:Number = (bgReadings[bgReadings.length - 1] as GlucoseData).sensorTime;
-					sensorAge = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE));
-					if (thisSensorAge > sensorAge) {
-						sensorAge = thisSensorAge;
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, thisSensorAge.toString());
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NFC_AGE_PROBEM, "false");
-						myTrace("in CalculateFromDataTransferObject, Sensor age advanced to: " + thisSensorAge);
-					} else if (thisSensorAge == sensorAge) {
-						myTrace("in CalculateFromDataTransferObject, Sensor age has not advanced: " + sensorAge);
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NFC_AGE_PROBEM, "true");
-					} else {
-						myTrace("in CalculateFromDataTransferObject, Sensor age has gone backwards!!! " + sensorAge);
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, thisSensorAge.toString());
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NFC_AGE_PROBEM, "true");
-					}
+			if (readingsAndCalibrations != null) {
+				if (readingsAndCalibrations.length > 0) {
+					var thisSensorAge:Number = Number.NaN;
+					var gd:GlucoseData;
 					
-					if (Sensor.getActiveSensor() == null && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE))) < 14 * 24 * 60) {
-						//start sensor without user intervention 
-						Sensor.startSensor(((new Date()).valueOf() - sensorAge * 60 * 1000));
-					}
-					
-					//got all readings and if there's new one add them, at least 4.5 minutes between two readings
-					for (var cntr:int = 0; cntr < bgReadings.length ;cntr ++) {
-						var gd:GlucoseData = bgReadings[cntr] as GlucoseData;
-						if (gd.glucoseLevelRaw > 0) {
-							if (gd.realDate > timeStampLastAddedBgReading + 4.5 * 60 * 1000) {//
-								myTrace("in CalculateFromDataTransferObject createbgd : " + (new Date(gd.realDate)).toString() + " " + gd.glucose(0, false));
-								createBGfromGD(gd);
-								timeStampLastAddedBgReading = gd.realDate;
-								lastReadingNotAdded = null;
+					if (readingsAndCalibrations[readingsAndCalibrations.length - 1] is GlucoseData) {
+						gd = readingsAndCalibrations[readingsAndCalibrations.length - 1] as GlucoseData;
+						if (isNaN(thisSensorAge)) {
+							thisSensorAge = gd.sensorTime;
+							sensorAge = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE));
+							if (thisSensorAge > sensorAge) {
+								sensorAge = thisSensorAge;
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, thisSensorAge.toString());
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NFC_AGE_PROBEM, "false");
+								myTrace("in CalculateFromDataTransferObject, Sensor age advanced to: " + thisSensorAge);
+							} else if (thisSensorAge == sensorAge) {
+								myTrace("in CalculateFromDataTransferObject, Sensor age has not advanced: " + sensorAge);
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NFC_AGE_PROBEM, "true");
 							} else {
-								//save the lastReading that was skipped, because the last reading is too interesting too drop
-								lastReadingNotAdded = gd;
+								myTrace("in CalculateFromDataTransferObject, Sensor age has gone backwards!!! " + sensorAge);
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, thisSensorAge.toString());
+								CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NFC_AGE_PROBEM, "true");
 							}
-						} else {
-							myTrace("in CalculateFromDataTransferObject, received glucoseLevelRaw = 0");
+							
+							if (Sensor.getActiveSensor() == null && (new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE))) < 14 * 24 * 60) {
+								//start sensor without user intervention 
+								Sensor.startSensor(((new Date()).valueOf() - sensorAge * 60 * 1000));
+							}
 						}
 					}
+					
+					for (var cntr:int = 0; cntr < readingsAndCalibrations.length ;cntr ++) {
+						if (readingsAndCalibrations[cntr] is GlucoseData) {
+							gd = readingsAndCalibrations[cntr] as GlucoseData;
+							
+							
+							if (gd.glucoseLevelRaw > 0) {
+								if (gd.realDate > timeStampLastAddedBgReading + 4.5 * 60 * 1000) {//
+									//myTrace("in CalculateFromDataTransferObject create bgd : " + (new Date(gd.realDate)).toString() + " " + gd.glucose(0, false));
+									createBGfromGD(gd);
+									timeStampLastAddedBgReading = gd.realDate;
+									lastReadingNotAdded = null;
+								} else {
+									//save the lastReading that was skipped, because the last reading is too interesting too drop
+									lastReadingNotAdded = gd;
+								}
+							} else {
+								myTrace("in CalculateFromDataTransferObject processing glucosedata, received glucoseLevelRaw = 0");
+							}
+						} else {
+							var calibration:CalibrationData = readingsAndCalibrations[cntr] as CalibrationData;
+							if (calibration.realDate > BgReading.lastNoSensor().timestamp) {
+								if (calibration.glucoseLevelRaw > 0) {
+									Calibration.create(calibration.glucoseLevelRaw,  calibration.realDate).saveToDatabaseSynchronous();
+									myTrace("in CalculateFromDataTransferObject, created calibration");
+									
+									//to avoid that NightScoutService would re-upload the readings to NightScout, set COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP
+									if (calibration.realDate > new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP))) {
+										CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_UPLOAD_CALIBRATION_TIMESTAMP, calibration.realDate.toString());
+									}
+									CalibrationService.dispatchCalibrationEvent();						
+								} else {
+									myTrace("in CalculateFromDataTransferObject processing calibrationdata, received glucoseLevelRaw = 0");
+								}
+							}
+						}
+					}
+					
 					if (lastReadingNotAdded != null) {
 						//lastreading was not added because it was too close to previous reading
 						//adding it now will guarantee that the most recent reading is shown, next readings will follow 5 minutes later)
@@ -92,15 +122,15 @@ package utils.libre
 							myTrace("in CalculateFromDataTransferObject, removing last reading from modellocator");
 							ModelLocator.removeLastBgReading();
 						}*/
-						myTrace("in CalculateFromDataTransferObject createbgd : " + (new Date(gd.realDate)).toString() + " " + gd.glucose(0, false));
+						//myTrace("in CalculateFromDataTransferObject createbgd : " + (new Date(gd.realDate)).toString() + " " + gd.glucose(0, false));
 						createBGfromGD(lastReadingNotAdded);
 						timeStampLastAddedBgReading = gd.realDate;
 					}
 				} else {
-					myTrace("in CalculateFromDataTransferObject, Trend data has no elements")
+					myTrace("in CalculateFromDataTransferObject, readingsAndCalibrations has no elements")
 				}
 			} else {
-				myTrace("in CalculateFromDataTransferObject, Trend data is null!");
+				myTrace("in CalculateFromDataTransferObject, readingsAndCalibrations is null!");
 			}
 			
 			return timeStampLastAddedBgReading > timeStampLastBgReadingBeforeStart;
@@ -112,7 +142,7 @@ package utils.libre
 			//myTrace("in createBGfromGD, created bgreading at: " + DateTimeUtilities.createNSFormattedDateAndTime(new Date(gd.realDate)) + ", with value " + bgReading.calculatedValue);
 			myTrace("in createBGfromGD, created bgreading at: " + (new Date(gd.realDate)).toString() + ", with value " + bgReading.calculatedValue);
 			bgReading.saveToDatabaseSynchronous();
-			TransmitterService.dispatchBgReadingEvent();
+			TransmitterService.dispatchBgReadingReceivedEvent();
 		}
 		
 		public static function getGlucose(rawGlucose:Number):Number {
@@ -168,7 +198,7 @@ package utils.libre
 					glucoseData.realDate = sensorStartTime + time * 60 * 1000;
 					glucoseData.sensorId = tagId;
 					glucoseData.sensorTime = time;
-					myTrace("add history with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
+					//myTrace("add history with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
 					bgReadingList.push(glucoseData);
 				}
 			}
@@ -187,14 +217,10 @@ package utils.libre
 					glucoseData.realDate = sensorStartTime + time * 60 * 1000;
 					glucoseData.sensorId = tagId;
 					glucoseData.sensorTime = time;
-					//myTrace("in parseData trendlist, glucoselevelraw = " + glucoseData.glucoseLevelRaw + ", realdata = " + glucoseData.realDate + ", glucoseData.sensorId = " + glucoseData.sensorId + ", sensorTime = " + glucoseData.sensorTime);
-					myTrace("add trend with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
+					//myTrace("add trend with realDate = " + glucoseData.realDate + ", sensorTime = " + glucoseData.sensorTime + ", glucoselevelRaw = " + glucoseData.glucoseLevelRaw);
 					bgReadingList.push(glucoseData);
 				}
 			}
-			
-			//Sort by realDate, ascending.
-			bgReadingList.sortOn(["realDate"], Array.NUMERIC);
 			
 			return bgReadingList;
 		}

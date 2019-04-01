@@ -100,7 +100,7 @@ package network.httpserver
 						.setBody(message)
 						.enableVibration(true)
 						.enableLights(true)
-						.setSound("../assets/sounds/Sci-Fi_Alarm_Loop_4.caf");
+						.setSound("../assets/sounds/Insistently.caf");
 					
 					Notifications.service.notify(notificationBuilder.build());
 					

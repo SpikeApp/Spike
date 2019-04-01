@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder.WatchKit.Storyboard" version="3.0" toolsVersion="13771" targetRuntime="watchKit" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="AgC-eL-Hgc">
+<document type="com.apple.InterfaceBuilder.WatchKit.Storyboard" version="3.0" toolsVersion="14313.18" targetRuntime="watchKit" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="AgC-eL-Hgc">
     <device id="watch42" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBWatchKitPlugin" version="13756"/>
+        <deployment identifier="watchOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14283.14"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBWatchKitPlugin" version="14238.10"/>
     </dependencies>
     <scenes>
         <!--Interface Controller-->
@@ -35,7 +36,7 @@
             <objects>
                 <controller id="AgC-eL-Hgc" customClass="InterfaceController" customModule="watch" customModuleProvider="target">
                     <items>
-                        <group width="154" alignment="left" id="0XS-Xb-x7m">
+                        <group width="1" alignment="left" id="0XS-Xb-x7m">
                             <items>
                                 <label alignment="left" text=" Velocity Per Min" id="1qW-8W-XE3">
                                     <fontDescription key="font" type="system" pointSize="8"/>
@@ -47,7 +48,12 @@
                         </group>
                         <group width="1" height="32" alignment="left" id="Mak-4o-hyQ">
                             <items>
-                                <label alignment="left" id="1cw-2v-v8O"/>
+                                <label alignment="left" id="1cw-2v-v8O">
+                                    <fontDescription key="font" type="system" pointSize="12"/>
+                                    <variation key="device=watch38mm">
+                                        <fontDescription key="font" type="system" pointSize="10"/>
+                                    </variation>
+                                </label>
                                 <label alignment="center" text="N/A" textAlignment="center" minimumScaleFactor="0.10000000000000014" id="vGM-hd-W1b">
                                     <fontDescription key="font" type="system" weight="thin" pointSize="33"/>
                                     <variation key="device=watch38mm">
@@ -60,7 +66,12 @@
                                         <fontDescription key="font" type="system" pointSize="26"/>
                                     </variation>
                                 </label>
-                                <label alignment="right" id="oEG-1v-IuD"/>
+                                <label alignment="right" id="oEG-1v-IuD">
+                                    <fontDescription key="font" type="system" pointSize="12"/>
+                                    <variation key="device=watch38mm">
+                                        <fontDescription key="font" type="system" pointSize="10"/>
+                                    </variation>
+                                </label>
                             </items>
                         </group>
                         <group width="1" alignment="left" id="nJH-yY-zdH">
@@ -162,7 +173,7 @@
             <objects>
                 <controller identifier="FSInterfaceController" id="fe6-hF-q5I" customClass="FSInterfaceController" customModule="watch_Extension">
                     <items>
-                        <group width="1" alignment="left" id="cRa-m8-VJB">
+                        <group width="1" alignment="center" id="cRa-m8-VJB">
                             <items>
                                 <label alignment="right" verticalAlignment="center" text="0 mg/dL" id="0mk-lq-mzw">
                                     <fontDescription key="font" type="system" pointSize="14"/>
@@ -185,9 +196,9 @@
                                 </label>
                             </items>
                         </group>
-                        <group width="1" alignment="center" verticalAlignment="bottom" id="Yfg-C1-SQZ">
+                        <group width="1" alignment="center" verticalAlignment="bottom" contentMode="bottom" id="Yfg-C1-SQZ">
                             <items>
-                                <label alignment="center" verticalAlignment="center" text="IOB: 0.00U | COB: 0.0g" textAlignment="center" id="i7E-CW-jxD">
+                                <label alignment="center" verticalAlignment="bottom" text="IOB: 0.00U | COB: 0.0g" textAlignment="center" id="i7E-CW-jxD">
                                     <fontDescription key="font" type="system" pointSize="13"/>
                                     <variation key="device=watch38mm">
                                         <fontDescription key="font" type="system" pointSize="11"/>

@@ -23,19 +23,24 @@ package ui
 	import ui.screens.AlarmsCustomizerSettingsScreen;
 	import ui.screens.AlarmsSettingsScreen;
 	import ui.screens.AlertTypesListScreen;
+	import ui.screens.BolusWizardSettingsScreen;
 	import ui.screens.BugReportScreen;
 	import ui.screens.ChartScreen;
 	import ui.screens.ChartSettingsScreen;
 	import ui.screens.DisclaimerScreen;
 	import ui.screens.DonateScreen;
+	import ui.screens.FoodManagerSettingsScreen;
 	import ui.screens.FullScreenGlucoseScreen;
 	import ui.screens.GeneralSettingsScreen;
 	import ui.screens.GlucoseManagementScreen;
 	import ui.screens.HelpScreen;
+	import ui.screens.HistoryChartScreen;
 	import ui.screens.IFTTTSettingsScreen;
 	import ui.screens.IntegrationSettingsScreen;
 	import ui.screens.MainSettingsScreen;
+	import ui.screens.MaintenanceScreen;
 	import ui.screens.NightscoutViewScreen;
+	import ui.screens.PebbleSettingsScreen;
 	import ui.screens.ProfileSettingsScreen;
 	import ui.screens.Screens;
 	import ui.screens.SensorScreen;
@@ -48,6 +53,7 @@ package ui
 	import ui.screens.TreatmentsSettingsScreen;
 	import ui.screens.WatchSettingsScreen;
 	import ui.screens.WidgetSettingsScreen;
+	import ui.screens.WorkflowSettingsScreen;
 	import ui.screens.data.AlarmNavigatorData;
 	import ui.screens.display.menu.MenuList;
 	
@@ -173,6 +179,16 @@ package ui
 			profileSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_PROFILE, profileSettingsScreenItem );
 			
+			/* Bolus Wizard Settings Screen */
+			var bolusWizardSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( BolusWizardSettingsScreen );
+			bolusWizardSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_BOLUS_WIZARD, bolusWizardSettingsScreenItem );
+			
+			/* Food Manager Settings Screen */
+			var foodManagerSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( FoodManagerSettingsScreen );
+			foodManagerSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_FOOD_MANAGER, foodManagerSettingsScreenItem );
+			
 			/* Chart Settings Screen */
 			chartSettingsScreenItem = new StackScreenNavigatorItem( ChartSettingsScreen );
 			chartSettingsScreenItem.addPopEvent(Event.COMPLETE);
@@ -225,6 +241,11 @@ package ui
 			advancedSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_ADVANCED, advancedSettingsScreenItem );
 			
+			/* Maintenance Settings Screen */
+			var maintenanceSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( MaintenanceScreen );
+			maintenanceSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.MAINTENANCE, maintenanceSettingsScreenItem );
+			
 			/* About Settings Screen */
 			var aboutSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( AboutScreen );
 			aboutSettingsScreenItem.addPopEvent(Event.COMPLETE);
@@ -234,6 +255,16 @@ package ui
 			var IFTTTSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( IFTTTSettingsScreen );
 			IFTTTSettingsScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.SETTINGS_IFTTT, IFTTTSettingsScreenItem );
+			
+			/* Workflow Settings Screen */
+			var workflowSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( WorkflowSettingsScreen );
+			workflowSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_WORKFLOW, workflowSettingsScreenItem );
+			
+			/* Pebble Settings Screen */
+			var pebbleSettingsScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( PebbleSettingsScreen );
+			pebbleSettingsScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.SETTINGS_PEBBLE, pebbleSettingsScreenItem );
 			
 			/* Help Screen */
 			var helpScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( HelpScreen );
@@ -262,6 +293,13 @@ package ui
 			donateScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
 			donateScreenItem.addPopEvent(Event.COMPLETE);
 			navigator.addScreen( Screens.DONATE, donateScreenItem );
+			
+			/* History Screen */
+			var historyScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( HistoryChartScreen );
+			historyScreenItem.pushTransition = Cover.createCoverUpTransition(0.6, Transitions.EASE_IN_OUT);
+			historyScreenItem.popTransition = Reveal.createRevealDownTransition(0.6, Transitions.EASE_IN_OUT);
+			historyScreenItem.addPopEvent(Event.COMPLETE);
+			navigator.addScreen( Screens.HISTORY, historyScreenItem );
 			
 			/* Treatments Management Screen */
 			var treatmentsManagementScreenItem:StackScreenNavigatorItem = new StackScreenNavigatorItem( TreatmentsManagementScreen );

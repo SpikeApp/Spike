@@ -3,6 +3,8 @@ package ui.screens
 	import flash.display.StageOrientation;
 	import flash.system.System;
 	
+	import database.CGMBlueToothDevice;
+	
 	import feathers.controls.DragGesture;
 	import feathers.controls.Label;
 	import feathers.layout.HorizontalAlign;
@@ -20,7 +22,9 @@ package ui.screens
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.settings.integration.HTTPServerSettingsList;
 	import ui.screens.display.settings.integration.IFTTTSettingsChooser;
+	import ui.screens.display.settings.integration.PebbleSettingsChooser;
 	import ui.screens.display.settings.integration.SiDiarySettingsList;
+	import ui.screens.display.settings.integration.WorkflowSettingsChooser;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -37,6 +41,10 @@ package ui.screens
 		private var httpServerSectionSubLabel:Label;
 		private var iFTTTLabel:Label;
 		private var iFTTTSettingsChooser:IFTTTSettingsChooser;
+		private var workflowLabel:Label;
+		private var workflowSettingsChooser:WorkflowSettingsChooser;
+		private var pebbleLabel:Label;
+		private var pebbleSettingsChooser:PebbleSettingsChooser;
 		
 		public function IntegrationSettingsScreen() 
 		{
@@ -80,13 +88,32 @@ package ui.screens
 			iFTTTSettingsChooser = new IFTTTSettingsChooser();
 			screenRenderer.addChild(iFTTTSettingsChooser);
 			
-			//SiDiary Section Label
-			siDiaryLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','sidiary_section_label'));
-			screenRenderer.addChild(siDiaryLabel);
+			//Workflow Section Label
+			workflowLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','workflow_label'));
+			screenRenderer.addChild(workflowLabel);
 			
-			//SiDiary Settings
-			siDiarySettings = new SiDiarySettingsList();
-			screenRenderer.addChild(siDiarySettings);
+			//Workflow Settings
+			workflowSettingsChooser = new WorkflowSettingsChooser();
+			screenRenderer.addChild(workflowSettingsChooser);
+			
+			//Pebble Section Label
+			pebbleLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','pebble_label'));
+			screenRenderer.addChild(pebbleLabel);
+			
+			//Workflow Settings
+			pebbleSettingsChooser = new PebbleSettingsChooser();
+			screenRenderer.addChild(pebbleSettingsChooser);
+			
+			if (!CGMBlueToothDevice.isFollower())
+			{
+				//SiDiary Section Label
+				siDiaryLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','sidiary_section_label'));
+				screenRenderer.addChild(siDiaryLabel);
+				
+				//SiDiary Settings
+				siDiarySettings = new SiDiarySettingsList();
+				screenRenderer.addChild(siDiarySettings);
+			}
 			
 			//HTTP Server Section Label
 			httpServerSectionLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('integrationsettingsscreen','server_section_label'));
@@ -103,7 +130,7 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			AppInterface.instance.menu.selectedIndex = 3;
+			AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 4 : 3;
 		}
 		
 		/**
@@ -130,9 +157,11 @@ package ui.screens
 		
 		override protected function onStarlingBaseResize(e:ResizeEvent):void 
 		{
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 			{
 				if (iFTTTLabel != null) iFTTTLabel.paddingLeft = 30;
+				if (workflowLabel != null) workflowLabel.paddingLeft = 30;
+				if (pebbleLabel != null) pebbleLabel.paddingLeft = 30;
 				if (siDiaryLabel != null) siDiaryLabel.paddingLeft = 30;
 				if (httpServerSectionLabel != null) httpServerSectionLabel.paddingLeft = 30;
 				if (httpServerSectionSubLabel != null) httpServerSectionSubLabel.paddingLeft = 30;
@@ -140,6 +169,8 @@ package ui.screens
 			else
 			{
 				if (iFTTTLabel != null) iFTTTLabel.paddingLeft = 0;
+				if (workflowLabel != null) workflowLabel.paddingLeft = 0;
+				if (pebbleLabel != null) pebbleLabel.paddingLeft = 0;
 				if (siDiaryLabel != null) siDiaryLabel.paddingLeft = 0;
 				if (httpServerSectionLabel != null) httpServerSectionLabel.paddingLeft = 0;
 				if (httpServerSectionSubLabel != null) httpServerSectionSubLabel.paddingLeft = 0;
@@ -186,6 +217,41 @@ package ui.screens
 				iFTTTLabel.removeFromParent();
 				iFTTTLabel.dispose();
 				iFTTTLabel = null;
+			}
+			
+			if (iFTTTSettingsChooser != null)
+			{
+				iFTTTSettingsChooser.removeFromParent();
+				iFTTTSettingsChooser.dispose();
+				iFTTTSettingsChooser = null;
+			}
+			
+			if (workflowLabel != null)
+			{
+				workflowLabel.removeFromParent();
+				workflowLabel.dispose();
+				workflowLabel = null;
+			}
+			
+			if (workflowSettingsChooser != null)
+			{
+				workflowSettingsChooser.removeFromParent();
+				workflowSettingsChooser.dispose();
+				workflowSettingsChooser = null;
+			}
+			
+			if (pebbleLabel != null)
+			{
+				pebbleLabel.removeFromParent();
+				pebbleLabel.dispose();
+				pebbleLabel = null;
+			}
+			
+			if (pebbleSettingsChooser != null)
+			{
+				pebbleSettingsChooser.removeFromParent();
+				pebbleSettingsChooser.dispose();
+				pebbleSettingsChooser = null;
 			}
 			
 			super.dispose();

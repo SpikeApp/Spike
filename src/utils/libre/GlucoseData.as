@@ -14,13 +14,6 @@ package utils.libre
 
 		public function GlucoseData() {}
 
-		public static function createGlucoseData( glucoseLevelRaw:int,  timestamp:Number):GlucoseData {
-			var returnValue:GlucoseData = new GlucoseData;
-			returnValue.glucoseLevelRaw = glucoseLevelRaw;
-			returnValue.realDate = timestamp;
-			return returnValue;
-		}
-		
 		/**
 		 * if glucoseLevelParam == 0, then GlucoseData.glucoseLevel is used
 		 */

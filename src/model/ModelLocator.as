@@ -1,6 +1,7 @@
 package model
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
+	import com.distriqt.extension.scanner.Scanner;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.EventDispatcher;
@@ -9,6 +10,7 @@ package model
 	import mx.resources.ResourceManager;
 	
 	import database.BgReading;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
 	import database.LocalSettings;
@@ -19,13 +21,15 @@ package model
 	import events.NotificationServiceEvent;
 	
 	import services.AlarmService;
-	import services.BluetoothService;
+	import services.AppCenterService;
 	import services.CalibrationService;
 	import services.DeepSleepService;
 	import services.DexcomShareService;
 	import services.HTTPServerService;
 	import services.HealthKitService;
+	import services.ICloudService;
 	import services.IFTTTService;
+	import services.MultipleMiaoMiaoService;
 	import services.NightscoutService;
 	import services.NotificationService;
 	import services.RemoteAlertService;
@@ -34,6 +38,7 @@ package model
 	import services.UpdateService;
 	import services.WatchService;
 	import services.WidgetService;
+	import services.bluetooth.CGMBluetoothService;
 	
 	import starling.utils.SystemUtil;
 	
@@ -45,6 +50,7 @@ package model
 	import ui.popups.AlertManager;
 	
 	import utils.Constants;
+	import utils.TimeSpan;
 
 	/**
 	 * holds arraylist needed for displaying etc, like bgreadings of last 24 hours, loggings, .. 
@@ -54,9 +60,9 @@ package model
 		private static var _instance:ModelLocator = new ModelLocator();
 
 		public static const MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR:int = 1;
-		public static const MAX_TIME_FOR_BGREADINGS:int = MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * 24 * 60 * 60 * 1000 + Constants.READING_OFFSET;
+		public static const MAX_TIME_FOR_BGREADINGS:int = MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * TimeSpan.TIME_24_HOURS + Constants.READING_OFFSET;
 
-		public static const TEST_FLIGHT_MODE:Boolean = true;
+		public static const APPCENTER_MODE:Boolean = true;
 		public static const IS_IPAD:Boolean = false;
 		public static const INTERNAL_TESTING:Boolean = false;
 		
@@ -75,7 +81,7 @@ package model
 			return _resourceManagerInstance;
 		}
 		
-		private static var _bgReadings:Array;
+		private static var _bgReadings:Array = [];
 
 		/**
 		 * Sorted ascending, from small to large, ie latest element is also the last element
@@ -107,7 +113,6 @@ package model
 			_phoneMuted = value;
 		}
 
-		
 		public function ModelLocator()
 		{
 			if (_instance != null)
@@ -121,15 +126,24 @@ package model
 						
 			function getBgReadingsFromDatabase():void 
 			{
-				Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
-				
-				//bgreadings created after app start time are not needed because they are already stored in the _bgReadings by the transmitter service
-				Database.getBgReadings(_appStartTimestamp - MAX_TIME_FOR_BGREADINGS, _appStartTimestamp); //24H
+				if (!CGMBlueToothDevice.isFollower())
+				{
+					//Load readings from database
+					Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
+					
+					//bgreadings created after app start time are not needed because they are already stored in the _bgReadings by the transmitter service
+					Database.getBgReadings(_appStartTimestamp - MAX_TIME_FOR_BGREADINGS, _appStartTimestamp); //24H
+				}
+				else
+				{
+					//Init app
+					bgReadingsReceivedFromDatabase(null);
+				}
 			}
 
 			function bgReadingsReceivedFromDatabase(de:DatabaseEvent):void 
 			{
-				Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
+				if (de != null) Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
 				
 				//Set Language
 				ModelLocator.resourceManagerInstance.localeChain = [CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_LANGUAGE),"en_US"];
@@ -138,23 +152,30 @@ package model
 				var preventRotation:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PREVENT_SCREEN_ROTATION_ON) == "true";
 				Constants.appStage.autoOrients = !preventRotation;
 				
-				_bgReadings = de.data as Array;
+				if (de != null && de.data != null) _bgReadings = de.data as Array;
+				
+				//ANE Initialization
+				SpikeANE.init();
+				NetworkInfo.init(!IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
+				Scanner.init(!IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
+				
+				//Audio Initialization
+				SpikeANE.setAvAudioSessionCategory(true);
+				
+				//CGM Initialization
+				Database.getBlueToothDevice();
+				
+				//Services Initialization
 				ProfileManager.init();
 				TreatmentsManager.init();
 				SystemUtil.executeWhenApplicationIsActive( AppInterface.instance.init ); //Start rendering interface now that all data is available but only when app is active
 				AlertManager.init();
 				DeepSleepService.init();
-				Database.getBlueToothDevice();
 				TransmitterService.init();
-				SpikeANE.init();
-				BluetoothService.init();
+				CGMBluetoothService.init();
 				NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SERVICE_INITIATED_EVENT, InterfaceController.notificationServiceInitiated);
 				NotificationService.init();
 				CalibrationService.init();
-				NetworkInfo.init(!IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
-				SpikeANE.setAvAudioSessionCategory(true);
-				WidgetService.init();
-				WatchService.init();
 				AlarmService.init();
 				HTTPServerService.init();
 				if (!IS_IPAD) HealthKitService.init();
@@ -162,9 +183,33 @@ package model
 				DexcomShareService.init();
 				IFTTTService.init();
 				TextToSpeechService.init();
+				WidgetService.init();
+				WatchService.init();
+				ICloudService.init();
 				RemoteAlertService.init();
-				if (!TEST_FLIGHT_MODE) UpdateService.init();
+				if (!APPCENTER_MODE) UpdateService.init();
 				updateApplicationVersion();
+				//MultipleMiaoMiaoService.init();
+				if (APPCENTER_MODE)
+					AppCenterService.init();
+			}
+		}
+		
+		public static function getMasterReadings():void
+		{
+			//Clear previous readings
+			_bgReadings.length = 0;
+			
+			//Load readings from database
+			var now:Number = new Date().valueOf();
+			Database.instance.addEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
+			Database.getBgReadings(now - MAX_TIME_FOR_BGREADINGS, now); //24H
+			
+			function bgReadingsReceivedFromDatabase(de:DatabaseEvent):void 
+			{
+				Database.instance.removeEventListener(DatabaseEvent.BGREADING_RETRIEVAL_EVENT, bgReadingsReceivedFromDatabase);
+				
+				if (de != null && de.data != null) _bgReadings = de.data as Array;
 			}
 		}
 		

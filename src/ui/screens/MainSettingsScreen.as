@@ -1,9 +1,8 @@
 package ui.screens
 {
-	
 	import flash.system.System;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	
 	import feathers.controls.ScrollPolicy;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
@@ -68,10 +67,10 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			if (!BlueToothDevice.isFollower())
-				AppInterface.instance.menu.selectedIndex = 3;
+			if (!CGMBlueToothDevice.isFollower())
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 4 : 3;
 			else
-				AppInterface.instance.menu.selectedIndex = 1;
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 2 : 1;
 		}
 		
 		/**

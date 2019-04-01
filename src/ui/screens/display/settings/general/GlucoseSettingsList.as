@@ -3,8 +3,10 @@ package ui.screens.display.settings.general
 	import flash.display.StageOrientation;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
+	
+	import events.SettingsServiceEvent;
 	
 	import feathers.controls.Check;
 	import feathers.controls.NumericStepper;
@@ -39,6 +41,7 @@ package ui.screens.display.settings.general
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
+		private var isSaving:Boolean = false;
 		private var glucoseUrgentLowValue:Number;
 		private var glucoseLowValue:Number;
 		private var glucoseUrgentHighValue:Number;
@@ -81,6 +84,29 @@ package ui.screens.display.settings.general
 			autoHideBackground = true;
 			hasElasticEdges = false;
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
+			
+			//Event Listeners
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSpikeSettingChanged);
+		}
+		
+		private function onSpikeSettingChanged(e:SettingsServiceEvent):void
+		{
+			if (isSaving)
+			{
+				return;
+			}
+			
+			if (e.data == CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK
+				||
+				e.data == CommonSettings.COMMON_SETTING_HIGH_MARK
+				||
+				e.data == CommonSettings.COMMON_SETTING_LOW_MARK
+				||
+				e.data == CommonSettings.COMMON_SETTING_URGENT_LOW_MARK
+			) 
+			{
+				setupInitialState();
+			}
 		}
 		
 		private function setupContent():void
@@ -95,7 +121,7 @@ package ui.screens.display.settings.general
 			glucoseUnitsPicker.labelField = "label";
 			glucoseUnitsPicker.popUpContentManager = new DropDownPopUpContentManager();
 			glucoseUnitsPicker.dataProvider = glucoseUnits;
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				glucoseUnitsPicker.pivotX = 38;
 			if (selectedUnit == "mmol/L") 
 				glucoseUnitsPicker.selectedIndex = 1;
@@ -103,33 +129,33 @@ package ui.screens.display.settings.general
 			//Round MGDL values
 			roundMgDlCheck = LayoutFactory.createCheckMark(roundMfDlValue);
 			roundMgDlCheck.pivotX = 3;
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				roundMgDlCheck.pivotX = 41;
 			
 			//Glucose Urgent High Value
 			glucoseUrgentHighStepper = new NumericStepper();
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				glucoseUrgentHighStepper.pivotX = 28;
 			
 			//Glucose High Value
 			glucoseHighStepper = new NumericStepper();
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				glucoseHighStepper.pivotX = 28;
 			
 			//Glucose Low Value
 			glucoseLowStepper = new NumericStepper();
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				glucoseLowStepper.pivotX = 28;
 			
 			//Glucose Urgent Low Value
 			glucoseUrgentLowStepper = new NumericStepper();
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				glucoseUrgentLowStepper.pivotX = 28;
 			
 			//Define Glucose Settings Data
 			var data:Array = [];
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','unit'), accessory: glucoseUnitsPicker } );
-			if (selectedUnit == "mg/dL" && !BlueToothDevice.isFollower())
+			if (selectedUnit == "mg/dL" && !CGMBlueToothDevice.isFollower())
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','round_mgdl_chart_value'), accessory: roundMgDlCheck } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','urgent_high_threshold'), accessory: glucoseUrgentHighStepper } );
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('generalsettingsscreen','high_threshold'), accessory: glucoseHighStepper } );
@@ -143,7 +169,7 @@ package ui.screens.display.settings.general
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "label";
 				itemRenderer.paddingRight = 0;
-				if(Constants.deviceModel == DeviceInfo.IPHONE_X)
+				if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 					itemRenderer.paddingRight = -40;
 				return itemRenderer;
 			};
@@ -156,7 +182,9 @@ package ui.screens.display.settings.general
 			{
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.labelField = "label";
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				itemRenderer.accessoryLabelProperties.wordWrap = true;
+				itemRenderer.defaultLabelProperties.wordWrap = true;
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					{
@@ -170,7 +198,7 @@ package ui.screens.display.settings.general
 				}
 				else
 				{
-					if(Constants.deviceModel == DeviceInfo.IPHONE_X)
+					if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 						itemRenderer.paddingRight = -40;
 					else
 						itemRenderer.paddingRight = 0;
@@ -293,6 +321,8 @@ package ui.screens.display.settings.general
 		
 		public function save():void
 		{
+			isSaving = true;
+			
 			/* Save Glucose Units */
 			if (glucoseUnitsPicker.selectedIndex == 0) //mg/dl
 			{
@@ -319,6 +349,7 @@ package ui.screens.display.settings.general
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_ROUND_MGDL_ON) != String(roundMfDlValue))
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_CHART_ROUND_MGDL_ON, String(roundMfDlValue));
 			
+			isSaving = false;
 			needsSave = false;
 		}
 		
@@ -539,6 +570,8 @@ package ui.screens.display.settings.general
 		 */
 		override public function dispose():void
 		{	
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSpikeSettingChanged);
+			
 			if(glucoseUnitsPicker != null)
 			{
 				glucoseUnitsPicker.removeEventListener(Event.CHANGE, onUnitsChanged);

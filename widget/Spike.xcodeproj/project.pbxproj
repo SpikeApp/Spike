@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 48;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -21,6 +21,9 @@
 		1CB729D72029FD3500965219 /* UIColor+colorFromHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB729D62029FD3500965219 /* UIColor+colorFromHex.swift */; };
 		677BE12171EF0760555A41F4 /* Pods_widget.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 68C880EB4875714A3910DFCC /* Pods_widget.framework */; };
 		89E17E0D4380005A601C4E69 /* Pods_Spike.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FD1A6AD0E53E5E7CB44C06AA /* Pods_Spike.framework */; };
+		9603E39D224BB71900B641AA /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9603E39C224BB71900B641AA /* HealthKit.framework */; };
+		9603E39E224BB72100B641AA /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9603E39C224BB71900B641AA /* HealthKit.framework */; };
+		9603E39F224BB72500B641AA /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9603E39C224BB71900B641AA /* HealthKit.framework */; };
 		961EB7632089460D005F0E9F /* Interface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 961EB7612089460D005F0E9F /* Interface.storyboard */; };
 		961EB7652089460D005F0E9F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 961EB7642089460D005F0E9F /* Assets.xcassets */; };
 		961EB76C2089460D005F0E9F /* watch Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 961EB76B2089460D005F0E9F /* watch Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -31,7 +34,6 @@
 		961EB77C2089460D005F0E9F /* watch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 961EB75F2089460D005F0E9F /* watch.app */; };
 		961EB786208946A1005F0E9F /* GlanceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 961EB785208946A1005F0E9F /* GlanceController.swift */; };
 		961EB788208946B3005F0E9F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 961EB787208946B3005F0E9F /* Images.xcassets */; };
-		961EB78D2089488B005F0E9F /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 961EB78B2089488B005F0E9F /* Info.plist */; };
 		961EB78E2089488B005F0E9F /* PushNotificationPayload.apns in Resources */ = {isa = PBXBuildFile; fileRef = 961EB78C2089488B005F0E9F /* PushNotificationPayload.apns */; };
 		961EB79420894D59005F0E9F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 961EB79320894D59005F0E9F /* Images.xcassets */; };
 		9654C7F32087C35F0021B684 /* NotificationCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C510155202806D600872D37 /* NotificationCenter.framework */; };
@@ -40,10 +42,9 @@
 		9654C7FD2087C35F0021B684 /* fswidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9654C7F22087C35F0021B684 /* fswidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9654C8012087C8790021B684 /* Pods_widget.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9654C8022087C8790021B684 /* Pods_widget.framework */; };
 		9654C8042087C8DB0021B684 /* UIColor+colorFromHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB729D62029FD3500965219 /* UIColor+colorFromHex.swift */; };
-		9663B5AA20F4210600A9BC91 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9663B5A920F4210600A9BC91 /* HealthKit.framework */; };
-		9663B5AB20F4210E00A9BC91 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9663B5A920F4210600A9BC91 /* HealthKit.framework */; };
-		9663B5AC20F4211400A9BC91 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9663B5A920F4210600A9BC91 /* HealthKit.framework */; };
+		965DE933221C50FA001307A5 /* ClockKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 965DE932221C50FA001307A5 /* ClockKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		96728E612096D27700ADFFDE /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96728E602096D27700ADFFDE /* ComplicationController.swift */; };
+		96A54793212C8AFB00FDE960 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96A54792212C8AFB00FDE960 /* CloudKit.framework */; };
 		96B9CB5520969B9300782124 /* FSInterfaceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B9CB5420969B9300782124 /* FSInterfaceController.swift */; };
 		96D5EE94208F7B3900308288 /* UIColor+colorFromHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB729D62029FD3500965219 /* UIColor+colorFromHex.swift */; };
 		A9F0B0D10FA7E63562B1D19D /* Pods_SpikeTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D1C13DD723CC3C77D2D1D0E /* Pods_SpikeTests.framework */; };
@@ -165,6 +166,7 @@
 		68C880EB4875714A3910DFCC /* Pods_widget.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_widget.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6D1C13DD723CC3C77D2D1D0E /* Pods_SpikeTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SpikeTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		814206E8BCE86FF5796BA541 /* Pods-SpikeTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SpikeTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-SpikeTests/Pods-SpikeTests.release.xcconfig"; sourceTree = "<group>"; };
+		9603E39C224BB71900B641AA /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		961EB75F2089460D005F0E9F /* watch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = watch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		961EB7622089460D005F0E9F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Interface.storyboard; sourceTree = "<group>"; };
 		961EB7642089460D005F0E9F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -187,8 +189,9 @@
 		9654C7FA2087C35F0021B684 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9654C8022087C8790021B684 /* Pods_widget.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Pods_widget.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9654C8052087CED70021B684 /* fswidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = fswidget.entitlements; sourceTree = "<group>"; };
-		9663B5A920F4210600A9BC91 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
+		965DE932221C50FA001307A5 /* ClockKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ClockKit.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS5.1.sdk/System/Library/Frameworks/ClockKit.framework; sourceTree = DEVELOPER_DIR; };
 		96728E602096D27700ADFFDE /* ComplicationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationController.swift; sourceTree = "<group>"; };
+		96A54792212C8AFB00FDE960 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		96B9CB5420969B9300782124 /* FSInterfaceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FSInterfaceController.swift; sourceTree = "<group>"; };
 		F4F850F9FEC9EE7AB5D05EB4 /* Pods_SpikeUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SpikeUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD1A6AD0E53E5E7CB44C06AA /* Pods_Spike.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Spike.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -199,8 +202,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9603E39D224BB71900B641AA /* HealthKit.framework in Frameworks */,
+				96A54793212C8AFB00FDE960 /* CloudKit.framework in Frameworks */,
 				89E17E0D4380005A601C4E69 /* Pods_Spike.framework in Frameworks */,
-				9663B5AA20F4210600A9BC91 /* HealthKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -224,7 +228,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9663B5AB20F4210E00A9BC91 /* HealthKit.framework in Frameworks */,
+				9603E39E224BB72100B641AA /* HealthKit.framework in Frameworks */,
 				1C510156202806D600872D37 /* NotificationCenter.framework in Frameworks */,
 				677BE12171EF0760555A41F4 /* Pods_widget.framework in Frameworks */,
 			);
@@ -234,6 +238,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				965DE933221C50FA001307A5 /* ClockKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -241,7 +246,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9663B5AC20F4211400A9BC91 /* HealthKit.framework in Frameworks */,
+				9603E39F224BB72500B641AA /* HealthKit.framework in Frameworks */,
 				9654C8012087C8790021B684 /* Pods_widget.framework in Frameworks */,
 				9654C7F32087C35F0021B684 /* NotificationCenter.framework in Frameworks */,
 			);
@@ -331,7 +336,9 @@
 		1C510154202806D600872D37 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				9663B5A920F4210600A9BC91 /* HealthKit.framework */,
+				9603E39C224BB71900B641AA /* HealthKit.framework */,
+				965DE932221C50FA001307A5 /* ClockKit.framework */,
+				96A54792212C8AFB00FDE960 /* CloudKit.framework */,
 				9654C8022087C8790021B684 /* Pods_widget.framework */,
 				1C510155202806D600872D37 /* NotificationCenter.framework */,
 				FD1A6AD0E53E5E7CB44C06AA /* Pods_Spike.framework */,
@@ -556,12 +563,80 @@
 				TargetAttributes = {
 					1C51011D202806B400872D37 = {
 						CreatedOnToolsVersion = 9.2;
-						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
+							com.apple.AccessWiFi = {
+								enabled = 0;
+							};
+							com.apple.ApplePay = {
+								enabled = 0;
+							};
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
 							};
+							com.apple.AutoFillCredentialProvider = {
+								enabled = 0;
+							};
+							com.apple.BackgroundModes = {
+								enabled = 0;
+							};
+							com.apple.ClassKit = {
+								enabled = 0;
+							};
+							com.apple.DataProtection = {
+								enabled = 0;
+							};
+							com.apple.GameCenter.iOS = {
+								enabled = 0;
+							};
 							com.apple.HealthKit = {
+								enabled = 1;
+							};
+							com.apple.HomeKit = {
+								enabled = 0;
+							};
+							com.apple.HotspotConfiguration = {
+								enabled = 0;
+							};
+							com.apple.InAppPurchase = {
+								enabled = 0;
+							};
+							com.apple.InterAppAudio = {
+								enabled = 0;
+							};
+							com.apple.Keychain = {
+								enabled = 0;
+							};
+							com.apple.Maps.iOS = {
+								enabled = 0;
+							};
+							com.apple.Multipath = {
+								enabled = 0;
+							};
+							com.apple.NearFieldCommunicationTagReading = {
+								enabled = 0;
+							};
+							com.apple.NetworkExtensions.iOS = {
+								enabled = 0;
+							};
+							com.apple.Push = {
+								enabled = 0;
+							};
+							com.apple.SafariKeychain = {
+								enabled = 0;
+							};
+							com.apple.Siri = {
+								enabled = 0;
+							};
+							com.apple.VPNLite = {
+								enabled = 0;
+							};
+							com.apple.WAC = {
+								enabled = 0;
+							};
+							com.apple.Wallet = {
+								enabled = 0;
+							};
+							com.apple.iCloud = {
 								enabled = 1;
 							};
 						};
@@ -578,7 +653,6 @@
 					};
 					1C510152202806D600872D37 = {
 						CreatedOnToolsVersion = 9.2;
-						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
@@ -590,7 +664,6 @@
 					};
 					961EB75E2089460D005F0E9F = {
 						CreatedOnToolsVersion = 9.2;
-						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
@@ -599,7 +672,6 @@
 					};
 					961EB76A2089460D005F0E9F = {
 						CreatedOnToolsVersion = 9.2;
-						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
@@ -608,7 +680,6 @@
 					};
 					9654C7F12087C35F0021B684 = {
 						CreatedOnToolsVersion = 9.2;
-						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 1;
@@ -621,7 +692,7 @@
 				};
 			};
 			buildConfigurationList = 1C510119202806B400872D37 /* Build configuration list for PBXProject "Spike" */;
-			compatibilityVersion = "Xcode 8.0";
+			compatibilityVersion = "Xcode 10.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -694,7 +765,6 @@
 				961EB7772089460D005F0E9F /* Assets.xcassets in Resources */,
 				961EB78E2089488B005F0E9F /* PushNotificationPayload.apns in Resources */,
 				961EB788208946B3005F0E9F /* Images.xcassets in Resources */,
-				961EB78D2089488B005F0E9F /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1146,7 +1216,8 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				TARGETED_DEVICE_FAMILY = 1;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -1159,13 +1230,18 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Spike/Spike.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = Spike/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1178,13 +1254,18 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Spike/Spike.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = Spike/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1197,9 +1278,13 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				DEVELOPMENT_TEAM = M295NYD8ZT;
 				INFOPLIST_FILE = SpikeTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.SpikeTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
@@ -1215,9 +1300,13 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				DEVELOPMENT_TEAM = M295NYD8ZT;
 				INFOPLIST_FILE = SpikeTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.SpikeTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
@@ -1232,9 +1321,13 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				DEVELOPMENT_TEAM = M295NYD8ZT;
 				INFOPLIST_FILE = SpikeUITests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.SpikeUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
@@ -1249,9 +1342,13 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				DEVELOPMENT_TEAM = M295NYD8ZT;
 				INFOPLIST_FILE = SpikeUITests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.SpikeUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.0;
@@ -1265,13 +1362,19 @@
 			baseConfigurationReference = 25546BC7F0898ACECC757489 /* Pods-widget.debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = widget/widget.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = widget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.todaywidget";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.todaywidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = ./Spike/Bridge.h;
 				SWIFT_VERSION = 4.0;
@@ -1284,13 +1387,19 @@
 			baseConfigurationReference = 20BF87FC35601698DA9C39BE /* Pods-widget.release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = widget/widget.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = widget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.todaywidget";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.todaywidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = ./Spike/Bridge.h;
 				SWIFT_VERSION = 4.0;
@@ -1304,12 +1413,14 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = watch/watch.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				DEVELOPMENT_TEAM = "";
 				IBSC_MODULE = watch_Extension;
 				INFOPLIST_FILE = watch/Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.watchkitapp";
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 4.0;
@@ -1324,12 +1435,14 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = watch/watch.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				DEVELOPMENT_TEAM = "";
 				IBSC_MODULE = watch_Extension;
 				INFOPLIST_FILE = watch/Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.watchkitapp";
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 4.0;
@@ -1343,12 +1456,18 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
 				CODE_SIGN_ENTITLEMENTS = "watch Extension/watch Extension.entitlements";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = "watch Extension/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.watchkitapp.watchkitextension";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.watchkitapp.watchkitextension;
 				PRODUCT_NAME = "${TARGET_NAME}";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 4.0;
@@ -1362,12 +1481,18 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
 				CODE_SIGN_ENTITLEMENTS = "watch Extension/watch Extension.entitlements";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = "watch Extension/Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.watchkitapp.watchkitextension";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.watchkitapp.watchkitextension;
 				PRODUCT_NAME = "${TARGET_NAME}";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 4.0;
@@ -1380,13 +1505,19 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = fswidget/fswidget.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = fswidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.fswidget";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.fswidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 4.0;
@@ -1398,13 +1529,19 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = fswidget/fswidget.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = AGW6KV7M2W;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = fswidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.fswidget";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.nightscoutfoundation.spike.fswidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 4.0;

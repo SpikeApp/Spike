@@ -18,6 +18,10 @@ var lowColor:String = ""
 var inRangeColor:String = ""
 var highColor:String = ""
 var urgentHighColor:String = ""
+var predictionsDuration:String = ""
+var predictionsOutcome:String = ""
+var glucoseVelocity:String = ""
+var offlineTask:DispatchWorkItem?
 let chartEmpty42 = #imageLiteral(resourceName: "chart-empty-42")
 let chartEmpty38 = #imageLiteral(resourceName: "chart-empty-38")
 
@@ -128,6 +132,8 @@ class InterfaceController: WKInterfaceController
     override func willActivate()
     {
         // This method is called when watch view controller is about to be visible to user
+        self.vlabel.setTextColor(UIColor.gray)
+        self.vlabel.setText("")
         super.willActivate()
         updateData()
     }
@@ -152,6 +158,13 @@ class InterfaceController: WKInterfaceController
         super.didDeactivate()
     }
     
+    func spikeOffline()
+    {
+        self.primarybg.setText("")
+        self.vlabel.setTextColor(UIColor.red)
+        self.vlabel.setText("Spike is offline!")
+    }
+    
     func updateData()
     {
         print("In updateData")
@@ -164,6 +177,7 @@ class InterfaceController: WKInterfaceController
         self.plabel.setTextColor(gray)
         self.pLabelHolder.setTextColor(gray)
         self.vlabel.setTextColor(gray)
+        self.vlabel.setText("0")
         self.vLabelHolder.setTextColor(gray)
         self.minago.setTextColor(gray)
         self.deltabg.setTextColor(gray)
@@ -185,7 +199,10 @@ class InterfaceController: WKInterfaceController
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard error == nil else {
                 print(error!)
-                self.displayError(error: "Spike is offline!")
+                
+                offlineTask = DispatchWorkItem { self.spikeOffline() }
+                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 8, execute: offlineTask!)
+                
                 return
             }
             guard let data = data else {
@@ -293,6 +310,10 @@ class InterfaceController: WKInterfaceController
                         self.displayError(error: "Data Missing!")
                         return
                     }
+                    
+                    //Cancel any previous offline delayed actions
+                    offlineTask?.cancel()
+                    
                     self.pumpstatus3.setText(statusThree)
                     self.pumpstatus3.setTextColor(UIColor.white)
                     
@@ -321,6 +342,35 @@ class InterfaceController: WKInterfaceController
                         self.displayError(error: "Data Missing!")
                         return
                     }
+                    
+                    if entries[0]["predictions_duration"] != nil
+                    {
+                        predictionsDuration = entries[0]["predictions_duration"] as! String
+                    }
+                    else
+                    {
+                        predictionsDuration = ""
+                    }
+                    
+                    if entries[0]["predictions_outcome"] != nil
+                    {
+                        predictionsOutcome = entries[0]["predictions_outcome"] as! String
+                    }
+                    else
+                    {
+                        predictionsOutcome = ""
+                    }
+                    
+                    if entries[0]["glucose_velocity"] != nil
+                    {
+                        glucoseVelocity = entries[0]["glucose_velocity"] as! String
+                    }
+                    else
+                    {
+                        glucoseVelocity = ""
+                    }
+                    
+                    self.vlabel.setText("")
                     let bgtime=entries[0]["date"] as! TimeInterval
                     let red=UIColor.red as UIColor
                     self.bghist=entries
@@ -362,26 +412,46 @@ class InterfaceController: WKInterfaceController
                         self.bgdirection.setTextColor(self.bgcolor(cbg))
                         self.deltabg.setTextColor(UIColor.white)
                         
-                        let velocity=self.velocity_cf(bgs, slope: slope,intercept: intercept,scale: scale) as Double
-                        let prediction=velocity*30.0+Double(cbg)
+                        if (glucoseVelocity == "" || predictionsOutcome == "" || predictionsDuration == "")
+                        {
+                            let velocity=self.velocity_cf(bgs, slope: slope,intercept: intercept,scale: scale) as Double
+                            let prediction=velocity*30.0+Double(cbg)
+                            
+                            if (mmol == false)
+                            {
+                                self.vlabel.setText(String(format:"%.1f", velocity))
+                                self.plabel.setText(String(format:"%.0f", prediction))
+                                self.pLabelHolder.setText("30 Min Predict")
+                            }
+                            else
+                            {
+                                let conv = 18.0182 as Double
+                                self.vlabel.setText(String(format:"%.1f", velocity/conv))
+                                self.plabel.setText(String(format:"%.1f", prediction/conv))
+                                self.pLabelHolder.setText("30 Min Predict")
+                            }
+                        }
+                        else
+                        {
+                            self.vlabel.setText(glucoseVelocity)
+                            self.plabel.setText(predictionsOutcome)
+                            self.pLabelHolder.setText(predictionsDuration + " Min Predict")
+                        }
                         
                         if (mmol == false)
                         {
                             self.primarybg.setText(String(cbg))
                             if (dbg<0) {self.deltabg.setText(String(dbg)+" mg/dL")} else {self.deltabg.setText("+"+String(dbg)+" mg/dL")}
-                            self.vlabel.setText(String(format:"%.1f", velocity))
-                            self.plabel.setText(String(format:"%.0f", prediction))
                         }
                         else
-                        {   let conv = 18.0182 as Double
+                        {
+                            let conv = 18.0182 as Double
                             let mmolbg = Double(cbg) / conv
                             let mmoltext = String(format:"%.1f", mmolbg)
                             self.primarybg.setText(mmoltext)
                             let deltammol = Double(dbg) / conv
                             let delmmoltext = String(format:"%.1f", deltammol)
                             if (dbg<0) {self.deltabg.setText(delmmoltext + " mmol/L")} else {self.deltabg.setText("+" + delmmoltext + " mmol/L")}
-                            self.vlabel.setText(String(format:"%.1f", velocity/conv))
-                            self.plabel.setText(String(format:"%.1f", prediction/conv))
                         }
                     }
                 }
@@ -608,10 +678,10 @@ class InterfaceController: WKInterfaceController
         let high:Double=Double(bgth-miny)/Double(maxy-miny)
         
         //create string for google chart api
-        let band1="&chm=r,FFFFFF,0,"+String(format:"%.2f",high-0.01)+","+String(format:"%.3f",high)
-        let band2="|r,FFFFFF,0,"+String(format:"%.2f",(low))+","+String(format:"%.3f",low+0.01)
+        let band1="&chm=r,FFFFFF,0,"+String(format:"%.2f",high-0.003)+","+String(format:"%.3f",high)
+        let band2="|r,FFFFFF,0,"+String(format:"%.2f",(low))+","+String(format:"%.3f",low+0.003)
         let h:String=String(stringInterpolationSegment: 100.0/Double(hours))
-        let hourlyverticals="&chg="+h+",0"
+        let hourlyverticals="&chg="+h+",0,4,0"
         
         if (mmol == false)
         {

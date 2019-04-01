@@ -27,6 +27,7 @@ package ui.popups
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.text.TextFormat;
+	import starling.utils.SystemUtil;
 	
 	import ui.screens.display.LayoutFactory;
 	
@@ -144,7 +145,7 @@ package ui.popups
 				yPos = Constants.headerHeight - 10;
 			else
 			{
-				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 					yPos = 68;
 				else
 					yPos = Constants.isPortrait ? 98 : 68;
@@ -167,9 +168,9 @@ package ui.popups
 		{
 			//Close the callout
 			if (PopUpManager.isPopUp(workflowConfigSenderCallout))
-				PopUpManager.removePopUp(workflowConfigSenderCallout, true);
+				SystemUtil.executeWhenApplicationIsActive(PopUpManager.removePopUp, workflowConfigSenderCallout, true);
 			else if (workflowConfigSenderCallout != null)
-				workflowConfigSenderCallout.close(true);
+				SystemUtil.executeWhenApplicationIsActive(workflowConfigSenderCallout.close, true);
 		}
 		
 		/**

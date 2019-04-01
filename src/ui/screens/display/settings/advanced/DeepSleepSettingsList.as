@@ -1,5 +1,7 @@
 package ui.screens.display.settings.advanced
 {
+	import com.adobe.utils.StringUtil;
+	
 	import flash.display.StageOrientation;
 	
 	import database.CommonSettings;
@@ -94,7 +96,7 @@ package ui.screens.display.settings.advanced
 			var suspensionModeList:ArrayCollection = new ArrayCollection();
 			for (var i:int = 0; i < suspensionModeLabelsList.length; i++) 
 			{
-				suspensionModeList.push({label: suspensionModeLabelsList[i], id: i});
+				suspensionModeList.push({label: StringUtil.trim(suspensionModeLabelsList[i]), id: i});
 			}
 			suspensionModeLabelsList.length = 0;
 			suspensionModeLabelsList = null;
@@ -220,7 +222,7 @@ package ui.screens.display.settings.advanced
 			
 			if (instructionsDescriptionLabel != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 						instructionsDescriptionLabel.width = width - 30;

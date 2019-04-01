@@ -9,6 +9,11 @@ package com.spikeapp.spike.airlibrary
 	
 	public class SpikeANE extends EventDispatcher
 	{
+		public static const APPLICATION_DIR:String = "application";
+		public static const CACHE_DIR:String = "cache";
+		public static const DOCUMENTS_DIR:String = "documents";
+		public static const STORAGE_DIR:String = "storage";
+		
 		private static var context:ExtensionContext; 
 		private static var _instance:SpikeANE = new SpikeANE();
 		
@@ -85,22 +90,70 @@ package com.spikeapp.spike.airlibrary
 			context.call("confirmSensorChangeMiaoMiao");
 		}
 
-		/**
-		* disconnect without forgetting device, and without automatically reconnecting<br>
-		* by calling reconnectMiaoMiao, the app will try to reconnect<br>
-		* <br>
-		*/
-		public static function disconnectMiaoMiao():void {
-			context.call("disconnectMiaoMiao");
+		/******************
+		 ** G5 FUNCTIONS
+		 * ****************/
+		public static function startScanningForG5():void {
+			context.call("ScanAndConnectToG5Device");
 		}
-
-		/**
-		* reconnect to known peripheral, can only be used if previously disconnect was done with disconnectMiaoMiao
-		*/
-		public static function reconnectMiaoMiao():void {
-			context.call("reconnectMiaoMiao");
+		
+		public static function setG5Mac(newMac:String):void {
+			context.call("setG5MAC", newMac);
 		}
-
+		
+		public static function resetG5Mac():void {
+			context.call("resetG5Mac");
+		}
+		
+		public static function cancelG5Connection(MAC:String):void {
+			if (MAC == null)
+				return;
+			if (MAC.length == 0)
+				return;
+			context.call("cancelG5ConnectionWithMAC", MAC);
+		}
+		
+		public static function stopScanningG5():void {
+			context.call("stopScanningG5");
+		}
+		
+		public static function forgetG5Peripheral():void {
+			context.call("forgetG5");
+		}
+		
+		public static function startScanDeviceG5():void {
+			context.call("startScanDeviceG5");
+		}
+		
+		public static function stopScanDeviceG5():void {
+			context.call("stopScanDeviceG5");
+		}
+		
+		public static function setTransmitterIdG5(transmitterID:String, cryptKey:ByteArray):void {
+			cryptKey.position = 0;
+			context.call("setTransmitterIdG5", transmitterID, cryptKey.readUTFBytes(cryptKey.length));
+		}
+		
+		public static function setTestData(testdata:ByteArray):void {
+			context.call("setTestData",testdata);
+		}
+		
+		public static function setG5Reset(resetG5:Boolean):void {
+			context.call("setG5Reset",resetG5);
+		}
+		
+		public static function doG5FirmwareVersionRequest():void {
+			context.call("doG5FirmwareVersionRequest");
+		}
+		
+		public static function doG5BatteryInfoRequest():void {
+			context.call("doG5BatteryInfoRequest");
+		}
+		
+		public static function disconnectG5():void {
+			context.call("disconnectG5");
+		}
+		
 		/**********************
 		 * ** HEALTHKIT
 		 * *******************/
@@ -147,8 +200,8 @@ package com.spikeapp.spike.airlibrary
 		 * If volume = Number.NaN, then volume will not be set
 		 * VOLUME PARAMETER NOT FULLY TESTED, PROBABLY DOESN'T WORK, NEEDS TO BE FPANE_FREObjectToDouble in objective-c side
 		 */
-		public static function playSound(sound:String, volume:Number = Number.NaN):void {
-			context.call("playSound", sound, isNaN(volume) ? 101: new Number(volume));
+		public static function playSound(sound:String, volume:Number = Number.NaN, systemVolume:Number = Number.NaN):void {
+			context.call("playSound", sound, isNaN(volume) ? 101: new Number(volume), isNaN(systemVolume) ? 101 : systemVolume);
 		}
 		
 		public static function isPlayingSound():Boolean {
@@ -159,8 +212,8 @@ package com.spikeapp.spike.airlibrary
 		 * text : text to be spoken<br> 
 		 * language  : examplle "en-US" , or "nl-BE"
 		 */
-		public static function say(text:String, language:String):void {
-			context.call("say", text, language);
+		public static function say(text:String, language:String, systemVolume:Number = Number.NaN):void {
+			context.call("say", text, language, isNaN(systemVolume) ? 101 : systemVolume);
 		}
 		
 		/**
@@ -195,6 +248,27 @@ package com.spikeapp.spike.airlibrary
 		
 		public static function getAppVersion():String {
 			return (context.call("getAppVersion") as String);
+		}
+		
+		public static function setDatabaseResetStatus(isResetted:Boolean):void {
+			context.call("setDatabaseResetStatus", isResetted ? "true" : "false");
+		}
+		
+		public static function getDatabaseResetStatus():Boolean {
+			return context.call("getDatabaseResetStatus") as Boolean;
+		}
+		
+		public static function terminateApp():void {
+			context.call("terminateApp");
+		}
+		
+		public static function setStatusBarToWhite():void {
+			context.call("setStatusBarToWhite");
+		}
+		
+		public static function openWithDefaultApplication(filePath:String, basePath:String = APPLICATION_DIR):void
+		{
+			context.call('openWithDefaultApplication', filePath, basePath);
 		}
 		
 		/**********
@@ -268,7 +342,12 @@ package com.spikeapp.spike.airlibrary
 			} else if (event.code == "StatusEvent_newMiaoMiaoMac") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.MIAO_MIAO_NEW_MAC);
 				spikeANEEvent.data = new Object();
-				spikeANEEvent.data.MAC = event.level;
+				spikeANEEvent.data.MAC = event.level.split("JJ§§((hhd")[0];
+				_instance.dispatchEvent(spikeANEEvent);
+			}  else if (event.code == "StatusEvent_newG5Mac") {
+				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.G5_NEW_MAC);
+				spikeANEEvent.data = new Object();
+				spikeANEEvent.data.MAC = event.level.split("JJ§§((hhd")[0];
 				_instance.dispatchEvent(spikeANEEvent);
 			} else if (event.code == "StatusEvent_sensorChangeMessageReceived") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.SENSOR_CHANGED_MESSAGE_RECEIVED_FROM_MIAOMIAO);
@@ -285,17 +364,31 @@ package com.spikeapp.spike.airlibrary
 			} else if (event.code == "StatusEvent_connectedMiaoMiao") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.MIAOMIAO_CONNECTED);
 				_instance.dispatchEvent(spikeANEEvent);
+			}  else if (event.code == "StatusEvent_connectedG5") {
+				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.G5_CONNECTED);
+				_instance.dispatchEvent(spikeANEEvent);
 			} else if (event.code == "StatusEvent_disconnectedMiaoMiao") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.MIAOMIAO_DISCONNECTED);
 				_instance.dispatchEvent(spikeANEEvent);
-			} else if (event.code == "StatusEvent_stoppedScanningMiaoMiaoBecauseConnected") {
-				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.MIAOMIAO_STOPPED_SCANNING_BECAUSE_CONNECTED);
+			} else if (event.code == "StatusEvent_disconnectedG5") {
+				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.G5_DISCONNECTED);
+				_instance.dispatchEvent(spikeANEEvent);
+			} else if (event.code == "StatusEvent_didRecieveInitialUpdateValueForCharacteristic") {
+				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.MIAOMIAO_INITIAL_UPDATE_CHARACTERISTIC_RECEIVED);
 				_instance.dispatchEvent(spikeANEEvent);
 			} else if (event.code == "phoneMuted") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.PHONE_MUTED);
 				_instance.dispatchEvent(spikeANEEvent);
 			} else if (event.code == "phoneNotMuted") {
 				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.PHONE_NOT_MUTED);
+				_instance.dispatchEvent(spikeANEEvent);
+			} else if (event.code == "StatusEvent_G5DeviceNotPaired") {
+				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.G5_DEVICE_NOT_PAIRED);
+				_instance.dispatchEvent(spikeANEEvent);
+			} else if (event.code == "StatusEvent_G5DataPacketReceived") {
+				spikeANEEvent = new SpikeANEEvent(SpikeANEEvent.G5_DATA_PACKET_RECEIVED);
+				spikeANEEvent.data = new Object();
+				spikeANEEvent.data.packet = event.level.split("JJ§§((hhd")[0];
 				_instance.dispatchEvent(spikeANEEvent);
 			} 
 		}

@@ -2,7 +2,7 @@ package ui.screens
 {
 	import flash.system.System;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import feathers.controls.DragGesture;
@@ -81,7 +81,7 @@ package ui.screens
 		
 		private function setupInitialContent():void
 		{
-			nightscoutURL = !BlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL);
+			nightscoutURL = !CGMBlueToothDevice.isFollower() ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_AZURE_WEBSITE_NAME) : CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL);
 			if (nightscoutURL.indexOf('http') == -1)
 				nightscoutURL = "https://" + nightscoutURL;
 		}
@@ -100,7 +100,7 @@ package ui.screens
 			nsWebView.height = availableScreenHeight;
 			nsWebView.addEventListener(FeathersEventType.ERROR, onLoadURLErrorTriggered);
 			nsWebView.loadURL( nightscoutURL );
-			addChild( nsWebView );
+			if (nsWebView != null) addChild( nsWebView );
 		}
 		
 		private function adjustMainMenu():void

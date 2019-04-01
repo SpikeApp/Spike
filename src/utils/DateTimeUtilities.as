@@ -64,23 +64,28 @@ package utils
 		}
 		
 		/**
-		 * Example format 2017-12-23T17:59:10.330+0100<br>
-		 * The +0100 is not needed, could also be "hello"
+		 * Example format 2017-12-23T17:59:10.330+0100<br><br>
+		 * or 2018-06-21T21:25:28.000Z<br>
 		 */
-		public static function parseNSFormattedDateTimeString(dateTime:String):Date {
+		public static function parseDateTimeString(dateTime:String):Date {
+			
 			var date:String = dateTime.split("T")[0];
 			var time:String = dateTime.split("T")[1];
 						
 			var year:Number = date.split("-")[0];
-			var month:Number = date.split("-")[1] - 1;
+			var month:Number = date.split("-")[1];
 			var day:Number = date.split("-")[2];
 						
 			var hour:Number = time.split(":")[0];
 			var minute:Number = time.split(":")[1];
 			var second:Number = (time.split(":")[2] as String).split(".")[0];
 			var millisecondsecond:Number = (time.split(":")[2] as String).split(".")[1].substr(0,3);
-			
-			return new Date(year,month,day,hour,minute,second,millisecondsecond);
+
+			if (dateTime.indexOf("Z") > -1) {
+				return new Date(Date.parse(year + "/" + month + "/" + day + "/" + " " + hour + ":" + minute + ":" + second + " GMT-0000"));
+			} else {
+				return new Date(year,month - 1,day,hour,minute,second,millisecondsecond);
+			}
 		}
 	}
 }

@@ -1,5 +1,7 @@
 package ui.screens
 {
+	import com.spikeapp.spike.airlibrary.SpikeANE;
+	
 	import flash.desktop.NativeApplication;
 	import flash.desktop.SystemIdleMode;
 	import flash.display.StageOrientation;
@@ -12,10 +14,11 @@ package ui.screens
 	import flash.utils.getTimer;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import events.FollowerEvent;
+	import events.PredictionEvent;
 	import events.TransmitterServiceEvent;
 	
 	import feathers.controls.DragGesture;
@@ -31,13 +34,16 @@ package ui.screens
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
+	import model.Forecast;
 	import model.ModelLocator;
 	
+	import services.DexcomShareService;
 	import services.NightscoutService;
 	import services.TransmitterService;
 	
 	import starling.core.Starling;
 	import starling.display.DisplayObject;
+	import starling.display.Quad;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	import starling.events.Touch;
@@ -49,8 +55,9 @@ package ui.screens
 	import treatments.TreatmentsManager;
 	
 	import ui.AppInterface;
-	import ui.chart.GlucoseFactory;
-	import ui.chart.GraphLayoutFactory;
+	import ui.InterfaceController;
+	import ui.chart.helpers.GlucoseFactory;
+	import ui.chart.layout.GraphLayoutFactory;
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.Constants;
@@ -60,21 +67,20 @@ package ui.screens
 	
 	[ResourceBundle("fullscreenglucosescreen")]
 	[ResourceBundle("chartscreen")]
+	[ResourceBundle("globaltranslations")]
 
 	public class FullScreenGlucoseScreen extends BaseSubScreen
-	{
-		/* Constants */
-		private const TIME_6_MINUTES:int = 6 * 60 * 1000;
-		private const TIME_16_MINUTES:int = 16 * 60 * 1000;
-		
+	{	
 		/* Display Objects */
 		private var glucoseDisplay:Label;
 		private var timeAgoDisplay:Label;
 		private var slopeDisplay:Label;
 		private var container:LayoutGroup;
 		private var IOBCOBDisplay:Label;
+		private var miaoMiaoHitArea:Quad;
 
 		/* Properties */
+		private var outdateDataMaxTime:int = 0;
 		private var oldColor:uint = 0xababab;
 		private var newColor:uint = 0xEEEEEE;
 		private var glucoseFontSize:Number;
@@ -117,6 +123,11 @@ package ui.screens
 			
 			addEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
 			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
+			{
+				Forecast.instance.addEventListener(PredictionEvent.APS_RETRIEVED, onAPSPredictionRetrieved);
+			}
+			
 			this.horizontalScrollPolicy = ScrollPolicy.OFF;
 			
 			setupHeader();
@@ -147,6 +158,9 @@ package ui.screens
 		
 		private function setupInitialContent():void
 		{			
+			//Time
+			outdateDataMaxTime = CGMBlueToothDevice.isFollower() ? TimeSpan.TIME_7_MINUTES : TimeSpan.TIME_6_MINUTES;
+			
 			//Glucose Unit
 			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true") 
 				glucoseUnit = "mg/dl";
@@ -179,23 +193,33 @@ package ui.screens
 			timeAgoDisplay = LayoutFactory.createLabel(timeAgoOutput, HorizontalAlign.LEFT, VerticalAlign.MIDDLE, infoFontSize, false, timeAgoColor);
 			timeAgoDisplay.width = 350;
 			timeAgoDisplay.y = 10;
-			timeAgoDisplay.x = Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 40 : 10;
+			timeAgoDisplay.x = Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 40 : 10;
 			timeAgoDisplay.validate();
 			addChild(timeAgoDisplay);
+			
+			/* MiaoMiao HitArea */
+			if (CGMBlueToothDevice.isMiaoMiao())
+			{
+				miaoMiaoHitArea = new Quad(150, timeAgoDisplay.height + 25, 0xFF0000);
+				miaoMiaoHitArea.alpha = 0;
+				miaoMiaoHitArea.addEventListener(TouchEvent.TOUCH, onRequestMiaoMiaoReading);
+				miaoMiaoHitArea.x = timeAgoDisplay.x;
+				addChild(miaoMiaoHitArea);
+			}
 			
 			/* Slope Display Label */
 			slopeDisplay = LayoutFactory.createLabel(latestGlucoseSlopeOutput != "" && latestGlucoseSlopeOutput != null ? latestGlucoseSlopeOutput + " " + GlucoseHelper.getGlucoseUnit() : "", HorizontalAlign.RIGHT, VerticalAlign.MIDDLE, infoFontSize, false, latestSlopeInfoColor);
 			slopeDisplay.width = 300;
 			slopeDisplay.validate();
-			slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT ? 40 : 10);
+			slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT ? 40 : 10);
 			slopeDisplay.y = timeAgoDisplay.y;
 			addChild(slopeDisplay);
 			
 			/* IOB/COB Display Label */
 			var now:Number = new Date().valueOf();
-			IOBCOBDisplay = GraphLayoutFactory.createChartStatusText(timeAgoColor != 0 ? "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)) : "", timeAgoColor, infoFontSize, Align.CENTER, false, Constants.stageWidth);
+			IOBCOBDisplay = GraphLayoutFactory.createChartStatusText(timeAgoColor != 0 ? "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob) + getPredictionText() : "", timeAgoColor, infoFontSize, Align.CENTER, false, Constants.stageWidth);
 			var IOBCOBLayoutData:AnchorLayoutData = new AnchorLayoutData();
-			if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				IOBCOBLayoutData.bottom = 10;
 			else
 				IOBCOBLayoutData.bottom = 20;
@@ -210,8 +234,9 @@ package ui.screens
 		
 		private function setupEventListeners():void
 		{
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived, false, 0, true);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceived, false, 0, true);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived, false, 0, true);
+			DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived, false, 0, true);
 			this.addEventListener(TouchEvent.TOUCH, onTouch);
 		}
 		
@@ -230,6 +255,12 @@ package ui.screens
 			timeAgoDisplay.text = timeAgoOutput;
 			timeAgoDisplay.fontStyles.color = timeAgoColor;
 			
+			if (CGMBlueToothDevice.isMiaoMiao() && miaoMiaoHitArea != null)
+			{
+				timeAgoDisplay.validate();
+				miaoMiaoHitArea.x = timeAgoDisplay.x;
+			}
+			
 			/* Slope Display Label */
 			slopeDisplay.text = latestGlucoseSlopeOutput != "" && latestGlucoseSlopeOutput != null ? latestGlucoseSlopeOutput + " " + GlucoseHelper.getGlucoseUnit() : "";
 			slopeDisplay.fontStyles.color = latestSlopeInfoColor;
@@ -237,7 +268,7 @@ package ui.screens
 			/* IOB / COB Display Label */
 			var now:Number = new Date().valueOf();
 			IOBCOBDisplay.fontStyles.color = timeAgoColor;
-			IOBCOBDisplay.text = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
+			IOBCOBDisplay.text = getPredictionText() + "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob);
 		}
 		
 		private function calculateValues():void
@@ -284,12 +315,12 @@ package ui.screens
 				if (latestGlucoseValue < 40) latestGlucoseValue = 40;
 				else if (latestGlucoseValue > 400) latestGlucoseValue = 400;
 				
-				if (nowTimestamp - latestGlucoseTimestamp <= TIME_16_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp <= TimeSpan.TIME_16_MINUTES)
 				{
 					latestGlucoseProperties = GlucoseFactory.getGlucoseOutput(latestGlucoseValue);
 					latestGlucoseOutput = latestGlucoseProperties.glucoseOutput;
 					latestGlucoseValueFormatted = latestGlucoseProperties.glucoseValueFormatted;
-					if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
+					if (nowTimestamp - latestGlucoseTimestamp < outdateDataMaxTime)
 						latestGlucoseColor = GlucoseFactory.getGlucoseColor(latestGlucoseValue);
 					else
 						latestGlucoseColor = oldColor;
@@ -308,7 +339,7 @@ package ui.screens
 				//Time Ago
 				timeAgoOutput = TimeSpan.formatHoursMinutesFromSecondsChart((nowTimestamp - latestGlucoseTimestamp)/1000, false, false);
 				timeAgoOutput != ModelLocator.resourceManagerInstance.getString('chartscreen','now') ? timeAgoOutput += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix') : timeAgoOutput += "";
-				if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp < outdateDataMaxTime)
 					timeAgoColor = newColor;
 				else
 					timeAgoColor = oldColor;
@@ -334,12 +365,12 @@ package ui.screens
 				if (latestGlucoseValue < 40) latestGlucoseValue = 40;
 				else if (latestGlucoseValue > 400) latestGlucoseValue = 400;
 				
-				if (nowTimestamp - latestGlucoseTimestamp <= TIME_16_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp <= TimeSpan.TIME_16_MINUTES)
 				{
 					latestGlucoseProperties = GlucoseFactory.getGlucoseOutput(latestGlucoseValue);
 					latestGlucoseOutput = latestGlucoseProperties.glucoseOutput;
 					latestGlucoseValueFormatted = latestGlucoseProperties.glucoseValueFormatted;
-					if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
+					if (nowTimestamp - latestGlucoseTimestamp < outdateDataMaxTime)
 						latestGlucoseColor = GlucoseFactory.getGlucoseColor(latestGlucoseValue);
 					else 
 						latestGlucoseColor = oldColor;
@@ -351,9 +382,9 @@ package ui.screens
 				}
 				
 				/* SLOPE */
-				if (nowTimestamp - latestGlucoseTimestamp > TIME_16_MINUTES || latestGlucoseTimestamp - previousGlucoseTimestamp > TIME_16_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp > TimeSpan.TIME_16_MINUTES || latestGlucoseTimestamp - previousGlucoseTimestamp > TimeSpan.TIME_16_MINUTES)
 					latestGlucoseSlopeOutput = "";
-				else if (latestGlucoseTimestamp - previousGlucoseTimestamp < TIME_16_MINUTES)
+				else if (latestGlucoseTimestamp - previousGlucoseTimestamp < TimeSpan.TIME_16_MINUTES)
 				{
 					latestGlucoseSlopeOutput = GlucoseFactory.getGlucoseSlope
 						(
@@ -363,16 +394,16 @@ package ui.screens
 							latestGlucoseValueFormatted
 						);
 					
-					if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
+					if (nowTimestamp - latestGlucoseTimestamp < outdateDataMaxTime)
 						latestSlopeInfoColor = newColor;
 					else
 						latestSlopeInfoColor = oldColor;
 				}
 				
 				//Arrow
-				if (nowTimestamp - latestGlucoseTimestamp > TIME_16_MINUTES || latestGlucoseTimestamp - previousGlucoseTimestamp > TIME_16_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp > TimeSpan.TIME_16_MINUTES || latestGlucoseTimestamp - previousGlucoseTimestamp > TimeSpan.TIME_16_MINUTES)
 					latestGlucoseSlopeArrow = "";
-				else if (latestGlucoseTimestamp - previousGlucoseTimestamp <= TIME_16_MINUTES)
+				else if (latestGlucoseTimestamp - previousGlucoseTimestamp <= TimeSpan.TIME_16_MINUTES)
 				{
 					if ((glucoseList[glucoseList.length - 1] as BgReading).hideSlope)
 						latestGlucoseSlopeArrow = "\u21C4";
@@ -386,7 +417,7 @@ package ui.screens
 				timeAgoOutput = TimeSpan.formatHoursMinutesFromSecondsChart(differenceInSec, false, false);
 				timeAgoOutput != ModelLocator.resourceManagerInstance.getString('chartscreen','now') ? timeAgoOutput += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix') : timeAgoOutput += "";
 				
-				if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp < outdateDataMaxTime)
 					timeAgoColor = newColor;
 				else
 					timeAgoColor = oldColor;
@@ -402,8 +433,32 @@ package ui.screens
 			{
 				var now:Number = new Date().valueOf();
 				IOBCOBDisplay.fontStyles.color = timeAgoColor;
-				IOBCOBDisplay.text = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
+				IOBCOBDisplay.text = getPredictionText() + "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob);
 			}
+		}
+		
+		private function getPredictionText():String
+		{
+			var predictionsText:String = "";
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
+			{
+				var predictionsLengthInMinutes:Number = Forecast.getCurrentPredictionsDuration();
+				if (!isNaN(predictionsLengthInMinutes))
+				{
+					var currentPrediction:Number = Forecast.getLastPredictiveBG(predictionsLengthInMinutes);
+					if (!isNaN(currentPrediction))
+					{
+						predictionsText = TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','prediction_label') + ": " + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? String(Math.round(currentPrediction)) : String(Math.round(BgReading.mgdlToMmol(currentPrediction * 10)) / 10)) + "\n";
+					}
+					else
+					{
+						predictionsText = TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','prediction_label') + ": " + ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available') + "\n";
+					}
+				}
+			}
+			
+			return predictionsText;
 		}
 		
 		private function getLeading(arrow:String):Number
@@ -485,10 +540,15 @@ package ui.screens
 			var textFormat:flash.text.TextFormat = sNativeFormat;
 			var maxTextWidth:int  = Constants.stageWidth - (Constants.isPortrait ? Constants.stageWidth * 0.2 : Constants.stageWidth * 0.1);
 			var maxTextHeight:int = Constants.stageHeight - Constants.headerHeight;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+			
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				maxTextHeight -= maxTextHeight * 0.35;
 			
-			if (isNaN(maxTextWidth) || isNaN(maxTextHeight)) return;
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
+				maxTextHeight -= maxTextHeight * 0.30;
+			
+			if (isNaN(maxTextWidth) || isNaN(maxTextHeight)) 
+				return;
 			
 			var size:Number = Number(textFormat.size);
 			
@@ -516,7 +576,7 @@ package ui.screens
 		{
 			//Get latest BGReading
 			var latestBgReading:BgReading;
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				latestBgReading = BgReading.lastNoSensor();
 			else
 				latestBgReading = BgReading.lastWithCalculatedValue();
@@ -543,6 +603,20 @@ package ui.screens
 			SystemUtil.executeWhenApplicationIsActive( updateInfo );
 		}
 		
+		private function onAPSPredictionRetrieved(e:PredictionEvent):void
+		{
+			if (!SystemUtil.isApplicationActive)
+				return;
+			
+			/* IOB / COB Display Label */
+			if (IOBCOBDisplay != null)
+			{
+				var now:Number = new Date().valueOf();
+				IOBCOBDisplay.fontStyles.color = timeAgoColor;
+				IOBCOBDisplay.text = getPredictionText() + "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob);
+			}
+		}
+		
 		private function onUpdateTimer(event:TimerEvent):void
 		{
 			if (latestGlucoseTimestamp != 0 && SystemUtil.isApplicationActive)
@@ -554,14 +628,20 @@ package ui.screens
 				timeAgoOutput != ModelLocator.resourceManagerInstance.getString('chartscreen','now') ? timeAgoOutput += " " + ModelLocator.resourceManagerInstance.getString('chartscreen','time_ago_suffix') : timeAgoOutput += "";
 				timeAgoDisplay.text = timeAgoOutput;
 				
-				if (nowTimestamp - latestGlucoseTimestamp < TIME_6_MINUTES)
+				if (nowTimestamp - latestGlucoseTimestamp < outdateDataMaxTime)
 					timeAgoColor = newColor;
 				else
 					timeAgoColor = oldColor;
 				
 				timeAgoDisplay.fontStyles.color = timeAgoColor;
 				
-				if ( nowTimestamp - latestGlucoseTimestamp > TIME_16_MINUTES )
+				if (CGMBlueToothDevice.isMiaoMiao() && miaoMiaoHitArea != null)
+				{
+					timeAgoDisplay.validate();
+					miaoMiaoHitArea.x = timeAgoDisplay.x;
+				}
+				
+				if ( nowTimestamp - latestGlucoseTimestamp > TimeSpan.TIME_16_MINUTES )
 				{
 					//Glucose Value
 					latestGlucoseOutput = "---";
@@ -577,7 +657,7 @@ package ui.screens
 					
 					glucoseDisplay.fontStyles.leading = getLeading(latestGlucoseSlopeArrow);
 				}
-				else if ( nowTimestamp - latestGlucoseTimestamp > TIME_6_MINUTES )
+				else if ( nowTimestamp - latestGlucoseTimestamp > outdateDataMaxTime )
 				{
 					glucoseDisplay.fontStyles.color = oldColor;
 					slopeDisplay.fontStyles.color = oldColor;
@@ -595,7 +675,7 @@ package ui.screens
 			{
 				var now:Number = new Date().valueOf();
 				IOBCOBDisplay.fontStyles.color = timeAgoColor;
-				IOBCOBDisplay.text = "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now));
+				IOBCOBDisplay.text = getPredictionText() + "IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob) + "  COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob);
 			}
 		}
 		
@@ -630,6 +710,27 @@ package ui.screens
 			}
 		}
 		
+		private function onRequestMiaoMiaoReading(e:TouchEvent):void
+		{
+			var touch:Touch = e.getTouch(stage);
+			if(touch != null && touch.phase == TouchPhase.BEGAN)
+			{
+				this.removeEventListener(TouchEvent.TOUCH, onTouch);
+				this.removeEventListener(starling.events.Event.ENTER_FRAME, onHold);
+				
+				//Request MiaoMiao Reading On-Demand
+				if (CGMBlueToothDevice.isMiaoMiao() && CGMBlueToothDevice.known() && InterfaceController.peripheralConnected)
+				{
+					SpikeANE.sendStartReadingCommmandToMiaoMia();
+					SpikeANE.vibrate();
+				}
+			}
+			else if (touch != null && touch.phase == TouchPhase.ENDED)
+			{
+				this.addEventListener(TouchEvent.TOUCH, onTouch);
+			}
+		}
+		
 		override protected function onBackButtonTriggered(event:starling.events.Event):void
 		{
 			//Pop this screen off
@@ -645,6 +746,12 @@ package ui.screens
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
+			if (!SystemUtil.isApplicationActive)
+			{
+				SystemUtil.executeWhenApplicationIsActive(onStarlingResize, null);
+				return;
+			}
+			
 			width = Constants.stageWidth;
 			
 			if (IOBCOBDisplay != null)
@@ -656,8 +763,15 @@ package ui.screens
 			//Adjust label position
 			if (timeAgoDisplay != null && slopeDisplay != null)
 			{
-				timeAgoDisplay.x = Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 40 : 10;
-				slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT ? 40 : 10);
+				timeAgoDisplay.x = Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT ? 40 : 10;
+				
+				if (CGMBlueToothDevice.isMiaoMiao() && miaoMiaoHitArea != null)
+				{
+					timeAgoDisplay.validate();
+					miaoMiaoHitArea.x = timeAgoDisplay.x;
+				}
+				
+				slopeDisplay.x = Constants.stageWidth - slopeDisplay.width - (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_LEFT ? 40 : 10);
 			}
 			
 			SystemUtil.executeWhenApplicationIsActive( calculateValues );
@@ -666,7 +780,7 @@ package ui.screens
 		
 		private function onCreation(event:starling.events.Event):void
 		{
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X && this.header != null)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && this.header != null)
 			{
 				if (Constants.isPortrait)
 				{
@@ -700,9 +814,15 @@ package ui.screens
 		override public function dispose():void
 		{
 			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
-			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
+			DexcomShareService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
 			this.removeEventListener(TouchEvent.TOUCH, onTouch);
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
+			{
+				Forecast.instance.removeEventListener(PredictionEvent.APS_RETRIEVED, onAPSPredictionRetrieved);
+			}
 			
 			if(updateTimer != null)
 			{
@@ -730,6 +850,14 @@ package ui.screens
 				timeAgoDisplay.removeFromParent();
 				timeAgoDisplay.dispose();
 				timeAgoDisplay = null;
+			}
+			
+			if (miaoMiaoHitArea != null)
+			{
+				miaoMiaoHitArea.removeEventListener(TouchEvent.TOUCH, onRequestMiaoMiaoReading);
+				miaoMiaoHitArea.removeFromParent();
+				miaoMiaoHitArea.dispose();
+				miaoMiaoHitArea = null;
 			}
 			
 			if (IOBCOBDisplay != null)

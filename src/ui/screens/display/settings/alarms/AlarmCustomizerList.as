@@ -9,6 +9,8 @@ package ui.screens.display.settings.alarms
 	import feathers.controls.Alert;
 	import feathers.controls.Button;
 	import feathers.controls.Callout;
+	import feathers.controls.NumericStepper;
+	import feathers.controls.ToggleSwitch;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.core.PopUpManager;
@@ -35,12 +37,11 @@ package ui.screens.display.settings.alarms
 	
 	[ResourceBundle("alarmsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
+	[ResourceBundle("speechsettingsscreen")]
 
 	public class AlarmCustomizerList extends SpikeList 
 	{
 		/* Constants */
-		private const TIME_1_MINUTE:int = 1000 * 60;
-		private const TIME_1_DAY:int = (1000 * 60 * 60 * 23) + (1000 * 60 * 59); //23h, 59m
 		private const UNIT_MGDL:String = "mg/dL";
 		private const UNIT_MMOL:String = "mmol/L";
 		
@@ -49,6 +50,9 @@ package ui.screens.display.settings.alarms
 		private var alarmCreatorList:AlarmCreatorList;
 		private var addAlarmtButton:Button;
 		private var positionHelper:Sprite;
+		private var useGlucoseThresholdsSwitch:ToggleSwitch;
+		private var lowGlucoseThresholdStepper:NumericStepper;
+		private var highGlucoseThresholdStepper:NumericStepper;
 		
 		/* Properties */
 		public var needsSave:Boolean = false;
@@ -58,6 +62,9 @@ package ui.screens.display.settings.alarms
 		private var alarmData:Array = [];
 		private var finalAlarmData:Array;
 		private var alarmControlsList:Array = [];
+		private var isThresholdsEnabled:Boolean;
+		private var lowThresholdValue:Number;
+		private var highThresholdValue:Number;
 		
 		public function AlarmCustomizerList(alarmID:Number, alarmType:String)
 		{
@@ -92,6 +99,28 @@ package ui.screens.display.settings.alarms
 			if (alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE || alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE_CHANGE)
 				glucoseUnit = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? UNIT_MGDL : UNIT_MMOL;
 			
+			if (alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE_CHANGE)
+			{
+				if (alarmID == CommonSettings.COMMON_SETTING_FAST_RISE_ALERT)
+					isThresholdsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT_GLUCOSE_THRESHOLDS_ON) == "true";
+				else if (alarmID == CommonSettings.COMMON_SETTING_FAST_DROP_ALERT)
+					isThresholdsEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT_GLUCOSE_THRESHOLDS_ON) == "true";
+				
+				if (alarmID == CommonSettings.COMMON_SETTING_FAST_RISE_ALERT)
+					lowThresholdValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT_LOW_GLUCOSE_THRESHOLD) != "" ? Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT_LOW_GLUCOSE_THRESHOLD)) : Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
+				else if (alarmID == CommonSettings.COMMON_SETTING_FAST_DROP_ALERT)
+					lowThresholdValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT_LOW_GLUCOSE_THRESHOLD) != "" ? Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT_LOW_GLUCOSE_THRESHOLD)) : Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK));
+				
+				if (glucoseUnit != "mg/dL") lowThresholdValue = Math.round(BgReading.mgdlToMmol(lowThresholdValue) * 10) / 10;
+				
+				if (alarmID == CommonSettings.COMMON_SETTING_FAST_RISE_ALERT)
+					highThresholdValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT_HIGH_GLUCOSE_THRESHOLD) != "" ? Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT_HIGH_GLUCOSE_THRESHOLD)) : Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+				else if (alarmID == CommonSettings.COMMON_SETTING_FAST_DROP_ALERT)
+					highThresholdValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT_HIGH_GLUCOSE_THRESHOLD) != "" ? Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT_HIGH_GLUCOSE_THRESHOLD)) : Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK));
+				
+				if (glucoseUnit != "mg/dL") highThresholdValue = Math.round(BgReading.mgdlToMmol(highThresholdValue) * 10) / 10;
+			}
+				
 			/* Parse Alarm Settings */
 			var completeAlarmSettings:String = CommonSettings.getCommonSetting(alarmID);
 			var alarmsSettingsDivided:Array = completeAlarmSettings.split("-");
@@ -163,6 +192,20 @@ package ui.screens.display.settings.alarms
 		
 		private function setupContent():void
 		{
+			//Glucose thresholds
+			if (alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE_CHANGE)
+			{
+				//On/Off Switch
+				useGlucoseThresholdsSwitch = LayoutFactory.createToggleSwitch(isThresholdsEnabled);
+				useGlucoseThresholdsSwitch.pivotX = 5;
+				useGlucoseThresholdsSwitch.addEventListener(Event.CHANGE, onGlucoseThresholdsChange);
+				
+				lowGlucoseThresholdStepper = LayoutFactory.createNumericStepper(glucoseUnit == "mg/dL" ? 40 : Math.round(BgReading.mgdlToMmol(40) * 10) / 10, glucoseUnit == "mg/dL" ? 390 : Math.round(BgReading.mgdlToMmol(390) * 10) / 10, lowThresholdValue, glucoseUnit == "mg/dL" ? 1 : 0.1);
+				lowGlucoseThresholdStepper.addEventListener( Event.CHANGE, onGlucoseThresholdLowChanged);
+				highGlucoseThresholdStepper = LayoutFactory.createNumericStepper(glucoseUnit == "mg/dL" ? 50 : Math.round(BgReading.mgdlToMmol(50) * 10) / 10, glucoseUnit == "mg/dL" ? 400 : Math.round(BgReading.mgdlToMmol(400) * 10) / 10, highThresholdValue, glucoseUnit == "mg/dL" ? 1 : 0.1);
+				highGlucoseThresholdStepper.addEventListener( Event.CHANGE, onGlucoseThresholdHighChanged);
+			}
+			
 			//Add alarm button
 			addAlarmtButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('globaltranslations',"add_button_label"), false, MaterialDeepGreyAmberMobileThemeIcons.alarmAddTexture);
 			addAlarmtButton.gap = 5;
@@ -200,7 +243,7 @@ package ui.screens.display.settings.alarms
 					alarmControls.scale = 0.8;
 				else if (Constants.deviceModel == DeviceInfo.IPHONE_6_6S_7_8 || Constants.deviceModel == DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS)
 					alarmControls.scale = 0.9;
-				else if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+				else if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 					alarmControls.scale = 0.7;
 				alarmControls.pivotX = -8;
 				alarmControls.addEventListener(AlarmManagerAccessory.EDIT, onEditAlarm);
@@ -217,6 +260,16 @@ package ui.screens.display.settings.alarms
 			}
 			//Add action buttons to the list
 			listData.push( { label:"", accessory:addAlarmtButton } );
+			
+			if (alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE_CHANGE)
+			{
+				listData.push( { label:ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','use_glucose_thresholds_label'), accessory:useGlucoseThresholdsSwitch } );
+				if (isThresholdsEnabled)
+				{
+					listData.push( { label:ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','high_threshold_label'), accessory:highGlucoseThresholdStepper } );
+					listData.push( { label:ModelLocator.resourceManagerInstance.getString('speechsettingsscreen','low_threshold_label'), accessory:lowGlucoseThresholdStepper } );
+				}
+			}
 			
 			//Set list content
 			dataProvider = listData;
@@ -235,8 +288,10 @@ package ui.screens.display.settings.alarms
 					item.fontStyles = new TextFormat("Roboto", 12, 0xEEEEEE, "left", "top");
 				item.accessoryField = "accessory";
 				item.accessoryOffsetX = -8;
+				item.accessoryLabelProperties.wordWrap = true;
+				item.defaultLabelProperties.wordWrap = true;
 				
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 					{
@@ -304,10 +359,10 @@ package ui.screens.display.settings.alarms
 						//Check if there's only one alarm. If so, we might need to push a NO ALERT filler at the end.
 						if (alarmData.length == 1)
 						{
-							if (currentAlarmEndTimeStamp < TIME_1_DAY)
+							if (currentAlarmEndTimeStamp < TimeSpan.TIME_23_HOURS_59_MINUTES)
 							{
 								//We need to add a NO ALERT filler at the end
-								timeSpan = TimeSpan.fromMilliseconds(currentAlarmEndTimeStamp + TIME_1_MINUTE);
+								timeSpan = TimeSpan.fromMilliseconds(currentAlarmEndTimeStamp + TimeSpan.TIME_1_MINUTE);
 								finalAlarmData.push
 								(
 									{ startTime: timeSpan.hoursFormatted + ":" + timeSpan.minutesFormatted, value: 0, alertType: "No Alert" }
@@ -322,10 +377,10 @@ package ui.screens.display.settings.alarms
 						var previousAlarmEndTimeStamp:Number = Number(previousAlarmSettings.endTimeStamp);
 						var timeSpan:TimeSpan;
 						
-						if (previousAlarmEndTimeStamp + TIME_1_MINUTE < currentAlarmStartTimeStamp)
+						if (previousAlarmEndTimeStamp + TimeSpan.TIME_1_MINUTE < currentAlarmStartTimeStamp)
 						{
 							//There's a gap between the previous alarm and this one. Let's add a filler NO ALERT alarm that starts 1 minute later
-							timeSpan = TimeSpan.fromMilliseconds(previousAlarmEndTimeStamp + TIME_1_MINUTE);
+							timeSpan = TimeSpan.fromMilliseconds(previousAlarmEndTimeStamp + TimeSpan.TIME_1_MINUTE);
 							finalAlarmData.push
 							(
 								{ startTime: timeSpan.hoursFormatted + ":" + timeSpan.minutesFormatted, value: 0, alertType: "No Alert" }
@@ -341,10 +396,10 @@ package ui.screens.display.settings.alarms
 						if (i == dataLength - 1)
 						{
 							//We're in the final alarm. Check if we need to add a NO ALERT filler to the end to complete the entire 24h span
-							if (currentAlarmEndTimeStamp < TIME_1_DAY)
+							if (currentAlarmEndTimeStamp < TimeSpan.TIME_23_HOURS_59_MINUTES)
 							{
 								//Complete the 24h timespan with a NO ALERT filler that starts 1 minute later
-								timeSpan = TimeSpan.fromMilliseconds(currentAlarmEndTimeStamp + TIME_1_MINUTE);
+								timeSpan = TimeSpan.fromMilliseconds(currentAlarmEndTimeStamp + TimeSpan.TIME_1_MINUTE);
 								finalAlarmData.push
 								(
 									{ startTime: timeSpan.hoursFormatted + ":" + timeSpan.minutesFormatted, value: 0, alertType: "No Alert" }
@@ -421,8 +476,21 @@ package ui.screens.display.settings.alarms
 			{
 				setupCalloutPosition();
 				
+				if (positionHelper == null || positionHelper.parent == null)
+					return;
+				
 				alarmCustomizerCallout = new Callout();
 				alarmCustomizerCallout.content = alarmCreatorList;
+				alarmCustomizerCallout.origin = positionHelper;
+			}
+			
+			if (positionHelper == null || positionHelper.parent == null)
+			{
+				setupCalloutPosition();
+				
+				if (positionHelper == null || positionHelper.parent == null)
+					return;
+				
 				alarmCustomizerCallout.origin = positionHelper;
 			}
 			
@@ -452,7 +520,7 @@ package ui.screens.display.settings.alarms
 				//Conditions that make timeranges conflict with each other
 				if ((alarmStartTimeStamp >= existingStartTimeStamp && alarmStartTimeStamp <= existingEndTimeStamp) ||
 					(alarmStartTimeStamp < existingStartTimeStamp && alarmEndTimeStamp >= existingEndTimeStamp) ||
-					(alarmStartTimeStamp == existingStartTimeStamp - TIME_1_MINUTE) ||
+					(alarmStartTimeStamp == existingStartTimeStamp - TimeSpan.TIME_1_MINUTE) ||
 					(alarmStartTimeStamp == existingStartTimeStamp) ||
 					(alarmEndTimeStamp == existingEndTimeStamp) ||
 					(alarmEndTimeStamp >= existingStartTimeStamp && alarmEndTimeStamp <= existingEndTimeStamp))
@@ -482,6 +550,30 @@ package ui.screens.display.settings.alarms
 		public function save():void
 		{
 			processAlarmData();
+			
+			if (alarmID == CommonSettings.COMMON_SETTING_FAST_RISE_ALERT)
+			{
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT_GLUCOSE_THRESHOLDS_ON) != String(isThresholdsEnabled))
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT_GLUCOSE_THRESHOLDS_ON, String(isThresholdsEnabled));
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT_HIGH_GLUCOSE_THRESHOLD) != String(glucoseUnit == "mg/dL" ? highThresholdValue : Math.round(BgReading.mmolToMgdl(highThresholdValue))))
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT_HIGH_GLUCOSE_THRESHOLD, String(glucoseUnit == "mg/dL" ? highThresholdValue : Math.round(BgReading.mmolToMgdl(highThresholdValue))));
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT_LOW_GLUCOSE_THRESHOLD) != String(glucoseUnit == "mg/dL" ? lowThresholdValue : Math.round(BgReading.mmolToMgdl(lowThresholdValue))))
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FAST_RISE_ALERT_LOW_GLUCOSE_THRESHOLD, String(glucoseUnit == "mg/dL" ? lowThresholdValue : Math.round(BgReading.mmolToMgdl(lowThresholdValue))));
+			}
+			else if (alarmID == CommonSettings.COMMON_SETTING_FAST_DROP_ALERT)
+			{
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT_GLUCOSE_THRESHOLDS_ON) != String(isThresholdsEnabled))
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT_GLUCOSE_THRESHOLDS_ON, String(isThresholdsEnabled));
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT_HIGH_GLUCOSE_THRESHOLD) != String(glucoseUnit == "mg/dL" ? highThresholdValue : Math.round(BgReading.mmolToMgdl(highThresholdValue))))
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT_HIGH_GLUCOSE_THRESHOLD, String(glucoseUnit == "mg/dL" ? highThresholdValue : Math.round(BgReading.mmolToMgdl(highThresholdValue))));
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT_LOW_GLUCOSE_THRESHOLD) != String(glucoseUnit == "mg/dL" ? lowThresholdValue : Math.round(BgReading.mmolToMgdl(lowThresholdValue))))
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FAST_DROP_ALERT_LOW_GLUCOSE_THRESHOLD, String(glucoseUnit == "mg/dL" ? lowThresholdValue : Math.round(BgReading.mmolToMgdl(lowThresholdValue))));
+			}
+			
 			needsSave = false;
 		}
 		
@@ -588,6 +680,41 @@ package ui.screens.display.settings.alarms
 			}
 		}
 		
+		private function onGlucoseThresholdsChange(e:Event):void
+		{
+			isThresholdsEnabled = useGlucoseThresholdsSwitch.isSelected;
+			
+			needsSave = true;
+			
+			setupContent();
+		}
+		
+		private function onGlucoseThresholdHighChanged(E:Event):void
+		{
+			highThresholdValue = highGlucoseThresholdStepper.value;
+			
+			if (highThresholdValue <= lowThresholdValue)
+			{
+				lowThresholdValue = highThresholdValue - (glucoseUnit == "mg/dL" ? 1 : 0.1);
+				lowGlucoseThresholdStepper.value = lowThresholdValue;
+			}
+			
+			needsSave = true;
+		}
+		
+		private function onGlucoseThresholdLowChanged(E:Event):void
+		{
+			lowThresholdValue = lowGlucoseThresholdStepper.value;
+			
+			if (lowThresholdValue >= highThresholdValue)
+			{
+				highThresholdValue = lowThresholdValue + (glucoseUnit == "mg/dL" ? 1 : 0.1);
+				highGlucoseThresholdStepper.value = highThresholdValue;
+			}
+			
+			needsSave = true;
+		}
+		
 		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
 			width = Constants.stageWidth - (2 * BaseMaterialDeepGreyAmberMobileTheme.defaultPanelPadding);
@@ -617,6 +744,7 @@ package ui.screens.display.settings.alarms
 			
 			if (addAlarmtButton != null)
 			{
+				addAlarmtButton.removeEventListener(Event.TRIGGERED, onAddAlarm);
 				addAlarmtButton.dispose();
 				addAlarmtButton = null;
 			}
@@ -638,6 +766,27 @@ package ui.screens.display.settings.alarms
 						control = null;
 					}
 				}
+			}
+			
+			if (useGlucoseThresholdsSwitch != null)
+			{
+				useGlucoseThresholdsSwitch.removeEventListener(Event.CHANGE, onGlucoseThresholdsChange);
+				useGlucoseThresholdsSwitch.dispose();
+				useGlucoseThresholdsSwitch = null;
+			}
+			
+			if (lowGlucoseThresholdStepper != null)
+			{
+				lowGlucoseThresholdStepper.removeEventListener(Event.CHANGE, onGlucoseThresholdLowChanged);
+				lowGlucoseThresholdStepper.dispose();
+				lowGlucoseThresholdStepper = null;
+			}
+			
+			if (highGlucoseThresholdStepper != null)
+			{
+				highGlucoseThresholdStepper.removeEventListener(Event.CHANGE, onGlucoseThresholdHighChanged);
+				highGlucoseThresholdStepper.dispose();
+				highGlucoseThresholdStepper = null;
 			}
 			
 			super.dispose();

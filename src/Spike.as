@@ -39,7 +39,8 @@ package
 	
 	public class Spike extends Sprite 
 	{
-		private static const TIME_1_MINUTE:int = 60 * 1000;
+		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
+		
 		private var starling:Starling;
 		private var scaler:ScreenDensityScaleFactorManager;	
 		private var timeoutID:int = -1;
@@ -70,76 +71,6 @@ package
 			}, 200 );
 		}
 		
-		private function onUncaughtError(e:UncaughtErrorEvent):void
-		{
-			if (e.error is Error)
-			{
-				var error:Error = e.error as Error;
-				sendError("<p>Error ID: " + error.errorID + "</p><p>Error Name: " + error.name + "</p><p> Error Message: " + error.message + "</p><p>Error Stack Trace: " + error.getStackTrace() + "</p>");
-			}
-			else
-			{
-				var errorEvent:ErrorEvent = e.error as ErrorEvent;
-				sendError("<p>Error Event ID: " + errorEvent.errorID + "</p><p>Text: " + errorEvent.text + "</p><p>Type: " + errorEvent.type + "</p><p>Target: " + ObjectUtil.toString(errorEvent.target) + "</p><p>Current Target: " + ObjectUtil.toString(errorEvent.currentTarget));
-			}
-		}
-		
-		private function sendError(error:String):void
-		{
-			//Things we don't want to report
-			if ( 
-				error.indexOf("ioError") != -1 ||
-				error.indexOf("Unexpected < encountered") != -1 ||
-				error.indexOf("Unexpected T encountered") != -1 ||
-				error.indexOf("details:'cannot rollback - no transaction is active") != -1 ||
-				error.indexOf("PickerList/closeList()") != -1 ||
-				error.indexOf("PickerList/button_touchHandler()") != -1 ||
-				error.indexOf("JSONParseError") != -1 ||
-				error.indexOf("starling.display.graphics::Graphic/render()") != -1 ||
-				error.indexOf("starling.rendering::VertexData/createVertexBuffer()") != -1 ||
-				error.indexOf("RangeError: Error #1125 at BatchProcessor/getBatchAt() at starling.rendering::Painter/drawFromCache()") != -1 ||
-				error.indexOf("DropDownPopUpContentManager/stage_enterFrameHandler()") != -1 ||
-				error.indexOf("feathers.utils.touch::TapToEvent/target_touchHandler()") != -1 ||
-				error.indexOf("Graphic/getBounds()") != -1
-				)
-			{
-				return;
-			}
-			
-			var now:Number = new Date().valueOf();
-			
-			//Don't send consecutive errors that might happen on onEnterFrame events. Not usefull and will save battery life and not SPAM our email
-			if (now - lastCrashReportTimestamp < TIME_1_MINUTE)
-				return;
-			
-			lastCrashReportTimestamp = now;
-			
-			error = "Device Model: " + Constants.deviceModelName + "\n\n" + "Spike Version: " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION) + "\n\n" + error;
-			
-			//Create URL Request 
-			var vars:URLVariables = new URLVariables();
-			vars.mimeType = "text/html";
-			vars.emailSubject = "Spike Error";
-			vars.emailBody = error;
-			vars.userName = "";
-			vars.userEmail = "bug@spike-app.com";
-			
-			//Send Email
-			EmailSender.sendData
-			(
-				EmailSender.TRANSMISSION_URL_NO_ATTACHMENT,
-				onLoadCompleteHandler,
-				vars
-			);
-		}
-		
-		private function onLoadCompleteHandler(event:flash.events.Event):void 
-		{ 
-			var loader:URLLoader = URLLoader(event.target);
-			loader.removeEventListener(flash.events.Event.COMPLETE, onLoadCompleteHandler);
-			loader = null;
-		}
-		
 		/**
 		 * Initialization
 		 */
@@ -158,6 +89,7 @@ package
 			Constants.init( starling.stage.stageWidth, starling.stage.stageHeight, stage );
 			Constants.isPortrait = starling.stage.stageWidth < starling.stage.stageHeight;
 			Constants.currentOrientation = stage.orientation;
+			Constants.systemLocale = String(Capabilities.languages[0]);
 			starling.addEventListener( starling.events.Event.ROOT_CREATED, onStarlingReady );
 			Starling.current.stage3D.addEventListener(flash.events.Event.CONTEXT3D_CREATE, onContextCreated, false, 50, true);
 			Starling.current.stage.addEventListener(starling.events.Event.RESIZE, onStarlingResize);
@@ -269,9 +201,177 @@ package
 		}
 		
 		/**
+		 * Error Handling
+		 */
+		private function onUncaughtError(e:UncaughtErrorEvent):void
+		{
+			if (e.error is Error)
+			{
+				var error:Error = e.error as Error;
+				sendError("<p>Error ID: " + error.errorID + "</p><p>Error Name: " + error.name + "</p><p> Error Message: " + error.message + "</p><p>Error Stack Trace: " + error.getStackTrace() + "</p>");
+			}
+			else
+			{
+				var errorEvent:ErrorEvent = e.error as ErrorEvent;
+				sendError("<p>Error Event ID: " + errorEvent.errorID + "</p><p>Text: " + errorEvent.text + "</p><p>Type: " + errorEvent.type + "</p><p>Target: " + ObjectUtil.toString(errorEvent.target) + "</p><p>Current Target: " + ObjectUtil.toString(errorEvent.currentTarget));
+			}
+		}
+		
+		private function sendError(error:String):void
+		{
+			var now:Number = new Date().valueOf();
+			
+			//Don't send consecutive errors that might happen on onEnterFrame events. Not usefull and will save battery life and not SPAM our email
+			if (now - lastCrashReportTimestamp < TIME_5_MINUTES)
+				return;
+			
+			//Things we don't want to report
+			if (
+				error.indexOf("ioError") != -1 ||
+				error.indexOf("Unexpected < encountered") != -1 ||
+				error.indexOf("Unexpected T encountered") != -1 ||
+				error.indexOf("details:'cannot rollback - no transaction is active") != -1 ||
+				error.indexOf("PickerList/closeList()") != -1 ||
+				error.indexOf("PickerList/button_touchHandler()") != -1 ||
+				error.indexOf("JSONParseError") != -1 ||
+				error.indexOf("starling.display.graphics::Graphic/render()") != -1 ||
+				error.indexOf("starling.rendering::VertexData/createVertexBuffer()") != -1 ||
+				error.indexOf("DropDownPopUpContentManager/stage_enterFrameHandler()") != -1 ||
+				error.indexOf("feathers.utils.touch::TapToEvent/target_touchHandler()") != -1 ||
+				error.indexOf("#2004 at flash.text.engine::ElementFormat()") != -1 ||
+				error.indexOf("#1009 at feathers.controls.text::StageTextTextEditor/render()") != -1 ||
+				error.indexOf("Error #1125 at BatchProcessor/getBatchAt()") != -1 ||
+				error.indexOf("Error #1009 at feathers.controls.text::StageTextTextEditor/render()") != -1 ||
+				error.indexOf("Error #1009 at feathers.controls::StackScreenNavigator/handleDragEnd()") != -1 ||
+				error.indexOf("Error #2004 at flash.text.engine::ElementFormat()") != -1 ||
+				error.indexOf("Error #1016 at services::NightscoutService$/getRemoteTreatments()") != -1 ||
+				error.indexOf("getBatchAt()") != -1 ||
+				error.indexOf("StageTextTextEditor/render()") != -1 ||
+				error.indexOf("native extension class with your key") != -1 ||
+				error.indexOf("StackScreenNavigator/handleDragEnd()") != -1 ||
+				error.indexOf("nativePath()") != -1 ||
+				error.indexOf("ExtensionContext/call()") != -1 ||
+				error.indexOf("myTrace()") != -1 ||
+				error.indexOf("getSensor()") != -1 ||
+				error.indexOf("internalRefresh()") != -1 ||
+				error.indexOf("insertBgReadingSynchronous()") != -1 ||
+				error.indexOf("describeType()") != -1 ||
+				error.indexOf("builtin::splice()") != -1 ||
+				error.indexOf("builtin::concat()") != -1 ||
+				error.indexOf("CollectionEvent()") != -1 ||
+				error.indexOf("SQLConnection/close()") != -1 ||
+				error.indexOf("JSONEncoder/objectToString()") != -1 ||
+				error.indexOf("Sort/findItem()") != -1 ||
+				error.indexOf("ui::InterfaceController$/onInvoke()") != -1 ||
+				error.indexOf("addItemsToView()") != -1 ||
+				error.indexOf("FromtimeAndValueArrayCollection()") != -1 ||
+				error.indexOf("JSONEncoder/arrayToString()") != -1 ||
+				error.indexOf("builtin::sortOn()") != -1 ||
+				error.indexOf("getCalibrationForSensorId()") != -1 ||
+				error.indexOf("ListDataViewPort: active renderers should be empty") != -1 ||
+				error.indexOf("StageTextTextEditor/render()") != -1 ||
+				error.indexOf("saveIOBCOBCache()") != -1 ||
+				error.indexOf("MaterialDesignSpinner/stopAnimation()") != -1 ||
+				error.indexOf("BlowFishKey/F()") != -1 ||
+				error.indexOf("Error #2006 at starling.rendering::VertexData/copyTo()") != -1 ||
+				error.indexOf("Error #3694") != -1 ||
+				error.indexOf("describeTraits()") != -1 ||
+				error.indexOf("Error #3768 at services::DeepSleepService$/playSound()") != -1 ||
+				error.indexOf("TypeError: Error #1009 at feathers.controls.popups::DropDownPopUpContentManager/layout()") != -1 ||
+				error.indexOf("Error #3768 at flash.media::Sound/load()") != -1 ||
+				error.indexOf("Error Stack Trace: Error: Error #3768 at mx.collections::ArrayList/internalDispatchEvent()") != -1 ||
+				error.indexOf("Error #3768 at Number/http://adobe.com/AS3/2006/builtin::toString()") != -1 ||
+				error.indexOf("starling.animation::DelayedCall/advanceTime()") != -1 ||
+				error.indexOf("Error #3768 at mx.collections::ListCollectionView/removeItemsFromView()") != -1 ||
+				error.indexOf("Error #3768 at treatments::TreatmentsManager$/getTotalIOB()") != -1 ||
+				error.indexOf("Error #1009 at database::Database$/getAlertType()") != -1 ||
+				error.indexOf("Error #3768 at database::BgReading$/latest()") != -1 ||
+				error.indexOf("Error #1009 at feathers.controls.supportClasses::ListDataViewPort/draw()") != -1 ||
+				error.indexOf("Error #3768 at flash.data::SQLConnection/open()") != -1 ||
+				error.indexOf("Error #3768 at flash.data::SQLStatement/execute()") != -1 ||
+				error.indexOf("DropDownPopUpContentManager/openCloseTween_onUpdate()") != -1 ||
+				error.indexOf("Error #3768 at flash.data::SQLConnection/close()") != -1 ||
+				error.indexOf("Error #3768 at flash.net::URLLoader/addEventListener()") != -1 ||
+				error.indexOf("Error #3768 at String/http://adobe.com/AS3/2006/builtin::split()") != -1 ||
+				error.indexOf("Error #3768 at flash.utils::ByteArray/uncompress()") != -1 ||
+				error.indexOf("Error #3768 at com.hurlant.crypto.symmetric::BlowFishKey/processTable()") != -1 ||
+				error.indexOf("Error #3768 at flash.data::SQLConnection/begin()") != -1 ||
+				error.indexOf("Error #3768 at database::Database$/getAlertType()") != -1 ||
+				error.indexOf("Error #3768 at com.hurlant.util::Hex$/toArray()") != -1 ||
+				error.indexOf("Error #3768 at Array/http://adobe.com/AS3/2006/builtin::sortOn()") != -1 ||
+				error.indexOf("Error #3768 at mx.events::CollectionEvent()") != -1 ||
+				error.indexOf("Error #3768 at global/avmplus::describeType()") != -1 ||
+				error.indexOf("Error #3768 at flash.globalization::DateTimeFormatter/format()") != -1 ||
+				error.indexOf("Error #3768 at com.hurlant.util::Base64$/decodeToByteArray()") != -1 ||
+				error.indexOf("Error #3768 at com.adobe.serialization.json::JSONEncoder/arrayToString()") != -1 ||
+				error.indexOf("Error #3768 at utils::FromtimeAndValueArrayCollection/addItem()") != -1 ||
+				error.indexOf("Error #3768 at flash.net::URLLoader()") != -1 ||
+				error.indexOf("Error #3768 at flash.utils::ByteArray/toString()") != -1 ||
+				error.indexOf("Error #3768 at com.adobe.serialization.json::JSONEncoder/escapeString()") != -1 ||
+				error.indexOf("Error Stack Trace: Error: Error #3768 at flash.events::EventDispatcher/dispatchEvent()") != -1 ||
+				error.indexOf("Error #3768 at database::Calibration$/allForSensor()") != -1 ||
+				error.indexOf("Error #3768 at flash.utils::Timer/start()") != -1 ||
+				error.indexOf("Error Stack Trace: Error: Error #3768 at services::TransmitterService$/transmitterDataReceived()") != -1 ||
+				error.indexOf("Error #3768 at flash.external::ExtensionContext/call()") != -1 ||
+				error.indexOf("Error #3768 at utils::Trace$/myTrace()") != -1 ||
+				error.indexOf("Error #3768 at utils::FromtimeAndValueArrayCollection$/createList()") != -1 ||
+				error.indexOf("Object not connected to target") != -1 ||
+				error.indexOf("setMilliseconds") != -1 ||
+				error.indexOf("UniqueId$/createNonce()") != -1 ||
+				error.indexOf("Error #3768 at String/http://adobe.com/AS3/2006/builtin::split()") != -1 ||
+				error.indexOf("Error #3768 at com.hurlant.util::Base64$/decodeToByteArray()") != -1 ||
+				error.indexOf("Error #3768 at services::DeepSleepService$/playSound()") != -1 ||
+				error.indexOf("TypeError: Error #1009 at database::Database$/getAlertType()") != -1 ||
+				error.indexOf("Error #3768 at treatments::TreatmentsManager$/getTotalIOB()") != -1 ||
+				error.indexOf("Error #3768 at treatments::TreatmentsManager$/calcMealCOB()") != -1 ||
+				error.indexOf("Error #3768 at flash.data::SQLStatement/execute()") != -1 ||
+				error.indexOf("Error #3768 at flash.events::EventDispatcher/dispatchEvent()") != -1 ||
+				error.indexOf("Error #3768 at mx.collections::ListCollectionView/removeItemsFromView()") != -1 ||
+				error.indexOf("Error #3768 at services::WidgetService$/removeDuplicates()") != -1 ||
+				error.indexOf("Graphic/getBounds()") != -1
+			)
+			{
+				return;
+			}
+			
+			lastCrashReportTimestamp = now;
+			
+			error = "Device Model: " + Constants.deviceModelName + "\n\n" + "Spike Version: " + LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION) + "\n\n" + error;
+			
+			//Create URL Request 
+			var vars:URLVariables = new URLVariables();
+			vars.mimeType = "text/html";
+			vars.emailSubject = "Spike Error";
+			vars.emailBody = error;
+			vars.userName = "";
+			vars.userEmail = "bug@spike-app.com";
+			
+			//Send Email
+			EmailSender.sendData
+				(
+					EmailSender.TRANSMISSION_URL_NO_ATTACHMENT,
+					onLoadCompleteHandler,
+					vars
+				);
+		}
+		
+		private function onLoadCompleteHandler(event:flash.events.Event):void 
+		{ 
+			var loader:URLLoader = URLLoader(event.target);
+			loader.removeEventListener(flash.events.Event.COMPLETE, onLoadCompleteHandler);
+			loader = null;
+		}
+		
+		/**
 		 * Utility Functions
 		 */
-		private static function myTrace(log:String):void {
+		public static function haltApp():void
+		{
+			_instance.dispatchEvent( new SpikeEvent(SpikeEvent.APP_HALTED) );
+		}
+		
+		private static function myTrace(log:String):void 
+		{
 			Trace.myTrace("Spike.as", log);
 		}	
 	}	

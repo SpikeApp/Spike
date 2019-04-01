@@ -1,14 +1,13 @@
 package utils
 {
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	import database.LocalSettings;
 
 	public class BadgeBuilder
 	{
-		private static const TIME_4_MINUTES_30_SECONDS:int = 4.5 * 60 * 1000;
 		private static const MMOL_MULTIPLIER:int = 10;
 		private static const HIGH_VALUE:int = 400;
 		private static const LOW_VALUE:int = 38;		
@@ -35,17 +34,17 @@ package utils
 		{
 			var badgeNumber:int = 0;
 			
-			if ((Calibration.allForSensor().length >= 2 || BlueToothDevice.isFollower()) && LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true") 
+			if ((Calibration.allForSensor().length >= 2 || CGMBlueToothDevice.isFollower()) && LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_ALWAYS_ON_APP_BADGE) == "true") 
 			{
 				var latestReading:BgReading;
-				if (!BlueToothDevice.isFollower())
+				if (!CGMBlueToothDevice.isFollower())
 					latestReading = BgReading.lastNoSensor();
 				else
 					latestReading = BgReading.lastWithCalculatedValue();
 				
 				var now:Number = new Date().valueOf();
 				
-				if (latestReading != null && latestReading.calculatedValue != 0 && now - latestReading.timestamp < TIME_4_MINUTES_30_SECONDS)
+				if (latestReading != null && latestReading.calculatedValue != 0 && now - latestReading.timestamp < TimeSpan.TIME_4_MINUTES_30_SECONDS)
 				{
 					var isMgDl:Boolean = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true";					
 					var preBadgeNumber:String = BgGraphBuilder.unitizedString(latestReading.calculatedValue, isMgDl);

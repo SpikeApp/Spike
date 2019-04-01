@@ -7,10 +7,11 @@ package network.httpserver.API
 	import spark.formatters.DateTimeFormatter;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	
+	import model.Forecast;
 	import model.ModelLocator;
 	
 	import network.httpserver.ActionController;
@@ -23,20 +24,17 @@ package network.httpserver.API
 	import treatments.TreatmentsManager;
 	
 	import ui.InterfaceController;
-	import ui.chart.GlucoseFactory;
+	import ui.chart.helpers.GlucoseFactory;
 	
+	import utils.BatteryInfo;
 	import utils.BgGraphBuilder;
 	import utils.GlucoseHelper;
 	import utils.SpikeJSON;
+	import utils.TimeSpan;
 	import utils.Trace;
 	
 	public class NightscoutAPIGeneralController extends ActionController
 	{
-		/* Constants */
-		private static const TIME_24_HOURS_6_MINUTES:int = (24 * 60 * 60 * 1000) + 6000;
-		private static const TIME_24H:int = 24 * 60 * 60 * 1000;
-		private static const TIME_30SEC:int = 30 * 1000;
-		
 		/* Objects */
 		private var nsFormatter:DateTimeFormatter;
 		
@@ -61,36 +59,56 @@ package network.httpserver.API
 			
 			try
 			{
+				//Parameters
+				var numReadings:int = 1;
+				if (params.count != null)	
+					numReadings = int(params.count);
+				
+				var now:Number = new Date().valueOf();
+				
 				//Main response object
 				var responseObject:Object = {};
 				
 				//Status property
 				responseObject.status = [ {now: new Date().valueOf()} ];
 				
-				//Bgs Propery
-				var latestReading:BgReading;
-				if (!BlueToothDevice.isFollower())
-					latestReading = BgReading.lastNoSensor();
+				//Bgs Property
+				var readingsList:Array = BgReading.latest(numReadings + 1, CGMBlueToothDevice.isFollower());
+				var readingsCollection:Array = [];
+				var loopLength: int;
+				if (readingsList.length > numReadings)
+					loopLength = readingsList.length - 1;
 				else
-					latestReading = BgReading.lastWithCalculatedValue();
+					loopLength = readingsList.length;
 				
-				var now:Number = new Date().valueOf();
-				
-				responseObject.bgs =
-				[ 
+				for (var i:int = 0; i < loopLength; i++) 
+				{
+					var bgReading:BgReading = readingsList[i] as BgReading;
+					if (bgReading == null || bgReading.calculatedValue == 0)
+						continue;
+					
+					var bgsObject:Object = {};
+					bgsObject.sgv = BgGraphBuilder.unitizedString(bgReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+					bgsObject.trend = bgReading.getSlopeOrdinal()
+					bgsObject.direction = bgReading.slopeName();
+					bgsObject.datetime = bgReading.timestamp;
+					bgsObject.filtered = !CGMBlueToothDevice.isFollower() ? Math.round(bgReading.ageAdjustedFiltered() * 1000) : Math.round(bgReading.calculatedValue) * 1000;
+					bgsObject.unfiltered = !CGMBlueToothDevice.isFollower() ? Math.round(bgReading.usedRaw() * 1000) : Math.round(bgReading.calculatedValue) * 1000;
+					bgsObject.noise = bgReading.noiseValue();
+					if (i == 0)
 					{
-						sgv: BgGraphBuilder.unitizedString(latestReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true"), 
-						trend: latestReading.getSlopeOrdinal(), 
-						direction: latestReading.slopeName(), 
-						datetime: latestReading.timestamp,
-						filtered: !BlueToothDevice.isFollower() ? Math.round(latestReading.ageAdjustedFiltered() * 1000) : Math.round(latestReading.calculatedValue) * 1000,
-						unfiltered: !BlueToothDevice.isFollower() ? Math.round(latestReading.usedRaw() * 1000) : Math.round(latestReading.calculatedValue) * 1000,
-						noise: latestReading.noiseValue(),
-						bgdelta: Number(BgGraphBuilder.unitizedDeltaString(false, false)),
-						iob: String(TreatmentsManager.getTotalIOB(now)),
-						cob: TreatmentsManager.getTotalCOB(now)
-					} 
-				];
+						bgsObject.bgdelta = Number(BgGraphBuilder.unitizedDeltaString(false, false));
+						bgsObject.battery = String(BatteryInfo.getBatteryLevel());
+						bgsObject.iob = String(TreatmentsManager.getTotalIOB(now).iob);
+						bgsObject.cob = TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob;
+						bgsObject.bwp = "0";
+						bgsObject.bwpo = 0;
+					}
+					
+					readingsCollection.push(bgsObject);
+				}
+				
+				responseObject.bgs = readingsCollection;
 				
 				//Cals Property
 				var latestCalibration:Calibration = Calibration.last();
@@ -120,7 +138,6 @@ package network.httpserver.API
 				}
 				
 				//Final Response
-				//response = JSON.stringify(responseObject);
 				response = SpikeJSON.stringify(responseObject);
 			} 
 			catch(error:Error) 
@@ -143,7 +160,7 @@ package network.httpserver.API
 				if (params.count != null)	
 					numReadings = int(params.count);
 				
-				var readingsList:Array = BgReading.latest(numReadings + 1, BlueToothDevice.isFollower());
+				var readingsList:Array = BgReading.latest(numReadings + 1, CGMBlueToothDevice.isFollower());
 				var readingsCollection:Array = [];
 				var loopLength: int;
 				if (readingsList.length > numReadings)
@@ -173,8 +190,8 @@ package network.httpserver.API
 					{
 						bgObject.units_hint = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "mgdl" : "mmol";
 						var now:Number = new Date().valueOf();
-						var currentIOB:Number = TreatmentsManager.getTotalIOB(now);
-						var currentCOB:Number = TreatmentsManager.getTotalCOB(now);
+						var currentIOB:Number = TreatmentsManager.getTotalIOB(now).iob;
+						var currentCOB:Number = TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob;
 						if (currentIOB > 0)
 							bgObject.IOB = currentIOB;
 						if (currentCOB > 0)
@@ -191,7 +208,6 @@ package network.httpserver.API
 					readingsCollection.push(bgObject);
 				}
 				
-				//response = JSON.stringify(readingsCollection);
 				response = SpikeJSON.stringify(readingsCollection);
 				
 				readingsList = null;
@@ -224,7 +240,7 @@ package network.httpserver.API
 				if (params["startoffset"] != null)
 					startTime = now - Number(params["startoffset"]);
 				else
-					startTime = now - TIME_24_HOURS_6_MINUTES;
+					startTime = now - TimeSpan.TIME_24_HOURS_6_MINUTES;
 				
 				var lightMode:Boolean = false;
 				if (params["lightMode"] != null && params["lightMode"] == "true")
@@ -233,7 +249,7 @@ package network.httpserver.API
 				var readingsCollection:Array = [];
 				var currentSensorId:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CURRENT_SENSOR);
 				
-				if (currentSensorId != "0" || BlueToothDevice.isFollower()) 
+				if (currentSensorId != "0" || CGMBlueToothDevice.isFollower()) 
 				{
 					var cntr:int = ModelLocator.bgReadings.length - 1;
 					var itemParsed:int = 0;
@@ -244,9 +260,9 @@ package network.httpserver.API
 						if (bgReading.timestamp < startTime)
 							break;
 						
-						if (bgReading.sensor != null || BlueToothDevice.isFollower()) 
+						if (bgReading.sensor != null || CGMBlueToothDevice.isFollower()) 
 						{
-							if ((BlueToothDevice.isFollower() || bgReading.sensor.uniqueId == currentSensorId) && bgReading.calculatedValue != 0 && bgReading.rawData != 0) 
+							if ((CGMBlueToothDevice.isFollower() || bgReading.sensor.uniqueId == currentSensorId) && bgReading.calculatedValue != 0 && bgReading.rawData != 0) 
 							{
 								var readingObject:Object = {}
 								readingObject.date = bgReading.timestamp;
@@ -266,13 +282,43 @@ package network.httpserver.API
 									readingObject.low_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_LOW_COLOR)).toString(16).toUpperCase();
 									readingObject.urgent_low_color = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_URGENT_LOW_COLOR)).toString(16).toUpperCase();
 									
-									//Stats
-									readingObject.status_one = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)) + " | IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now));
+									//Stats / Predictions / Velocity
+									readingObject.status_one = "COB: " + GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob) + " | IOB: " + GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob);
 									if (!lightMode)
 									{
+										//Stats
 										var userStats:BasicUserStats = StatsManager.getBasicUserStats();
 										readingObject.status_two = "L: " + userStats.percentageLowRounded + "% | " + "R: " + userStats.percentageInRangeRounded + "% | " + "H: " + userStats.percentageHighRounded + "%";
 										readingObject.status_three = "AVG: " + userStats.averageGlucose + GlucoseHelper.getGlucoseUnit() + " | " + "A1C: " + userStats.a1c + (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PIE_CHART_A1C_IFCC_ON) != "true" ? "%" : "m");
+										
+										//Predictions
+										var predictionsLengthInMinutes:Number = Forecast.getCurrentPredictionsDuration();
+										if (!isNaN(predictionsLengthInMinutes))
+										{
+											var currentPrediction:Number = Forecast.getLastPredictiveBG(predictionsLengthInMinutes);
+											if (!isNaN(currentPrediction))
+											{
+												readingObject.predictions_duration = String(predictionsLengthInMinutes);
+												readingObject.predictions_outcome = readingObject.unit == "mgdl" ? String(Math.round(currentPrediction)) : String(Math.round(BgReading.mgdlToMmol(currentPrediction * 10)) / 10);
+											}
+											else
+											{
+												readingObject.predictions_duration = String(predictionsLengthInMinutes);
+												readingObject.predictions_outcome = "N/A";
+											}
+										}
+										else
+										{
+											readingObject.predictions_duration = "";
+											readingObject.predictions_outcome = "N/A";
+										}
+										
+										//Velocity
+										var glucoseVelocity:Number = GlucoseFactory.getGlucoseVelocity();
+										if (!isNaN(glucoseVelocity))
+										{
+											readingObject.glucose_velocity = String(glucoseVelocity);
+										}
 									}
 								}
 								readingsCollection.push(readingObject);
@@ -283,7 +329,6 @@ package network.httpserver.API
 					}
 				}
 				
-				//response = JSON.stringify(readingsCollection);
 				response = SpikeJSON.stringify(readingsCollection);
 				
 				readingsCollection = null;
@@ -299,7 +344,7 @@ package network.httpserver.API
 		
 		public function spikeondemand(params:URLVariables):String
 		{
-			if (BlueToothDevice.isMiaoMiao() && BlueToothDevice.known() && InterfaceController.peripheralConnected)
+			if (CGMBlueToothDevice.isMiaoMiao() && CGMBlueToothDevice.known() && InterfaceController.peripheralConnected)
 				SpikeANE.sendStartReadingCommmandToMiaoMia();
 			
 			return responseSuccess("OK");

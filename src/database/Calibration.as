@@ -407,8 +407,8 @@ package database
 			//myTrace("before adjustbgreadings bgReading1 = " + bgReading1.print("   "));
 			//myTrace("before adjustbgreadings bgReading2 = " + bgReading2.print("   "));
 			var latest3Calibrations:Array = [];
-			latest3Calibrations.push(calibration2);//the second is the latest, this one comes first, so it will be sorted from large to small
-			latest3Calibrations.push(calibration1);
+			latest3Calibrations.push(calibration1);//the first is the latest, this one comes first, so it will be sorted from large to small
+			latest3Calibrations.push(calibration2);
 			
 			adjustRecentBgReadings(numAdjustedReadings, latest3Calibrations);
 			//myTrace("after adjustbgreadings");
@@ -421,8 +421,12 @@ package database
 		/**
 		 * no database insert of the new calibration !
 		 */
-		public static function create(bg:Number):Calibration {
-			myTrace("create calibration");
+		public static function create(bg:Number, timeStamp:Number = Number.NaN):Calibration {
+			var calibrationTimeStamp:Number = isNaN(timeStamp) ? (new Date()).valueOf() : timeStamp;
+
+			myTrace("in create, with timestamp  = " + timeStamp);
+			myTrace("in create, with timestamp  = " + (new Date(calibrationTimeStamp)).toString());
+			
 			var calibration:Calibration;
 			var unit:String = "mgdl";
 			if (unit != "mgdl") {
@@ -435,8 +439,8 @@ package database
 				if (bgReading != null) {
 					var estimatedRawBg:Number = BgReading.estimatedRawBg((new Date()).valueOf());
 					calibration = (new Calibration(
-						(new Date()).valueOf(),//timestamp
-						(new Date()).valueOf() - sensor.startedAt,//sensorageattimeofestimation
+						calibrationTimeStamp,//timestamp
+						calibrationTimeStamp - sensor.startedAt,//sensorageattimeofestimation
 						sensor,//sensor
 						bg,//bg
 						bgReading.rawData,//rawvalue
@@ -485,7 +489,7 @@ package database
 		 * without database update<br> 
 		 */
 		private static function calculateWLS(calibration:Calibration):Calibration {
-			var sParams:SlopeParameters = BlueToothDevice.isTypeLimitter() ? new LiParameters(): new DexParameters();
+			var sParams:SlopeParameters = CGMBlueToothDevice.isTypeLimitter() ? new LiParameters(): new DexParameters();
 			if (Sensor.getActiveSensor()) {
 				myTrace("calculatewls : sensor is active");
 				var l:Number = 0;
@@ -618,7 +622,7 @@ package database
 		 * calibrations should have maximum 3 calibrations, the latest,  from large to small ie descending
 		 */
 		private function slopeOOBHandler(status:int, calibrations:Array):Number {
-			var sParams:SlopeParameters = BlueToothDevice.isTypeLimitter() ? new LiParameters(): new DexParameters();
+			var sParams:SlopeParameters = CGMBlueToothDevice.isTypeLimitter() ? new LiParameters(): new DexParameters();
 			
 			var thisCalibration:Calibration = calibrations[0] as Calibration;
 			if(status == 0) {

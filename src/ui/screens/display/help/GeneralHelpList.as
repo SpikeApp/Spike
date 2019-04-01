@@ -1,11 +1,17 @@
 package ui.screens.display.help
 {
-	import database.BlueToothDevice;
+	import flash.net.URLRequest;
+	import flash.net.navigateToURL;
 	
+	import database.CGMBlueToothDevice;
+	
+	import feathers.controls.Button;
 	import feathers.controls.Label;
 	import feathers.controls.text.HyperlinkTextFieldTextRenderer;
 	import feathers.core.ITextRenderer;
 	import feathers.data.ArrayCollection;
+	import feathers.layout.HorizontalAlign;
+	import feathers.layout.VerticalAlign;
 	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	
@@ -16,6 +22,7 @@ package ui.screens.display.help
 	import starling.events.ResizeEvent;
 	import starling.utils.SystemUtil;
 	
+	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
@@ -28,6 +35,8 @@ package ui.screens.display.help
 	{
 		/* Display Objects */
 		private var missedReadingsDescriptionLabel:Label;
+		private var wikiButton:Button;
+		private var missedReadingsTitleLabel:Label;
 		
 		public function GeneralHelpList()
 		{
@@ -60,9 +69,17 @@ package ui.screens.display.help
 		
 		private function setupContent():void
 		{	
+			//Wiki Button
+			wikiButton = LayoutFactory.createButton(ModelLocator.resourceManagerInstance.getString('helpscreen','wiki_button_label'));
+			wikiButton.addEventListener(starling.events.Event.TRIGGERED, onWikiPressed);
+			
+			//Missed Readings Title Label
+			missedReadingsTitleLabel = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('helpscreen','missed_readings_label'), HorizontalAlign.CENTER, VerticalAlign.TOP, 14, true);
+			missedReadingsTitleLabel.width = width - 20;
+			
 			//Missed Readings Description Label
 			missedReadingsDescriptionLabel = new Label();
-			missedReadingsDescriptionLabel.text = !BlueToothDevice.isFollower() ? ModelLocator.resourceManagerInstance.getString('helpscreen','missed_readings_description') : ModelLocator.resourceManagerInstance.getString('helpscreen','missed_readings_description_follower');
+			missedReadingsDescriptionLabel.text = !CGMBlueToothDevice.isFollower() ? ModelLocator.resourceManagerInstance.getString('helpscreen','missed_readings_description') : ModelLocator.resourceManagerInstance.getString('helpscreen','missed_readings_description_follower');
 			missedReadingsDescriptionLabel.width = width - 20;
 			missedReadingsDescriptionLabel.wordWrap = true;
 			missedReadingsDescriptionLabel.paddingTop = 10;
@@ -77,7 +94,7 @@ package ui.screens.display.help
 				return textRenderer;
 			};
 			
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 			{
 				if (missedReadingsDescriptionLabel != null)
 					missedReadingsDescriptionLabel.width = width - 40;
@@ -88,8 +105,9 @@ package ui.screens.display.help
 			//Define Notifications Settings Data
 			dataProvider = new ArrayCollection(
 			[
-				{ label: ModelLocator.resourceManagerInstance.getString('helpscreen','missed_readings_label')},
-				{ label: "", accessory: missedReadingsDescriptionLabel}
+				{ label: ModelLocator.resourceManagerInstance.getString('helpscreen','general_help_label'), accessory: wikiButton },
+				{ label: "", accessory: missedReadingsTitleLabel },
+				{ label: "", accessory: missedReadingsDescriptionLabel }
 			]);
 			
 			(layout as VerticalLayout).hasVariableItemDimensions = true;
@@ -98,6 +116,10 @@ package ui.screens.display.help
 		/**
 		 * Event Handlers
 		 */
+		private function onWikiPressed(e:Event):void
+		{
+			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki"));
+		}
 		
 		override protected function onStarlingResize(event:ResizeEvent):void 
 		{
@@ -113,8 +135,24 @@ package ui.screens.display.help
 		{
 			Starling.current.stage.removeEventListener(starling.events.Event.RESIZE, onStarlingResize);
 			
+			if (wikiButton != null)
+			{
+				wikiButton.removeEventListener(starling.events.Event.TRIGGERED, onWikiPressed);
+				wikiButton.removeFromParent();
+				wikiButton.dispose();
+				wikiButton = null;
+			}
+			
+			if (missedReadingsTitleLabel != null)
+			{
+				missedReadingsTitleLabel.removeFromParent();
+				missedReadingsTitleLabel.dispose();
+				missedReadingsTitleLabel = null;
+			}
+			
 			if (missedReadingsDescriptionLabel != null)
 			{
+				missedReadingsDescriptionLabel.removeFromParent();
 				missedReadingsDescriptionLabel.dispose();
 				missedReadingsDescriptionLabel = null;
 			}

@@ -1,7 +1,12 @@
 package ui.screens.display.settings.treatments
 {
+	import com.adobe.utils.StringUtil;
+	
+	import flash.display.StageOrientation;
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
+	
+	import database.CommonSettings;
 	
 	import feathers.controls.Button;
 	import feathers.controls.Check;
@@ -24,12 +29,16 @@ package ui.screens.display.settings.treatments
 	
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
+	import starling.utils.SystemUtil;
 	
 	import treatments.Insulin;
 	import treatments.ProfileManager;
+	import treatments.Treatment;
+	import treatments.TreatmentsManager;
 	
 	import ui.screens.display.LayoutFactory;
 	import ui.screens.display.SpikeList;
+	import ui.shapes.SpikeInsulinActivityCurve;
 	
 	import utils.Constants;
 	import utils.DeviceInfo;
@@ -52,6 +61,13 @@ package ui.screens.display.settings.treatments
 		private var modeLabel:Label;
 		private var guideContainer:LayoutGroup;
 		private var diaGuideButton:Button;
+		private var insulinCurvePicker:PickerList;
+		private var insulinPeak:NumericStepper;
+		private var insulinCurveGraph:SpikeInsulinActivityCurve;
+		private var insulinCurveContainer:LayoutGroup;
+		private var insulinCurvePresetsPicker:PickerList;
+		private var xAxisLegend:Label;
+		private var yAxisLegend:Label;
 		
 		/* Properties */
 		private var userInsulins:Array;
@@ -60,6 +76,8 @@ package ui.screens.display.settings.treatments
 		private var isSaveEnabled:Boolean = false;
 		private var accessoryList:Array = [];
 		private var insulinToEdit:Insulin;
+		private var selectedInsulinCurve:String = "bilinear";
+		private var isBasalEnabled:Boolean = false;
 		
 		public function InsulinsSettingsList()
 		{
@@ -111,7 +129,7 @@ package ui.screens.display.settings.treatments
 			var insulinTypesList:ArrayCollection = new ArrayCollection();
 			for (var i:int = 0; i < insulinTypesLabelList.length; i++) 
 			{
-				insulinTypesList.push( {label: insulinTypesLabelList[i] } );
+				insulinTypesList.push( {label: StringUtil.trim(insulinTypesLabelList[i]) } );
 			}
 			insulinTypesPicker = LayoutFactory.createPickerList();
 			insulinTypesPicker.labelField = "label";
@@ -124,17 +142,75 @@ package ui.screens.display.settings.treatments
 			insulinTypesPicker.popUpContentManager = new DropDownPopUpContentManager();
 			insulinTypesPicker.dataProvider = insulinTypesList;
 			insulinTypesPicker.addEventListener(Event.CHANGE, onSettingsChanged);
+			insulinTypesPicker.addEventListener(Event.CHANGE, onInsulinTypeChanged);
 			
 			//New Insulin DIA
-			insulinDIA = LayoutFactory.createNumericStepper(0.5, 150, 3, 0.1);
+			insulinDIA = LayoutFactory.createNumericStepper(1.1, 8, 3, 0.1);
 			insulinDIA.pivotX = -8;
 			insulinDIA.addEventListener(Event.CHANGE, onSettingsChanged);
+			insulinDIA.addEventListener(Event.CHANGE, onDiaPeakChanged);
+			
+			//Curve
+			var insulinCurvesList:ArrayCollection = new ArrayCollection();
+			insulinCurvesList.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_bilinear_curve_label'), id: "bilinear" } );
+			insulinCurvesList.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_exponential_curve_label'), id: "exponential" } );
+			
+			insulinCurvePicker = LayoutFactory.createPickerList();
+			insulinCurvePicker.labelField = "label";
+			insulinCurvePicker.itemRendererFactory = function():IListItemRenderer
+			{
+				var renderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				renderer.paddingRight = renderer.paddingLeft = 20;
+				return renderer;
+			};
+			insulinCurvePicker.popUpContentManager = new DropDownPopUpContentManager();
+			insulinCurvePicker.dataProvider = insulinCurvesList;
+			insulinCurvePicker.addEventListener(Event.CHANGE, onInsulinCurveChanged);
+			
+			//Curve Presets
+			var insulinCurvesPresetsList:ArrayCollection = new ArrayCollection();
+			insulinCurvesPresetsList.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_model_rapid_acting_adults_preset'), id: "rapid-acting-adults" } );
+			insulinCurvesPresetsList.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_model_rapid_acting_children_preset'), id: "rapid-acting-children" } );
+			insulinCurvesPresetsList.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_model_ultra_rapid_adults_preset'), id: "ultra-rapid-adults" } );
+			insulinCurvesPresetsList.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_model_ultra_rapid_children_preset'), id: "ultra-rapid-children" } );
+			
+			insulinCurvePresetsPicker = LayoutFactory.createPickerList();
+			insulinCurvePresetsPicker.labelField = "label";
+			insulinCurvePresetsPicker.itemRendererFactory = function():IListItemRenderer
+			{
+				var renderer:DefaultListItemRenderer = new DefaultListItemRenderer();
+				renderer.paddingRight = renderer.paddingLeft = 20;
+				return renderer;
+			};
+			insulinCurvePresetsPicker.popUpContentManager = new DropDownPopUpContentManager();
+			insulinCurvePresetsPicker.dataProvider = insulinCurvesPresetsList;
+			insulinCurvePresetsPicker.prompt = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_model_custom_preset');
+			insulinCurvePresetsPicker.addEventListener(Event.CHANGE, onInsulinCurvePresetChanged);
+			
+			//Peak
+			insulinPeak = LayoutFactory.createNumericStepper(30, 210, 75, 1);
+			insulinPeak.pivotX = -8;
+			insulinPeak.addEventListener(Event.CHANGE, onSettingsChanged);
+			insulinPeak.addEventListener(Event.CHANGE, onDiaPeakChanged);
 			
 			//Default Insulin
 			defaultInsulinCheck = LayoutFactory.createCheckMark(false);
 			defaultInsulinCheck.pivotX = 3;
 			defaultInsulinCheck.addEventListener(Event.CHANGE, onSettingsChanged);
 			
+			//Insulin Curve Container
+			insulinCurveContainer = LayoutFactory.createLayoutGroup("vertical", HorizontalAlign.CENTER, VerticalAlign.TOP, 5);
+			insulinCurveContainer.width = width;
+			(insulinCurveContainer.layout as VerticalLayout).paddingTop = 15;
+			(insulinCurveContainer.layout as VerticalLayout).paddingBottom = 15;
+			
+			//Insulin Curve Legends
+			xAxisLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_curve_chart_x_label'), HorizontalAlign.RIGHT, VerticalAlign.TOP, 8, true);
+			insulinCurveContainer.addChild(xAxisLegend);
+			
+			yAxisLegend = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_curve_chart_y_label'), HorizontalAlign.RIGHT, VerticalAlign.TOP, 8, true);
+			insulinCurveContainer.addChild(yAxisLegend);
+	
 			//Settings explanation
 			insulinSettingsExplanation = LayoutFactory.createLabel(ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_settings_explanation'), HorizontalAlign.JUSTIFY);
 			insulinSettingsExplanation.wordWrap = true;
@@ -182,6 +258,24 @@ package ui.screens.display.settings.treatments
 			refreshContent();
 		}
 		
+		private function onInsulinTypeChanged(e:Event):void
+		{
+			if (insulinTypesPicker != null && insulinTypesPicker.selectedIndex == 4)
+			{
+				insulinDIA.maximum = 72;
+				insulinDIA.value = 24;
+				isBasalEnabled = true;
+			}
+			else
+			{
+				insulinDIA.maximum = 8;
+				if (insulinDIA.value > 8) insulinDIA.value = 8;
+				isBasalEnabled = false;
+			}
+			
+			refreshContent();
+		}
+		
 		private function refreshContent():void
 		{
 			//Set screen content
@@ -192,9 +286,9 @@ package ui.screens.display.settings.treatments
 				var insulin:Insulin = userInsulins[i];
 				if (insulin.name.indexOf("Nightscout") == -1 && !insulin.isHidden)
 				{
-					var insulinAccessory:InsulinManagerAccessory = new InsulinManagerAccessory();
-					insulinAccessory.addEventListener(InsulinManagerAccessory.EDIT, onEditInsulin);
-					insulinAccessory.addEventListener(InsulinManagerAccessory.DELETE, onDeleteInsulin);
+					var insulinAccessory:TreatmentManagerAccessory = new TreatmentManagerAccessory();
+					insulinAccessory.addEventListener(TreatmentManagerAccessory.EDIT, onEditInsulin);
+					insulinAccessory.addEventListener(TreatmentManagerAccessory.DELETE, onDeleteInsulin);
 					accessoryList.push(insulinAccessory);
 					data.push( { label: insulin.name, accessory: insulinAccessory, insulin: insulin } );
 				}
@@ -208,9 +302,48 @@ package ui.screens.display.settings.treatments
 				data.push( { label: "", accessory: modeLabel } );
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','name_label'), accessory: insulinName } );
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','type_label'), accessory: insulinTypesPicker } );
+				if (!isBasalEnabled)
+				{
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps")
+					{
+						data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_model_label'), accessory: insulinCurvePicker } );
+						
+						if (selectedInsulinCurve == "exponential")
+						{
+							data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_model_presets_label'), accessory: insulinCurvePresetsPicker } );
+						}
+					}
+				}
 				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','dia_label'), accessory: insulinDIA } );
-				data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','default_insulin_label'), accessory: defaultInsulinCheck } );
+				if (!isBasalEnabled)
+				{
+					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps" && selectedInsulinCurve == "exponential")
+					{
+						data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_peak_label'), accessory: insulinPeak } );
+					}
+					data.push( { label: ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','default_insulin_label'), accessory: defaultInsulinCheck } );
+				
+					plotInsulinCurve();
+					data.push( { label: "", accessory: insulinCurveContainer } );
+				}
+				
 				data.push( { label: "", accessory: actionsContainer } );
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps" && !isBasalEnabled)
+				{
+					insulinSettingsExplanation.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_curve_peak_description') + "\n\n" + ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_settings_explanation');
+				}
+				else
+				{
+					if (!isBasalEnabled)
+					{
+						insulinSettingsExplanation.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_settings_explanation');
+					}
+					else
+					{
+						var startIndex:int = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_settings_explanation').indexOf("\n");
+						insulinSettingsExplanation.text = ModelLocator.resourceManagerInstance.getString('profilesettingsscreen','insulin_settings_explanation').slice(0, startIndex);
+					}
+				}
 				data.push( { label: "", accessory: insulinSettingsExplanation } );
 				data.push( { label: "", accessory: guideContainer } );
 			}
@@ -218,14 +351,205 @@ package ui.screens.display.settings.treatments
 			dataProvider = new ArrayCollection(data);
 		}
 		
+		private function plotInsulinCurve():void
+		{
+			if (insulinCurveGraph != null)
+			{
+				insulinCurveGraph.removeFromParent();
+				insulinCurveGraph.dispose();
+				insulinCurveGraph = null;
+			}
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps")
+			{
+				if (selectedInsulinCurve == "exponential")
+				{
+					insulinCurveGraph = new SpikeInsulinActivityCurve(SpikeInsulinActivityCurve.EXPONENTIAL_OPENAPS_MODEL, insulinDIA.value, insulinPeak.value);
+					insulinCurveContainer.addChildAt(insulinCurveGraph, 0);
+					insulinCurveContainer.readjustLayout();
+					insulinCurveContainer.validate();
+					insulinCurveGraph.x = 30;
+					
+					if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+					{
+						if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+						{
+							insulinCurveGraph.x += 25;
+						}
+						else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+						{
+							insulinCurveGraph.x += 35;
+						}
+					}
+				}
+				else if (selectedInsulinCurve == "bilinear")
+				{
+					insulinCurveGraph = new SpikeInsulinActivityCurve(SpikeInsulinActivityCurve.BILINEAR_OPENAPS_MODEL, insulinDIA.value);
+					insulinCurveContainer.addChildAt(insulinCurveGraph, 0);
+					insulinCurveContainer.readjustLayout();
+					insulinCurveContainer.validate();
+					insulinCurveGraph.x = 30;
+					
+					if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+					{
+						if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+						{
+							insulinCurveGraph.x += 25;
+						}
+						else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+						{
+							insulinCurveGraph.x += 35;
+						}
+					}
+				}
+			}
+			else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "nightscout")
+			{
+				insulinCurveGraph = new SpikeInsulinActivityCurve(SpikeInsulinActivityCurve.NIGHTSCOUT_MODEL, insulinDIA.value);
+				insulinCurveContainer.addChildAt(insulinCurveGraph, 0);
+				insulinCurveContainer.readjustLayout();
+				insulinCurveContainer.validate();
+				insulinCurveGraph.x = 30;
+				
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
+				{
+					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
+					{
+						insulinCurveGraph.x += 25;
+					}
+					else if (Constants.currentOrientation == StageOrientation.ROTATED_LEFT)
+					{
+						insulinCurveGraph.x += 35;
+					}
+				}
+			}
+		}
+		
+		private function onDiaPeakChanged(e:Event):void
+		{
+			//Check if it's basal
+			if (insulinTypesPicker != null && insulinTypesPicker.selectedIndex == 4)
+			{
+				return;
+			}
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps" && selectedInsulinCurve == "exponential")
+			{
+				//Perform validations to avoid breaking the exponential algorithm
+				var doublePeak:Number = 2 * insulinPeak.value;
+				var diaInMinutes:Number = insulinDIA.value * 60;
+				
+				if (diaInMinutes <= doublePeak)
+				{
+					//DIA in minutes needs to be greater than 2 * Peak. Let's adjust it.
+					if (e.currentTarget === insulinPeak)
+					{
+						insulinDIA.value += 0.1;
+					}
+					else
+					{
+						insulinPeak.value -= 12;
+					}
+				}
+				
+				//Set curve preset as custom
+				insulinCurvePresetsPicker.selectedIndex = -1;
+				
+				//Plot the curve
+				plotInsulinCurve();
+			}
+			else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps" && selectedInsulinCurve == "bilinear")
+			{
+				//Plot the curve
+				plotInsulinCurve();
+			}
+			else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "nightscout")
+			{
+				//Plot the curve
+				plotInsulinCurve();
+			}
+		}
+		
 		/**
 		 * Event Listeners
 		 */
 		private function onSettingsChanged(e:Event):void
 		{
-			isSaveEnabled = true;
+			if (insulinName.text != "")
+				isSaveEnabled = true;
 			
 			draw();
+		}
+		
+		private function onInsulinCurveChanged(e:Event):void
+		{
+			selectedInsulinCurve = insulinCurvePicker.selectedItem.id;
+			
+			if (selectedInsulinCurve == "exponential" && !editInsulinMode)
+			{
+				adjustSettingsForPreset();
+			}
+			else if (selectedInsulinCurve == "bilinear" && !editInsulinMode)
+			{
+				insulinDIA.value = 3;
+			}
+			
+			if (insulinName.text != "")
+				isSaveEnabled = true;
+			
+			refreshContent();
+		}
+		
+		private function onInsulinCurvePresetChanged(e:Event):void
+		{
+			adjustSettingsForPreset();
+			plotInsulinCurve();
+		}
+		
+		private function removeDiaPeakEventListeners():void
+		{
+			insulinDIA.removeEventListener(Event.CHANGE, onDiaPeakChanged);
+			insulinPeak.removeEventListener(Event.CHANGE, onDiaPeakChanged);
+		}
+		
+		private function addDiaPeakEventListeners():void
+		{
+			insulinDIA.addEventListener(Event.CHANGE, onDiaPeakChanged);
+			insulinPeak.addEventListener(Event.CHANGE, onDiaPeakChanged);
+		}
+		
+		private function adjustSettingsForPreset():void
+		{
+			//Validation
+			if (insulinCurvePresetsPicker.selectedIndex == -1)
+				return;
+			
+			removeDiaPeakEventListeners();
+			
+			var selectedPreset:String = insulinCurvePresetsPicker.selectedItem.id;
+			
+			if (selectedPreset == "rapid-acting-adults")
+			{
+				insulinPeak.value = 75;
+				insulinDIA.value = 5;
+			}
+			else if (selectedPreset == "rapid-acting-children")
+			{
+				insulinPeak.value = 50;
+				insulinDIA.value = 5;
+			}
+			else if (selectedPreset == "ultra-rapid-adults")
+			{
+				insulinPeak.value = 55;
+				insulinDIA.value = 5;
+			}
+			else if (selectedPreset == "ultra-rapid-children")
+			{
+				insulinPeak.value = 45;
+				insulinDIA.value = 5;
+			}
+			
+			addDiaPeakEventListeners();
 		}
 		
 		private function onInsulinNameChanged(e:Event):void
@@ -240,9 +564,13 @@ package ui.screens.display.settings.treatments
 		
 		private function onNewInsulin(e:Event):void
 		{
+			insulinDIA.value = 3;
+			insulinDIA.maximum = 8;
+			
 			newInsulinMode = true;
 			editInsulinMode = false;
 			isSaveEnabled = false;
+			isBasalEnabled = false;
 			
 			refreshContent();
 		}
@@ -253,27 +581,36 @@ package ui.screens.display.settings.treatments
 			newInsulinMode = false;
 			editInsulinMode = false;
 			isSaveEnabled = false;
+			isBasalEnabled = false;
 			
 			//Reset controls
 			defaultInsulinCheck.isSelected = false;
 			insulinName.text = "";
 			insulinTypesPicker.selectedIndex = 0;
+			insulinCurvePicker.selectedIndex = 0;
+			insulinPeak.value = 75;
+			selectedInsulinCurve = "bilinear";
+			insulinDIA.value = 5;
+			insulinCurvePresetsPicker.selectedIndex = 0;
 			
 			//Refresh screen content
 			refreshContent();
+			
+			//Reset vertical scroll position
+			dispatchEventWith(Event.CLOSE);
 		}
 		
 		private function onEditInsulin(e:Event):void
 		{
 			//Set display controls to insulin properties
-			var insulin:Insulin = (((e.currentTarget as InsulinManagerAccessory).parent as Object).data as Object).insulin as Insulin;
+			isBasalEnabled = false;
+			
+			var insulin:Insulin = (((e.currentTarget as TreatmentManagerAccessory).parent as Object).data as Object).insulin as Insulin;
 			insulinName.text = insulin.name;
 			defaultInsulinCheck.isSelected = insulin.isDefault;
-			insulinDIA.value = insulin.dia;
 			var selectedInsulinTypeIndex:int = 0;
 			for (var i:int = 0; i < insulinTypesPicker.dataProvider.length; i++) 
 			{
-				//trace(ObjectUtil.toString(insulinTypesPicker.dataProvider.arrayData));
 				var typeLabel:String = (insulinTypesPicker.dataProvider as ArrayCollection).arrayData[i].label;
 				if (typeLabel == insulin.type)
 				{
@@ -281,7 +618,37 @@ package ui.screens.display.settings.treatments
 					break;
 				}
 			}
-			insulinTypesPicker.selectedIndex = selectedInsulinTypeIndex
+			insulinTypesPicker.selectedIndex = selectedInsulinTypeIndex;
+			insulinPeak.value = insulin.peak;
+			insulinDIA.value = insulin.dia;
+			
+			if (insulin.dia == 5 && insulin.peak == 75)
+			{
+				insulinCurvePresetsPicker.selectedIndex = 0;
+			}
+			else if (insulin.dia == 5 && insulin.peak == 50)
+			{
+				insulinCurvePresetsPicker.selectedIndex = 1;
+			}
+			else if (insulin.dia == 5 && insulin.peak == 55)
+			{
+				insulinCurvePresetsPicker.selectedIndex = 2;
+			}
+			else if (insulin.dia == 5 && insulin.peak == 45)
+			{
+				insulinCurvePresetsPicker.selectedIndex = 3;
+			}
+			else
+			{
+				insulinCurvePresetsPicker.selectedIndex = -1;
+			}
+			
+			if (insulin.curve == "bilinear")
+				insulinCurvePicker.selectedIndex = 0;
+			else if (insulin.curve == "exponential")
+				insulinCurvePicker.selectedIndex = 1;
+			else
+				insulinCurvePicker.selectedIndex = 0;
 			
 			//Mark insulin to edit
 			insulinToEdit = insulin;
@@ -296,7 +663,7 @@ package ui.screens.display.settings.treatments
 		
 		private function onDeleteInsulin(e:Event):void
 		{
-			var insulin:Insulin = (((e.currentTarget as InsulinManagerAccessory).parent as Object).data as Object).insulin as Insulin;
+			var insulin:Insulin = (((e.currentTarget as TreatmentManagerAccessory).parent as Object).data as Object).insulin as Insulin;
 			if (insulin != null)
 			{
 				ProfileManager.deleteInsulin(insulin);
@@ -328,7 +695,18 @@ package ui.screens.display.settings.treatments
 				}
 				
 				//Add insulin to Spike
-				ProfileManager.addInsulin(insulinName.text, insulinDIA.value, insulinTypesPicker.selectedItem.label, defaultInsulinCheck.isSelected);
+				ProfileManager.addInsulin
+				(
+					insulinName.text, 
+					insulinDIA.value, 
+					insulinTypesPicker.selectedItem.label, 
+					defaultInsulinCheck.isSelected, 
+					null, 
+					true, 
+					false, 
+					insulinCurvePicker.selectedItem.id, 
+					insulinPeak.value
+				);
 			}
 			else if (editInsulinMode && insulinToEdit != null)
 			{
@@ -336,6 +714,8 @@ package ui.screens.display.settings.treatments
 				insulinToEdit.isDefault = defaultInsulinCheck.isSelected;
 				insulinToEdit.name = insulinName.text;
 				insulinToEdit.type = insulinTypesPicker.selectedItem.label;
+				insulinToEdit.curve = insulinCurvePicker.selectedItem.id;
+				insulinToEdit.peak = insulinPeak.value;
 				
 				//Remove default from all other insulins
 				if (defaultInsulinCheck.isSelected)
@@ -351,7 +731,21 @@ package ui.screens.display.settings.treatments
 					}
 				}
 				
+				//Update Database
 				ProfileManager.updateInsulin(insulinToEdit);
+				
+				//Update all previous treatments
+				var numberOfTreatments:uint = TreatmentsManager.treatmentsList.length;
+				for (var j:int = 0; j < numberOfTreatments; j++) 
+				{
+					var treatment:Treatment = TreatmentsManager.treatmentsList[j];
+					if (treatment != null && treatment.insulinAmount > 0 && treatment.insulinID == insulinToEdit.ID)
+					{
+						treatment.dia = insulinDIA.value;
+						TreatmentsManager.updateTreatment(treatment);
+					}
+				}
+				
 			}
 			
 			//Reset Modes
@@ -363,11 +757,19 @@ package ui.screens.display.settings.treatments
 			isSaveEnabled = false;
 			insulinName.text = "";
 			insulinTypesPicker.selectedIndex = 0;
+			insulinDIA.value = 5;
+			insulinCurvePicker.selectedIndex = 0;
+			selectedInsulinCurve = "bilinear";
+			insulinPeak.value = 75;
+			insulinCurvePresetsPicker.selectedIndex = 0;
 			
 			//Reset Objects 
 			insulinToEdit = null;
 			
 			refreshContent();
+			
+			//Reset vertical scroll position
+			dispatchEventWith(Event.CLOSE);
 		}
 		
 		private function onGuide(e:Event):void
@@ -392,6 +794,16 @@ package ui.screens.display.settings.treatments
 			{
 				insulinName.width = Constants.isPortrait ? 140: 240;
 				if (DeviceInfo.isTablet()) insulinName.width += 100;
+			}
+			
+			if (insulinCurveContainer != null)
+			{
+				insulinCurveContainer.width = width;
+			}
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps" && selectedInsulinCurve == "exponential")
+			{
+				SystemUtil.executeWhenApplicationIsActive(plotInsulinCurve);
 			}
 			
 			setupRenderFactory();
@@ -420,9 +832,9 @@ package ui.screens.display.settings.treatments
 			{
 				for (var i:int = 0; i < accessoryList.length; i++) 
 				{
-					var accessory:InsulinManagerAccessory = accessoryList[i];
-					accessory.removeEventListener(InsulinManagerAccessory.EDIT, onEditInsulin);
-					accessory.removeEventListener(InsulinManagerAccessory.DELETE, onDeleteInsulin);
+					var accessory:TreatmentManagerAccessory = accessoryList[i];
+					accessory.removeEventListener(TreatmentManagerAccessory.EDIT, onEditInsulin);
+					accessory.removeEventListener(TreatmentManagerAccessory.DELETE, onDeleteInsulin);
 					accessory.dispose();
 					accessory = null;
 				}
@@ -472,6 +884,20 @@ package ui.screens.display.settings.treatments
 				insulinTypesPicker = null;
 			}
 			
+			if (insulinCurvePicker != null)
+			{
+				insulinCurvePicker.removeEventListener(Event.CHANGE, onInsulinCurveChanged);
+				insulinCurvePicker.dispose();
+				insulinCurvePicker = null;
+			}
+			
+			if (insulinPeak != null)
+			{
+				insulinPeak.removeEventListener(Event.CHANGE, onSettingsChanged);
+				insulinPeak.dispose();
+				insulinPeak = null;
+			}
+			
 			if (insulinName != null)
 			{
 				insulinName.removeEventListener(Event.CHANGE, onInsulinNameChanged);
@@ -510,6 +936,42 @@ package ui.screens.display.settings.treatments
 			{
 				guideContainer.dispose();
 				guideContainer = null;
+			}
+			
+			if (insulinCurvePresetsPicker != null)
+			{
+				insulinCurvePresetsPicker.removeFromParent();
+				insulinCurvePresetsPicker.removeEventListener(Event.CHANGE, onInsulinCurvePresetChanged);
+				insulinCurvePresetsPicker.dispose();
+				insulinCurvePresetsPicker = null;
+			}
+			
+			if (insulinCurveGraph != null)
+			{
+				insulinCurveGraph.removeFromParent();
+				insulinCurveGraph.dispose();
+				insulinCurveGraph = null;
+			}
+			
+			if (insulinCurveContainer != null)
+			{
+				insulinCurveContainer.removeFromParent();
+				insulinCurveContainer.dispose();
+				insulinCurveContainer = null;
+			}
+			
+			if (xAxisLegend != null)
+			{
+				xAxisLegend.removeFromParent();
+				xAxisLegend.dispose();
+				xAxisLegend = null;
+			}
+			
+			if (yAxisLegend != null)
+			{
+				yAxisLegend.removeFromParent();
+				yAxisLegend.dispose();
+				yAxisLegend = null;
 			}
 			
 			super.dispose();

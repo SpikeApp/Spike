@@ -10,9 +10,10 @@ package services
 	import flash.utils.setTimeout;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
+	import database.LocalSettings;
 	import database.Sensor;
 	
 	import events.BlueToothServiceEvent;
@@ -29,15 +30,23 @@ package services
 	
 	import model.ModelLocator;
 	
+	import services.bluetooth.CGMBluetoothService;
+	
 	import starling.core.Starling;
 	import starling.events.Event;
+	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
 	import ui.screens.display.LayoutFactory;
 	
 	import utils.BadgeBuilder;
+	import utils.Constants;
 	import utils.GlucoseHelper;
+	import utils.TimeSpan;
 	import utils.Trace;
+	
+	[ResourceBundle("calibrationservice")]
+	[ResourceBundle("globaltranslations")]
 	
 	/**
 	 * listens for bgreadings, at each bgreading user is asked to enter bg value<br>
@@ -45,8 +54,7 @@ package services
 	 */
 	public class CalibrationService extends EventDispatcher
 	{
-		[ResourceBundle("calibrationservice")]
-		[ResourceBundle("globaltranslations")]
+		private static const MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS:int = 240; //4 minutes
 		
 		private static var _instance:CalibrationService = new CalibrationService();
 		/**
@@ -55,16 +63,15 @@ package services
 		 */
 		private static var initialCalibrationRequested:Boolean;
 		
-		private static const MAXIMUM_WAIT_FOR_CALIBRATION_IN_SECONDS:int = 240; //4 minutes
-
-		private static var calibrationValue:TextInput;
-
+		//Logic Properties
 		private static var initialCalibrationActive:Boolean = false;
-		
-		private static const TIME_5_MINUTES:int = 5 * 60 * 1000;
-
 		public static var optimalCalibrationScheduled:Boolean = false;
 		
+		//Data properties
+		private static var userCalibrationValue:String = "";
+		
+		//Display Objects
+		private static var calibrationTextInput:TextInput;
 
 		public static function get instance():CalibrationService {
 			return _instance;
@@ -78,12 +85,19 @@ package services
 		
 		public static function init():void {
 			myTrace("init");
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
+			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
 			NotificationService.instance.addEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.SENSOR_CHANGED_DETECTED, receivedSensorChanged);
+			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.SENSOR_CHANGED_DETECTED, receivedSensorChanged);
 			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
+			
+			optimalCalibrationScheduled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_OPTIMAL_CALIBRATION_ON_DEMAND_NOTIFIER_ON) == "true";
+			if (optimalCalibrationScheduled)
+				AlarmService.userRequestedSuboptimalCalibrationNotification = true;
+			
 			myTrace("finished init");
 		}
 		
@@ -148,8 +162,9 @@ package services
 			}
 			
 			/* Create and Style Calibration Text Input */
-			calibrationValue = LayoutFactory.createTextInput(false, false, 170, HorizontalAlign.CENTER, true);
-			calibrationValue.maxChars = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 3 : 4;
+			calibrationTextInput = LayoutFactory.createTextInput(false, false, 170, HorizontalAlign.CENTER, true);
+			calibrationTextInput.addEventListener(starling.events.Event.CHANGE, onCalibrationValueChanged);
+			calibrationTextInput.maxChars = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 3 : 4;
 			
 			/* Create and Style Popup Window */
 			var calibrationPopup:Alert = AlertManager.showActionAlert
@@ -162,16 +177,16 @@ package services
 					{ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: initialCalibrationValueEntered }
 				],
 				HorizontalAlign.JUSTIFY,
-				calibrationValue
+				calibrationTextInput
 			);
 			calibrationPopup.validate();
-			calibrationValue.width = calibrationPopup.width - 20;
+			calibrationTextInput.width = calibrationPopup.width - 20;
 			calibrationPopup.gap = 0;
 			calibrationPopup.headerProperties.maxHeight = 30;
 			calibrationPopup.buttonGroupProperties.paddingTop = -10;
 			calibrationPopup.buttonGroupProperties.gap = 10;
 			calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
-			calibrationValue.setFocus();
+			calibrationTextInput.setFocus();
 		}
 		
 		private static function bgReadingReceived(be:TransmitterServiceEvent):void {
@@ -198,10 +213,9 @@ package services
 			
 			initialCalibrationActive = false;
 			
-			var warmupTimeInMs:Number = 2 * 3600 * 1000;
-			if (BlueToothDevice.isTypeLimitter()) {
-				warmupTimeInMs = 1 * 3600 * 1000;
-			}
+			var warmupTimeInMs:int = 0;
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_REMOVE_SENSOR_WARMUP_ENABLED) != "true")
+				warmupTimeInMs = CGMBlueToothDevice.isTypeLimitter() ? TimeSpan.TIME_1_HOUR : TimeSpan.TIME_2_HOURS;
 			
 			//if there's already more than two calibrations, then there's no need anymore to request initial calibration
 			if (Calibration.allForSensor().length < 2) 
@@ -240,18 +254,21 @@ package services
 					{
 						myTrace("opening dialog to request calibration");
 						
-						try
+						SystemUtil.executeWhenApplicationIsActive( function():void 
 						{
-							PopUpManager.removeAllPopUps(true);
-						} 
-						catch(error:Error) {}
-						
-						/* Create and Style Calibration Text Input */
-						calibrationValue = LayoutFactory.createTextInput(false, false, 170, HorizontalAlign.CENTER, true);
-						calibrationValue.maxChars = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 3 : 4;
-						
-						/* Create and Style Popup Window */
-						var calibrationPopup:Alert = AlertManager.showActionAlert
+							try
+							{
+								PopUpManager.removeAllPopUps(true);
+							} 
+							catch(error:Error) {}
+							
+							/* Create and Style Calibration Text Input */
+							calibrationTextInput = LayoutFactory.createTextInput(false, false, 170, HorizontalAlign.CENTER, true);
+							calibrationTextInput.addEventListener(starling.events.Event.CHANGE, onCalibrationValueChanged);
+							calibrationTextInput.maxChars = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 3 : 4;
+							
+							/* Create and Style Popup Window */
+							var calibrationPopup:Alert = AlertManager.showActionAlert
 							(
 								ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_initial_calibration_title"),
 								"",
@@ -261,26 +278,27 @@ package services
 									{ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: initialCalibrationValueEntered }
 								],
 								HorizontalAlign.JUSTIFY,
-								calibrationValue
+								calibrationTextInput
 							);
-						calibrationPopup.validate();
-						calibrationValue.width = calibrationPopup.width - 20;
-						calibrationPopup.gap = 0;
-						calibrationPopup.headerProperties.maxHeight = 30;
-						calibrationPopup.buttonGroupProperties.paddingTop = -10;
-						calibrationPopup.buttonGroupProperties.gap = 10;
-						calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
-						calibrationValue.setFocus();
-						calibrationPopup.addEventListener(starling.events.Event.CLOSE, onInitialCalibrationClosed);
+							calibrationPopup.validate();
+							calibrationTextInput.width = calibrationPopup.width - 20;
+							calibrationPopup.gap = 0;
+							calibrationPopup.headerProperties.maxHeight = 30;
+							calibrationPopup.buttonGroupProperties.paddingTop = -10;
+							calibrationPopup.buttonGroupProperties.gap = 10;
+							calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+							calibrationTextInput.setFocus();
+							calibrationPopup.addEventListener(starling.events.Event.CLOSE, onInitialCalibrationClosed);
+						});
 						initialCalibrationActive = true;
 					}
 				}
 			}
 			else if (optimalCalibrationScheduled && GlucoseHelper.isOptimalConditionToCalibrate())
 			{
-				if (SpikeANE.appIsInBackground())
+				if (!SystemUtil.isApplicationActive)
 				{
-					//Warn the user that optimal calibration conditions have been met
+					//Send a notification to the user notifying that optimal calibration conditions have been met
 					var notificationBuilder:NotificationBuilder = new NotificationBuilder()
 						.setCount(BadgeBuilder.getAppBadge())
 						.setId(NotificationService.ID_FOR_CALIBRATION_REQUEST_ALERT)
@@ -291,26 +309,37 @@ package services
 						.setSound("default")
 						.setCategory(NotificationService.ID_FOR_ALERT_CALIBRATION_REQUEST_CATEGORY);
 					Notifications.service.notify(notificationBuilder.build());
-					
-					SpikeANE.vibrate();
 				}
-				else
+				
+				SpikeANE.vibrate();
+				
+				if (SystemUtil.isApplicationActive)
 				{
-					var optimalAlert:Alert = AlertManager.showSimpleAlert
-					(
-						ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'),
-						ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_body')
-					);
-					optimalAlert.addEventListener(starling.events.Event.CLOSE, onOptimalCalibrationAcknowledged);
-					
-					function onOptimalCalibrationAcknowledged(e:starling.events.Event = null):void
+					//Show popup notifying that optimal calibration conditions have been met
+					SystemUtil.executeWhenApplicationIsActive( function():void 
 					{
-						calibrationOnRequest();
-					}
+						var optimalAlert:Alert = AlertManager.showSimpleAlert
+						(
+							ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_title'),
+							ModelLocator.resourceManagerInstance.getString('calibrationservice','optimal_calibration_request_notification_body')
+						);
+						optimalAlert.addEventListener(starling.events.Event.CLOSE, onOptimalCalibrationAcknowledged);
+						
+						function onOptimalCalibrationAcknowledged(e:starling.events.Event = null):void
+						{
+							calibrationOnRequest();
+						}
+					});
 				}
+				
+				AlarmService.userRequestedSuboptimalCalibrationNotification = false;
+				
+				//Notify Nightscout
+				NightscoutService.uploadOptimalCalibrationNotification();
 				
 				setTimeout( function():void {
 					optimalCalibrationScheduled = false;
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_OPTIMAL_CALIBRATION_ON_DEMAND_NOTIFIER_ON, String(optimalCalibrationScheduled), true, false);
 				}, 5000 );
 			}
 		}
@@ -324,8 +353,16 @@ package services
 		{
 			initialCalibrationActive = false;
 			
-			if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !SpikeANE.appIsInForeground())
+			if (!SystemUtil.isApplicationActive)
 				return;
+			
+			if (calibrationTextInput != null)
+			{
+				calibrationTextInput.removeEventListeners();
+				calibrationTextInput.removeFromParent();
+				calibrationTextInput.dispose();
+				calibrationTextInput = null;
+			}
 			
 			var latestReadings:Array = BgReading.latestBySize(2);
 			if (latestReadings.length < 2) {
@@ -335,11 +372,14 @@ package services
 			
 			myTrace("in intialCalibrationValueEntered");
 			
-			var asNumber:Number = Number(calibrationValue.text.replace(",","."));
+			var asNumber:Number = Number(userCalibrationValue.replace(",","."));
 			
-			if (isNaN(asNumber)) 
+			if (isNaN(asNumber) || userCalibrationValue == "") 
 			{
 				myTrace("in intialCalibrationValueEntered, user gave non numeric value, opening alert and requesting new value");
+				
+				//reset user value
+				userCalibrationValue = "";
 				
 				//add the warning message
 				AlertManager.showSimpleAlert
@@ -372,7 +412,29 @@ package services
 				
 				myTrace("in intialCalibrationValueEntered, starting Calibration.initialCalibration");
 				var now:Number = new Date().valueOf();
-				Calibration.initialCalibration(asNumber, now - TIME_5_MINUTES, now, BlueToothDevice.isMiaoMiao() ? 36 : 5);
+				Calibration.initialCalibration(asNumber, now - TimeSpan.TIME_5_MINUTES, now, CGMBlueToothDevice.isMiaoMiao() ? 36 : 5);
+				
+				//Apply Fix if calibrated value has a difference > 10mg/dL of the one inserted by the user
+				var lastBgReading:BgReading = (BgReading.latest(1))[0] as BgReading;
+				var fixCounter:uint = 0;
+				
+				while(fixCounter < 10 && lastBgReading != null && Math.abs(lastBgReading._calculatedValue - asNumber) > 10)
+				{
+					myTrace("Applying initial calibration fix #" + (fixCounter + 1) + ". Difference from calibrated value is " + Math.abs(lastBgReading._calculatedValue - asNumber));
+					
+					//Re-apply initial calibration
+					Calibration.clearLastCalibration();
+					var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
+					
+					//Update conditional variavles
+					lastBgReading = (BgReading.latest(1))[0] as BgReading;
+					fixCounter += 1;
+				}
+				
+				AlarmService.canUploadCalibrationToNightscout = true;
+				AlarmService.userWarnedOfSuboptimalCalibration = false;
+				userCalibrationValue = "";
+				
 				var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT);
 				_instance.dispatchEvent(calibrationServiceEvent);
 			}
@@ -386,8 +448,9 @@ package services
 			myTrace("initialCalibrate");
 			
 			/* Create and Style Calibration Text Input */
-			calibrationValue = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.CENTER, true);
-			calibrationValue.maxChars = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 3 : 4;
+			calibrationTextInput = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.CENTER, true);
+			calibrationTextInput.addEventListener(starling.events.Event.CHANGE, onCalibrationValueChanged);
+			calibrationTextInput.maxChars = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 3 : 4;
 			
 			/* Create and Style Popup Window */
 			var calibrationPopup:Alert = AlertManager.showActionAlert
@@ -400,16 +463,16 @@ package services
 						{ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: calibrationValueEntered }
 					],
 					HorizontalAlign.JUSTIFY,
-					calibrationValue
+					calibrationTextInput
 				);
 			calibrationPopup.validate();
-			calibrationValue.width = calibrationPopup.width - 20;
+			calibrationTextInput.width = calibrationPopup.width - 20;
 			calibrationPopup.gap = 0;
 			calibrationPopup.headerProperties.maxHeight = 30;
 			calibrationPopup.buttonGroupProperties.paddingTop = -10;
 			calibrationPopup.buttonGroupProperties.gap = 10;
 			calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
-			calibrationValue.setFocus();
+			calibrationTextInput.setFocus();
 		}
 		
 		/**
@@ -436,6 +499,9 @@ package services
 			{
 				myTrace(" in calibrationOnRequest, BgReading.last30Minutes().length < 2");
 				
+				if (!SystemUtil.isApplicationActive)
+					return;
+				
 				AlertManager.showSimpleAlert
 				(
 					ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"),
@@ -444,9 +510,13 @@ package services
 			} 
 			else //check if it's an override calibration
 			{ 
+				if (!SystemUtil.isApplicationActive)
+					return;
+				
 				/* Create and Style Calibration Text Input */
-				calibrationValue = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.CENTER, true);
-				calibrationValue.maxChars = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 3 : 4;
+				calibrationTextInput = LayoutFactory.createTextInput(false, false, 135, HorizontalAlign.CENTER, true);
+				calibrationTextInput.addEventListener(starling.events.Event.CHANGE, onCalibrationValueChanged);
+				calibrationTextInput.maxChars = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? 3 : 4;
 				
 				if (((new Date()).valueOf() - (Calibration.latest(2)[0] as Calibration).timestamp < (1000 * 60 * 60)) && override) 
 				{
@@ -463,6 +533,9 @@ package services
 					
 					function onAcceptedCalibrateWithOverride():void
 					{
+						if (!SystemUtil.isApplicationActive)
+							return;
+						
 						/* Create and Style Popup Window */
 						var calibrationPopup:Alert = AlertManager.showActionAlert
 						(
@@ -474,26 +547,39 @@ package services
 								{ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: calibrationDialogClosedWithOverride }
 							],
 							HorizontalAlign.JUSTIFY,
-							calibrationValue
+							calibrationTextInput
 						);
 						calibrationPopup.validate();
-						calibrationValue.width = calibrationPopup.width - 20;
+						calibrationTextInput.width = calibrationPopup.width - 20;
 						calibrationPopup.gap = 0;
 						calibrationPopup.headerProperties.maxHeight = 30;
 						calibrationPopup.buttonGroupProperties.paddingTop = -10;
 						calibrationPopup.buttonGroupProperties.gap = 10;
 						calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
-						calibrationValue.setFocus();
+						calibrationTextInput.setFocus();
 					}
 					
 					function calibrationDialogClosedWithOverride():void 
 					{
-						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !SpikeANE.appIsInForeground())
+						if (!SystemUtil.isApplicationActive)
 							return;
 						
-						var asNumber:Number = Number((calibrationValue.text as String).replace(",","."));
-						if (isNaN(asNumber)) 
+						if (calibrationTextInput != null)
 						{
+							calibrationTextInput.removeEventListeners();
+							calibrationTextInput.removeFromParent();
+							calibrationTextInput.dispose();
+							calibrationTextInput = null;
+						}
+						
+						var asNumber:Number = Number(userCalibrationValue.replace(",","."));
+						if (isNaN(asNumber) || userCalibrationValue == "") 
+						{
+							userCalibrationValue = "";
+							
+							if (!SystemUtil.isApplicationActive)
+								return;
+							
 							AlertManager.showSimpleAlert
 							(
 								ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"),
@@ -527,6 +613,11 @@ package services
 							
 							Calibration.clearLastCalibration();
 							var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
+							
+							AlarmService.canUploadCalibrationToNightscout = true;
+							AlarmService.userWarnedOfSuboptimalCalibration = false;
+							userCalibrationValue = "";
+							
 							var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT);
 							_instance.dispatchEvent(calibrationServiceEvent);
 							
@@ -536,7 +627,10 @@ package services
 				}
 				else if (!GlucoseHelper.isOptimalConditionToCalibrate()) //Check for optimal calibration conditions
 				{
-					AlertManager.showActionAlert
+					if (!SystemUtil.isApplicationActive)
+						return;
+					
+					var suboptimalCalibrationAlert:Alert = AlertManager.showActionAlert
 					(
 						ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title_sub_optimal"),
 						ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_bg_value_sub_optimal").replace("{max_bg_difference}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? "3mg/dL" : "0.16mmol/L").replace("{high_threshold}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK) + "-" + (Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) + Math.round(Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) * 0.25)) : Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10 + "-" + ((Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10) + (Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK)) * 0.25))) * 10)) / 10))).replace("{low_threshold}", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK) : String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LOW_MARK))))) * 10)) / 10)),
@@ -547,14 +641,22 @@ package services
 							{ label: ModelLocator.resourceManagerInstance.getString("calibrationservice","proceed_button_label"), triggered: onAcceptedCalibrateWithSuboptimal }
 						]
 					);
+					suboptimalCalibrationAlert.minWidth = Constants.stageWidth - 20;
+					suboptimalCalibrationAlert.width = Constants.stageWidth - 20;
 					
 					function onScheduleOptimalCalibration():void
 					{
 						optimalCalibrationScheduled = true;
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_OPTIMAL_CALIBRATION_ON_DEMAND_NOTIFIER_ON, String(optimalCalibrationScheduled), true, false);
+						
+						AlarmService.userRequestedSuboptimalCalibrationNotification = true;
 					}
 					
 					function onAcceptedCalibrateWithSuboptimal():void
 					{
+						if (!SystemUtil.isApplicationActive)
+							return;
+						
 						/* Create and Style Popup Window */
 						var calibrationPopup:Alert = AlertManager.showActionAlert
 							(
@@ -566,26 +668,36 @@ package services
 									{ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: calibrationDialogClosedWithSuboptimal }
 								],
 								HorizontalAlign.JUSTIFY,
-								calibrationValue
+								calibrationTextInput
 							);
 						calibrationPopup.validate();
-						calibrationValue.width = calibrationPopup.width - 20;
+						calibrationTextInput.width = calibrationPopup.width - 20;
 						calibrationPopup.gap = 0;
 						calibrationPopup.headerProperties.maxHeight = 30;
 						calibrationPopup.buttonGroupProperties.paddingTop = -10;
 						calibrationPopup.buttonGroupProperties.gap = 10;
 						calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
-						calibrationValue.setFocus();
+						calibrationTextInput.setFocus();
 					}
 					
 					function calibrationDialogClosedWithSuboptimal():void 
 					{
-						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !SpikeANE.appIsInForeground())
+						if (!SystemUtil.isApplicationActive)
 							return;
 						
-						var asNumber:Number = Number((calibrationValue.text as String).replace(",","."));
-						if (isNaN(asNumber)) 
+						if (calibrationTextInput != null)
 						{
+							calibrationTextInput.removeEventListeners();
+							calibrationTextInput.removeFromParent();
+							calibrationTextInput.dispose();
+							calibrationTextInput = null;
+						}
+						
+						var asNumber:Number = Number(userCalibrationValue.replace(",","."));
+						if (isNaN(asNumber) || userCalibrationValue == "") 
+						{
+							userCalibrationValue = "";
+							
 							AlertManager.showSimpleAlert
 								(
 									ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"),
@@ -619,6 +731,11 @@ package services
 							
 							Calibration.clearLastCalibration();
 							var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
+							
+							AlarmService.canUploadCalibrationToNightscout = true;
+							AlarmService.userWarnedOfSuboptimalCalibration = false;
+							userCalibrationValue = "";
+							
 							var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT);
 							_instance.dispatchEvent(calibrationServiceEvent);
 							
@@ -628,14 +745,17 @@ package services
 				}
 				else 
 				{
+					if (!SystemUtil.isApplicationActive)
+						return;
+					
 					var alertButtonsList:Array = [];
 					alertButtonsList.push({ label: ModelLocator.resourceManagerInstance.getString('globaltranslations','cancel_button_label').toUpperCase() });
-					alertButtonsList.push({ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: calibrationDialogClosedWithoutOverride });
 					if (addSnoozeOption)
 					{
 						alertButtonsList.push({ label: ModelLocator.resourceManagerInstance.getString("notificationservice","snooze_for_snoozin_alarm_in_notification_screen").toUpperCase(), triggered: calibrationDialogClosedWithSnooze });
-						calibrationValue.width = 210;
+						calibrationTextInput.width = 210;
 					}
+					alertButtonsList.push({ label: ModelLocator.resourceManagerInstance.getString('calibrationservice','calibration_add_button_title'), triggered: calibrationDialogClosedWithoutOverride });
 					
 					var calibrationPopup:Alert = AlertManager.showActionAlert
 					(
@@ -644,26 +764,39 @@ package services
 						Number.NaN,
 						alertButtonsList,
 						HorizontalAlign.JUSTIFY,
-						calibrationValue
+						calibrationTextInput
 					);
 					
 					calibrationPopup.validate();
-					calibrationValue.width = calibrationPopup.width - 20;
+					calibrationTextInput.width = calibrationPopup.width - 20;
 					calibrationPopup.gap = 0;
 					calibrationPopup.headerProperties.maxHeight = 30;
 					calibrationPopup.buttonGroupProperties.paddingTop = -10;
 					calibrationPopup.buttonGroupProperties.gap = 10;
 					calibrationPopup.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
-					calibrationValue.setFocus();
+					calibrationTextInput.setFocus();
 					
 					function calibrationDialogClosedWithoutOverride():void 
 					{
-						if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !SpikeANE.appIsInForeground())
+						if (!SystemUtil.isApplicationActive)
 							return;
 						
-						var asNumber:Number = Number((calibrationValue.text as String).replace(",","."));
-						if (isNaN(asNumber)) 
+						if (calibrationTextInput != null)
 						{
+							calibrationTextInput.removeEventListeners();
+							calibrationTextInput.removeFromParent();
+							calibrationTextInput.dispose();
+							calibrationTextInput = null;
+						}
+						
+						var asNumber:Number = Number(userCalibrationValue.replace(",","."));
+						if (isNaN(asNumber) || userCalibrationValue == "") 
+						{
+							userCalibrationValue = "";
+							
+							if (!SystemUtil.isApplicationActive)
+								return;
+							
 							AlertManager.showSimpleAlert
 							(
 								ModelLocator.resourceManagerInstance.getString("calibrationservice","enter_calibration_title"),
@@ -696,6 +829,11 @@ package services
 								asNumber = asNumber * BgReading.MMOLL_TO_MGDL; 	
 							
 							var newcalibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
+							
+							AlarmService.canUploadCalibrationToNightscout = true;
+							AlarmService.userWarnedOfSuboptimalCalibration = false;
+							userCalibrationValue = "";
+							
 							_instance.dispatchEvent(new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT));
 							
 							myTrace("Calibration created : " + newcalibration.print("   "));
@@ -714,12 +852,22 @@ package services
 		
 		private static function calibrationValueEntered():void 
 		{
-			if (calibrationValue == null || calibrationValue.text == "" || calibrationValue.text == null || !SpikeANE.appIsInForeground())
+			if (!SystemUtil.isApplicationActive)
 				return;
 			
-			var asNumber:Number = Number(calibrationValue.text.replace(",","."));
-			if (isNaN(asNumber)) 
+			if (calibrationTextInput != null)
 			{
+				calibrationTextInput.removeEventListeners();
+				calibrationTextInput.removeFromParent();
+				calibrationTextInput.dispose();
+				calibrationTextInput = null;
+			}
+			
+			var asNumber:Number = Number(userCalibrationValue.replace(",","."));
+			if (isNaN(asNumber) || userCalibrationValue == "") 
+			{
+				userCalibrationValue = "";
+				
 				//add the warning message
 				AlertManager.showSimpleAlert
 				(
@@ -749,27 +897,31 @@ package services
 				
 				var calibration:Calibration = Calibration.create(asNumber).saveToDatabaseSynchronous();
 				myTrace("Calibration created : " + calibration.print("   "));
+				
+				AlarmService.canUploadCalibrationToNightscout = true;
+				AlarmService.userWarnedOfSuboptimalCalibration = false;
+				userCalibrationValue = "";
 			}
 		}
 		
 		private static function commonSettingChanged(event:SettingsServiceEvent):void {
 			if (event.data == CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE) {
 				var currentSensorAgeInMinutes:int = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE));
-				if (currentSensorAgeInMinutes > 14.5 * 24 * 60 && BlueToothDevice.knowsFSLAge()) {
+				if (currentSensorAgeInMinutes > 14.5 * 24 * 60 && CGMBlueToothDevice.knowsFSLAge()) {
 					myTrace("in commonSettingChanged, sensorage more than 14.5 * 24 * 60 minutes, no further processing. Stop sensor if sensor is active");
 					if (Sensor.getActiveSensor() != null) {
 						//start sensor without user intervention 
 						Sensor.stopSensor();
 						giveSensorWarning("libre_14_dot_5_days_warning");
 					}
-				} else if (currentSensorAgeInMinutes > 14 * 24 * 60 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN) == "false" && BlueToothDevice.knowsFSLAge()) {
+				} else if (currentSensorAgeInMinutes > 14 * 24 * 60 && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN) == "false" && CGMBlueToothDevice.knowsFSLAge()) {
 					myTrace("in commonSettingChanged, sensorage more than 14 * 24 * 60 minutes, give warning that sensor will expiry in half a day ");
 					if (Sensor.getActiveSensor() != null) {
 						giveSensorWarning("libre_14days_warning");
 						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_LIBRE_SENSOR_14DAYS_WARNING_GIVEN,"true");
 					}
 				}
-				if (currentSensorAgeInMinutes > 0 && Sensor.getActiveSensor() == null && !BlueToothDevice.isMiaoMiao() && BlueToothDevice.knowsFSLAge() && currentSensorAgeInMinutes < 14 * 24 * 60) {
+				if (currentSensorAgeInMinutes > 0 && Sensor.getActiveSensor() == null && !CGMBlueToothDevice.isMiaoMiao() && CGMBlueToothDevice.knowsFSLAge() && currentSensorAgeInMinutes < 14 * 24 * 60) {
 					//not doing this for miaomiao because sensorstart for miaomiao is already handled in LibreAlarmReceiver
 					myTrace("in commonSettingChanged, sensorage changed to smaller value, starting sensor");
 					Sensor.startSensor(((new Date()).valueOf() - currentSensorAgeInMinutes * 60 * 1000));
@@ -778,7 +930,7 @@ package services
 		}
 		
 		private static function giveSensorWarning(warning:String):void {
-			if (SpikeANE.appIsInForeground()) {
+			if (SystemUtil.isApplicationActive) {
 				AlertManager.showSimpleAlert
 					(
 						ModelLocator.resourceManagerInstance.getString("transmitterservice","warning"),
@@ -797,16 +949,55 @@ package services
 		}
 		
 		private static function receivedSensorChanged(be:BlueToothServiceEvent):void {
-			if (Sensor.getActiveSensor() != null && BlueToothDevice.knowsFSLAge()) {
+			if (Sensor.getActiveSensor() != null && CGMBlueToothDevice.knowsFSLAge()) {
 				myTrace("in receivedSensorChanged, Stopping the sensor"); 
 				Sensor.stopSensor();
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_AGE, "0");
 				giveSensorWarning("new_fsl_sensor_detected");
 			}
 		}
+		
+		public static function dispatchCalibrationEvent():void {
+			var calibrationServiceEvent:CalibrationServiceEvent = new CalibrationServiceEvent(CalibrationServiceEvent.NEW_CALIBRATION_EVENT);
+			_instance.dispatchEvent(calibrationServiceEvent);
+		}
 
 		private static function myTrace(log:String):void {
 			Trace.myTrace("CalibrationService.as", log);
+		}
+		
+		/**
+		 * Stores in memory the calibration value inserted by the user. This method resolves some weird Feathers bug
+		 */
+		private static function onCalibrationValueChanged(e:starling.events.Event):void
+		{
+			var textInput:TextInput = e.currentTarget as TextInput;
+			if (textInput != null && textInput.text != null)
+			{
+				userCalibrationValue = textInput.text; 
+			}
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			myTrace("Stopping service...");
+			
+			stopService();
+		}
+		
+		private static function stopService():void
+		{
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingReceived);
+			NotificationService.instance.removeEventListener(NotificationServiceEvent.NOTIFICATION_EVENT, notificationReceived);
+			NotificationService.instance.removeEventListener(NotificationServiceEvent.NOTIFICATION_SELECTED_EVENT, notificationReceived);
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, commonSettingChanged);
+			CGMBluetoothService.instance.removeEventListener(BlueToothServiceEvent.SENSOR_CHANGED_DETECTED, receivedSensorChanged);
+			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, appInForeGround);
+			
+			myTrace("Service stopped!");
 		}
 	}
 }

@@ -11,6 +11,7 @@ package services
 	
 	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
 	import model.ModelLocator;
@@ -53,12 +54,15 @@ package services
 				glucoseThresholdHigh = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_HIGH));
 				glucoseThresholdLow = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_LOW));
 				
+				Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
+				
 				//Register event listener for changed settings
 				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 				
 				//Register event listener for new blood glucose readings
-				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgReadingReceived);
+				TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceived);
 				NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
+				DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
 				
 				//Set speech language
 				speechLanguageCode = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_LANGUAGE);
@@ -130,6 +134,22 @@ package services
 			{
 				ModelLocator.resourceManagerInstance.localeChain = ["de_DE","en_US"];
 			}
+			else if(speechLanguageCode == "da-DK")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["da_DK","en_US"];
+			}
+			else if(speechLanguageCode == "fi-FI")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["fi_FI","en_US"];
+			}
+			else if(speechLanguageCode == "no-NO")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["no_NO","en_US"];
+			}
+			else if(speechLanguageCode == "sv-SE")
+			{
+				ModelLocator.resourceManagerInstance.localeChain = ["sv_SE","en_US"];
+			}
 		}
 		
 		public static function sayText(text:String, language:String = "en-US"):void 
@@ -137,7 +157,7 @@ package services
 			myTrace("Text to speak: " + text);
 			
 			//Start Text To Speech
-			SpikeANE.say(text, language);		
+			SpikeANE.say(text, language, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_ON) == "true" ? Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_USER_DEFINED_SYSTEM_VOLUME_VALUE)) : Number.NaN);	
 		}
 		
 		//Remove all spaces in the string.
@@ -346,6 +366,26 @@ package services
 				glucoseThresholdHigh = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_HIGH));
 				glucoseThresholdLow = Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPEECH_THRESHOLD_LOW));
 			}
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			myTrace("Stopping service...");
+			
+			stopService();
+		}
+		
+		private static function stopService():void
+		{
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgReadingReceived);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
+			DexcomShareService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgReadingReceived);
+			
+			myTrace("Service stopped!");
 		}
 	}
 }

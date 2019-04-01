@@ -1,5 +1,7 @@
 package ui.popups
 {	
+	import com.adobe.utils.StringUtil;
+	
 	import flash.errors.IllegalOperationError;
 	
 	import feathers.controls.Button;
@@ -33,6 +35,7 @@ package ui.popups
 
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("alarmpresnoozer")]
+	[ResourceBundle("alarmservice")]
 	
 	public class AlarmPreSnoozer extends EventDispatcher
 	{
@@ -176,7 +179,7 @@ package ui.popups
 			}
 			snoozeStatusLabel = LayoutFactory.createLabel("", HorizontalAlign.CENTER);
 			
-			if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 || Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 || Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 			{
 				cancelButton.paddingLeft = cancelButton.paddingRight = 10;
 				preSnoozeButton.paddingLeft = preSnoozeButton.paddingRight = 10;
@@ -196,7 +199,7 @@ package ui.popups
 			snoozeCallout.content = mainContainer;
 			snoozeCallout.origin = positionHelper;
 			snoozeCallout.minWidth = 240;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				snoozeCallout.paddingLeft = snoozeCallout.paddingRight = 12;
 		}
 		
@@ -215,7 +218,7 @@ package ui.popups
 				yPos = Constants.headerHeight - 10;
 			else
 			{
-				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 					yPos = 68;
 				else
 					yPos = Constants.isPortrait ? 98 : 68;
@@ -232,7 +235,7 @@ package ui.popups
 			var numAlarmTypesLabels:uint = alarmTypesLabels.length;
 			for (var i:int = 0; i < numAlarmTypesLabels; i++) 
 			{
-				alarmTypesDataProvider.push( { label: alarmTypesLabels[i] } );
+				alarmTypesDataProvider.push( { label: StringUtil.trim(alarmTypesLabels[i]) } );
 			}
 			if (alarmTypesPicker != null)
 			{
@@ -271,7 +274,7 @@ package ui.popups
 			var numLabels:uint = snoozeLabels.length;
 			for (var i:int = 0; i < numLabels; i++) 
 			{
-				dataProvider.push( { label: snoozeLabels[i] } );
+				dataProvider.push( { label: (snoozeLabels[i] as String).replace("minutes", ModelLocator.resourceManagerInstance.getString('alarmservice',"minutes")).replace("hours", ModelLocator.resourceManagerInstance.getString('alarmservice',"hours")).replace("hour", ModelLocator.resourceManagerInstance.getString('alarmservice',"hour")).replace("day", ModelLocator.resourceManagerInstance.getString('alarmservice',"day")).replace("week", ModelLocator.resourceManagerInstance.getString('alarmservice',"week")) } );
 			}
 			
 			snoozePickerList.dataProvider = dataProvider;

@@ -3,7 +3,7 @@ package ui.screens
 	import flash.display.StageOrientation;
 	import flash.system.System;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	
 	import feathers.controls.Label;
 	import feathers.controls.ScrollPolicy;
@@ -25,7 +25,7 @@ package ui.screens
 	import utils.DeviceInfo;
 	
 	[ResourceBundle("bugreportsettingsscreen")]
-
+	
 	public class BugReportScreen extends BaseSubScreen
 	{
 		/* Display Objects */
@@ -79,10 +79,10 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			if (!BlueToothDevice.isFollower())
-				AppInterface.instance.menu.selectedIndex = 5;
+			if (!CGMBlueToothDevice.isFollower())
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 7 : 6;
 			else
-				AppInterface.instance.menu.selectedIndex = 3;
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 4 : 3;
 		}
 		
 		/**
@@ -96,7 +96,7 @@ package ui.screens
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT && bugReportLabel != null)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait && Constants.currentOrientation == StageOrientation.ROTATED_RIGHT && bugReportLabel != null)
 			{
 				bugReportLabel.paddingLeft = 30;
 			}

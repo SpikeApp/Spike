@@ -1,5 +1,7 @@
 package ui.screens.display.settings.treatments
 {
+	import com.adobe.utils.StringUtil;
+	
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
 	
@@ -115,7 +117,7 @@ package ui.screens.display.settings.treatments
 			var carbTypeList:ArrayCollection = new ArrayCollection();
 			for (var i:int = 0; i < carbTypesNamesList.length; i++) 
 			{
-				carbTypeList.push({label: carbTypesNamesList[i], id: i});
+				carbTypeList.push({label: StringUtil.trim(carbTypesNamesList[i]), id: i});
 			}
 			carbTypesNamesList.length = 0;
 			carbTypesNamesList = null;
@@ -234,7 +236,7 @@ package ui.screens.display.settings.treatments
 			
 			if (carbAbsorptionRateDescription != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 					carbAbsorptionRateDescription.width = width - 30;
 				else
 					carbAbsorptionRateDescription.width = width;
@@ -242,7 +244,7 @@ package ui.screens.display.settings.treatments
 			
 			if (carbAbsorptionTimeDescription != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 					carbAbsorptionTimeDescription.width = width - 30;
 				else
 					carbAbsorptionTimeDescription.width = width;

@@ -5,7 +5,9 @@ package ui.screens
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
+	import database.CommonSettings;
+	import database.LocalSettings;
 	import database.Sensor;
 	
 	import feathers.controls.Alert;
@@ -97,7 +99,7 @@ package ui.screens
 				ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_start_alert_title'),
 				ModelLocator.resourceManagerInstance.getString('sensorscreen','sensor_start_alert_message')
 			);
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 			{
 				alert.maxWidth = 270;
 				alert.height = 320;
@@ -124,9 +126,9 @@ package ui.screens
 			
 			/* Create DateSpinner */
 			dateSpinner = new DateTimeSpinner();
+			dateSpinner.locale = Constants.getUserLocale(true);
 			dateSpinner.height = 155;
 			dateSpinner.maximum = new Date();
-			//dateSpinner.locale = "en_US";
 			
 			container.addChild( dateSpinner );
 			
@@ -138,7 +140,7 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			AppInterface.instance.menu.selectedIndex = 3;
+			AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 2 : 1;
 		}
 		
 		private function setupEventListeners():void
@@ -180,17 +182,17 @@ package ui.screens
 			
 			/* Calculate Time Till Next Calibration */
 			var actualTime:Number = (new Date()).valueOf();
-			var timeOfCalibration:Number = !BlueToothDevice.isTypeLimitter() ? 2 * 3600 * 1000 - (actualTime - sensorStartTime) : 3600 * 1000 - (actualTime - sensorStartTime);
+			var timeOfCalibration:Number = !CGMBlueToothDevice.isTypeLimitter() ? 2 * 3600 * 1000 - (actualTime - sensorStartTime) : 3600 * 1000 - (actualTime - sensorStartTime);
 			
 			/* Define Date Formater Helper */
 			var dateFormatterForSensorStartWarning:DateTimeFormatter = new DateTimeFormatter();
-			dateFormatterForSensorStartWarning.dateTimePattern = ModelLocator.resourceManagerInstance.getString('sensorscreen','timestamppattern_for_sensor_start_warning');
+			dateFormatterForSensorStartWarning.dateTimePattern = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT).slice(0,2) == "24" ? "HH:mm" : "K:mm a";
 			dateFormatterForSensorStartWarning.useUTC = false;
-			dateFormatterForSensorStartWarning.setStyle("locale",Capabilities.language.substr(0,2));
+			dateFormatterForSensorStartWarning.setStyle("locale",Constants.getUserLocale());
 			
 			/* Define Alert Message */
 			var alertMessage:String;
-			if (timeOfCalibration > 0 && !BlueToothDevice.knowsFSLAge()) {
+			if (timeOfCalibration > 0 && !CGMBlueToothDevice.knowsFSLAge() && LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_REMOVE_SENSOR_WARMUP_ENABLED) != "true") {
 				alertMessage = ModelLocator.resourceManagerInstance.getString('sensorscreen',"sensor_start_alert_message_wait_prefix");
 				alertMessage += " " + dateFormatterForSensorStartWarning.format(new Date(actualTime + timeOfCalibration)) + " ";
 				alertMessage += ModelLocator.resourceManagerInstance.getString('sensorscreen',"sensor_start_alert_message_wait_suffix");
@@ -207,7 +209,7 @@ package ui.screens
 				onBackButtonTriggered
 			);
 			alert.height = 425;
-			if (Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 			{
 				alert.maxWidth = 270;
 				alert.height = 490;
@@ -217,7 +219,7 @@ package ui.screens
 			
 			function onClose(e:Event):void
 			{
-				if ((TutorialService.isActive || TutorialService.eleventhStepActive) && BlueToothDevice.isDexcomG5())
+				if ((TutorialService.isActive || TutorialService.eleventhStepActive) && (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()))
 					TutorialService.eleventhStep();
 			}
 		}	

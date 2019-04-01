@@ -1,29 +1,35 @@
 package services
 {
+	import com.adobe.utils.StringUtil;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
 	import flash.utils.Dictionary;
+	import flash.utils.clearInterval;
+	import flash.utils.clearTimeout;
 	import flash.utils.setInterval;
+	import flash.utils.setTimeout;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.Calibration;
 	import database.CommonSettings;
 	
 	import events.CalibrationServiceEvent;
 	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	import events.TreatmentsEvent;
 	
+	import model.Forecast;
 	import model.ModelLocator;
 	
 	import starling.core.Starling;
 	
 	import treatments.TreatmentsManager;
 	
-	import ui.chart.GlucoseFactory;
+	import ui.chart.helpers.GlucoseFactory;
 	
 	import utils.BgGraphBuilder;
 	import utils.DeviceInfo;
@@ -32,18 +38,17 @@ package services
 	import utils.SpikeJSON;
 	import utils.TimeSpan;
 	import utils.Trace;
-
+	
 	[ResourceBundle("generalsettingsscreen")]
 	[ResourceBundle("widgetservice")]
+	[ResourceBundle("chartscreen")]
+	[ResourceBundle("treatments")]
+	[ResourceBundle("globaltranslations")]
 	
 	public class WidgetService
 	{
-		/* Constants */
-		private static const TIME_1_HOUR:int = 60 * 60 * 1000;
-		private static const TIME_2_HOURS:int = 2 * 60 * 60 * 1000;
-		private static const TIME_1_MINUTE:int = 60 * 1000;
-		
 		/* Internal Variables */
+		private static var serviceHalted:Boolean = false;
 		private static var displayTrendEnabled:Boolean = true;
 		private static var displayDeltaEnabled:Boolean = true;
 		private static var displayUnitsEnabled:Boolean = true;
@@ -52,6 +57,8 @@ package services
 		private static var historyTimespan:int;
 		private static var widgetHistory:int;
 		private static var glucoseUnit:String;
+		private static var IOBCOBIntervalID:int = -1;
+		private static var IOBCOBTimeoutID:int = -1;
 		
 		/* Objects */
 		private static var months:Array;
@@ -69,23 +76,23 @@ package services
 			
 			SpikeANE.initUserDefaults();
 			
-			months = ModelLocator.resourceManagerInstance.getString('widgetservice','months').split(",");
-			
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				Starling.juggler.delayCall(setInitialGraphData, 3);
 			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBloodGlucoseReceived);
-			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
-			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onBloodGlucoseReceived);
-			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onBloodGlucoseReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBloodGlucoseReceived, false, 150, false);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived, false, 150, false);
+			DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived, false, 150, false);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onBloodGlucoseReceived, false, 150, false);
+			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onBloodGlucoseReceived, false, 150, false);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, setInitialGraphData);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentRefresh);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentRefresh);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentRefresh);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.IOB_COB_UPDATED, onTreatmentRefresh);
 			
-			setInterval(updateTreatments, TIME_1_MINUTE);
+			IOBCOBIntervalID = setInterval(updateTreatments, TimeSpan.TIME_2_MINUTES_30_SECONDS);
 		}
 		
 		private static function onSettingsChanged(e:SettingsServiceEvent):void
@@ -96,7 +103,15 @@ package services
 				e.data == CommonSettings.COMMON_SETTING_HIGH_MARK ||
 				e.data == CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK ||
 				e.data == CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT || 
-				e.data == CommonSettings.COMMON_SETTING_WIDGET_HISTORY_TIMESPAN
+				e.data == CommonSettings.COMMON_SETTING_WIDGET_HISTORY_TIMESPAN ||
+				e.data == CommonSettings.COMMON_SETTING_APP_LANGUAGE ||
+				e.data == CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED ||
+				e.data == CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_1_HOUR ||
+				e.data == CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_3_HOURS ||
+				e.data == CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_6_HOURS ||
+				e.data == CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_12_HOURS ||
+				e.data == CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_MINUTES_FOR_24_HOURS ||
+				e.data == CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_INCLUDE_IOB_COB
 			)
 			{
 				setInitialGraphData();
@@ -145,9 +160,11 @@ package services
 		{
 			Trace.myTrace("WidgetService.as", "Setting initial widget data!");
 			
+			months = ModelLocator.resourceManagerInstance.getString('widgetservice','months').split(",");
+			
 			dateFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
 			historyTimespan = int(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_HISTORY_TIMESPAN));
-			widgetHistory = historyTimespan * TIME_1_HOUR;
+			widgetHistory = historyTimespan * TimeSpan.TIME_1_HOUR;
 			activeGlucoseReadingsList = [];
 			
 			startupGlucoseReadingsList = ModelLocator.bgReadings.concat();
@@ -163,7 +180,7 @@ package services
 				if (now - timestamp <= widgetHistory)
 				{
 					var currentReading:BgReading = startupGlucoseReadingsList[i] as BgReading;
-					if (currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !BlueToothDevice.isFollower()))
+					if (currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !CGMBlueToothDevice.isFollower()))
 						continue;
 					
 					var glucose:String = BgGraphBuilder.unitizedString((startupGlucoseReadingsList[i] as BgReading).calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
@@ -191,6 +208,7 @@ package services
 			}
 			
 			activeGlucoseReadingsList.reverse();
+			processChartGlucoseValues();
 			
 			//Graph Data
 			SpikeANE.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
@@ -230,7 +248,7 @@ package services
 				SpikeANE.setUserDefaultsData("highThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_HIGH_MARK))))) * 10)) / 10));
 				SpikeANE.setUserDefaultsData("urgentHighThreshold", String(Math.round(((BgReading.mgdlToMmol((Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_URGENT_HIGH_MARK))))) * 10)) / 10));
 			}
-				
+			
 			//Colors
 			SpikeANE.setUserDefaultsData("urgenLowColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_URGENT_LOW_COLOR)).toString(16).toUpperCase());
 			SpikeANE.setUserDefaultsData("lowColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_LOW_COLOR)).toString(16).toUpperCase());
@@ -255,8 +273,38 @@ package services
 				SpikeANE.setUserDefaultsData("glucoseUnitInternal", "mmol");
 			
 			//IOB & COB
-			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)));
-			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)));
+			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob));
+			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob));
+			
+			//Predictions
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
+			{
+				var predictionsLengthInMinutes:Number = Forecast.getCurrentPredictionsDuration();
+				if (!isNaN(predictionsLengthInMinutes))
+				{
+					var currentPrediction:Number = Forecast.getLastPredictiveBG(predictionsLengthInMinutes);
+					if (!isNaN(currentPrediction))
+					{
+						SpikeANE.setUserDefaultsData("predictionDuration", TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+						SpikeANE.setUserDefaultsData("predictionOutcome", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? String(Math.round(currentPrediction)) : String(Math.round(BgReading.mgdlToMmol(currentPrediction * 10)) / 10));
+					}
+					else
+					{
+						SpikeANE.setUserDefaultsData("predictionDuration", TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+						SpikeANE.setUserDefaultsData("predictionOutcome", ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'));
+					}
+				}
+				else
+				{
+					SpikeANE.setUserDefaultsData("predictionDuration", "???" + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+					SpikeANE.setUserDefaultsData("predictionOutcome", ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'));
+				}
+			}
+			else
+			{
+				SpikeANE.setUserDefaultsData("predictionDuration", "");
+				SpikeANE.setUserDefaultsData("predictionOutcome", "-1");
+			}
 			
 			//Translations
 			SpikeANE.setUserDefaultsData("minAgo", ModelLocator.resourceManagerInstance.getString('widgetservice','minute_ago'));
@@ -264,6 +312,10 @@ package services
 			SpikeANE.setUserDefaultsData("ago", ModelLocator.resourceManagerInstance.getString('widgetservice','ago'));
 			SpikeANE.setUserDefaultsData("now", ModelLocator.resourceManagerInstance.getString('widgetservice','now'));
 			SpikeANE.setUserDefaultsData("openSpike", ModelLocator.resourceManagerInstance.getString('widgetservice','open_spike'));
+			SpikeANE.setUserDefaultsData("high", ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_high'));
+			SpikeANE.setUserDefaultsData("low", ModelLocator.resourceManagerInstance.getString('chartscreen','glucose_low'));
+			SpikeANE.setUserDefaultsData("IOBString", ModelLocator.resourceManagerInstance.getString('treatments','iob_label'));
+			SpikeANE.setUserDefaultsData("COBString", ModelLocator.resourceManagerInstance.getString('treatments','cob_label'));
 			
 			initialGraphDataSet = true;
 		}
@@ -271,10 +323,12 @@ package services
 		private static function processChartGlucoseValues():void
 		{
 			activeGlucoseReadingsList = removeDuplicates(activeGlucoseReadingsList);
+			if (activeGlucoseReadingsList.length == 0) return;
+			
 			activeGlucoseReadingsList.sortOn(["timestamp"], Array.NUMERIC);
 			
 			var currentTimestamp:Number
-			if (BlueToothDevice.isFollower())
+			if (CGMBlueToothDevice.isFollower())
 				currentTimestamp = (activeGlucoseReadingsList[0] as Object).timestamp;
 			else
 				currentTimestamp = activeGlucoseReadingsList[0].timestamp;
@@ -319,17 +373,64 @@ package services
 		
 		private static function updateTreatments():void
 		{
-			Trace.myTrace("WidgetService.as", "Sending updated IOB and COB values to widget!");
+			//Validation
+			if (serviceHalted)
+				return;
 			
 			var now:Number = new Date().valueOf();
 			
-			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)));
-			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)));
+			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob));
+			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob));
+		}
+		
+		private static function updatePredictions():void
+		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
+			{
+				var predictionsLengthInMinutes:Number = Forecast.getCurrentPredictionsDuration();
+				if (!isNaN(predictionsLengthInMinutes))
+				{
+					var currentPrediction:Number = Forecast.getLastPredictiveBG(predictionsLengthInMinutes);
+					if (!isNaN(currentPrediction))
+					{
+						SpikeANE.setUserDefaultsData("predictionDuration", TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+						SpikeANE.setUserDefaultsData("predictionOutcome", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? String(Math.round(currentPrediction)) : String(Math.round(BgReading.mgdlToMmol(currentPrediction * 10)) / 10));
+					}
+					else
+					{
+						SpikeANE.setUserDefaultsData("predictionDuration", TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+						SpikeANE.setUserDefaultsData("predictionOutcome", ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'));
+					}
+				}
+				else
+				{
+					SpikeANE.setUserDefaultsData("predictionDuration", "???" + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+					SpikeANE.setUserDefaultsData("predictionOutcome", ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'));
+				}
+			}
+			else
+			{
+				SpikeANE.setUserDefaultsData("predictionDuration", "");
+				SpikeANE.setUserDefaultsData("predictionOutcome", "-1");
+			}
 		}
 		
 		private static function onTreatmentRefresh(e:Event):void
 		{
-			updateTreatments();
+			//Validation
+			if (serviceHalted)
+				return;
+			
+			clearTimeout(IOBCOBTimeoutID);
+			IOBCOBTimeoutID = setTimeout( function():void 
+			{
+				updateTreatments();
+				updatePredictions();
+			}, TimeSpan.TIME_2_SECONDS );
 		}
 		
 		private static function isLowValue(value:String):Boolean
@@ -363,12 +464,12 @@ package services
 			Trace.myTrace("WidgetService.as", "Sending new glucose reading to widget!");
 			
 			var currentReading:BgReading;
-			if (!BlueToothDevice.isFollower())
+			if (!CGMBlueToothDevice.isFollower())
 				currentReading = BgReading.lastNoSensor();
 			else
 				currentReading = BgReading.lastWithCalculatedValue();
 			
-			if ((Calibration.allForSensor().length < 2 && !BlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !BlueToothDevice.isFollower()))
+			if ((Calibration.allForSensor().length < 2 && !CGMBlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !CGMBlueToothDevice.isFollower()))
 				return;
 			
 			var latestGlucose:String = BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
@@ -402,8 +503,73 @@ package services
 			SpikeANE.setUserDefaultsData("latestGlucoseDelta", MathHelper.formatNumberToStringWithPrefix(Number(BgGraphBuilder.unitizedDeltaString(false, true))));
 			SpikeANE.setUserDefaultsData("latestGlucoseTime", String(currentReading.timestamp));
 			SpikeANE.setUserDefaultsData("chartData", SpikeJSON.stringify(activeGlucoseReadingsList));
-			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now)));
-			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now)));
+			SpikeANE.setUserDefaultsData("IOB", GlucoseFactory.formatIOB(TreatmentsManager.getTotalIOB(now).iob));
+			SpikeANE.setUserDefaultsData("COB", GlucoseFactory.formatCOB(TreatmentsManager.getTotalCOB(now, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEFAULT_IOB_COB_ALGORITHM) == "openaps").cob));
+			
+			//Predictions
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) == "true")
+			{
+				var predictionsLengthInMinutes:Number = Forecast.getCurrentPredictionsDuration();
+				if (!isNaN(predictionsLengthInMinutes))
+				{
+					var currentPrediction:Number = Forecast.getLastPredictiveBG(predictionsLengthInMinutes);
+					if (!isNaN(currentPrediction))
+					{
+						SpikeANE.setUserDefaultsData("predictionDuration", TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+						SpikeANE.setUserDefaultsData("predictionOutcome", CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true" ? String(Math.round(currentPrediction)) : String(Math.round(BgReading.mgdlToMmol(currentPrediction * 10)) / 10));
+					}
+					else
+					{
+						SpikeANE.setUserDefaultsData("predictionDuration", TimeSpan.formatHoursMinutesFromMinutes(predictionsLengthInMinutes, false) + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+						SpikeANE.setUserDefaultsData("predictionOutcome", ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'));
+					}
+				}
+				else
+				{
+					SpikeANE.setUserDefaultsData("predictionDuration", "???" + " " + ModelLocator.resourceManagerInstance.getString('chartscreen','predictions_small_abbreviation_chart_pill_title'));
+					SpikeANE.setUserDefaultsData("predictionOutcome", ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available'));
+				}
+			}
+			else
+			{
+				SpikeANE.setUserDefaultsData("predictionDuration", "");
+				SpikeANE.setUserDefaultsData("predictionOutcome", "-1");
+			}
+			
+			//Re set update timeout
+			clearInterval(IOBCOBIntervalID);
+			IOBCOBIntervalID = setInterval(updateTreatments, TimeSpan.TIME_2_MINUTES_30_SECONDS);
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			Trace.myTrace("WidgetService.as", "Stopping service...");
+			
+			stopService();
+		}
+		
+		private static function stopService():void
+		{
+			serviceHalted = true;
+			
+			clearInterval(IOBCOBIntervalID);
+			
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBloodGlucoseReceived);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
+			DexcomShareService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived);
+			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onBloodGlucoseReceived);
+			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onBloodGlucoseReceived);
+			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, setInitialGraphData);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentRefresh);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentRefresh);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentRefresh);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.IOB_COB_UPDATED, onTreatmentRefresh);
+			
+			Trace.myTrace("WidgetService.as", "Service stopped!");
 		}
 		
 		/**
@@ -413,7 +579,7 @@ package services
 		{
 			var glucoseDate:Date = new Date(timestamp);
 			
-			return months[glucoseDate.month] + " " + glucoseDate.date;
+			return StringUtil.trim(months[glucoseDate.month]) + " " + glucoseDate.date;
 		}
 		
 		private static function getGlucoseTimeFormatted(timestamp:Number, formatForChartLabel:Boolean):String
@@ -424,14 +590,14 @@ package services
 			if (dateFormat == null || dateFormat.slice(0,2) == "24")
 			{
 				if (formatForChartLabel)
-					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_24H, widgetHistory == TIME_2_HOURS || DeviceInfo.isSmallScreenDevice());
+					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_24H, widgetHistory == TimeSpan.TIME_2_HOURS || DeviceInfo.isSmallScreenDevice());
 				else
 					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_24H);
 			}
 			else
 			{
 				if (formatForChartLabel)
-					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_12H, widgetHistory == TIME_2_HOURS  || DeviceInfo.isSmallScreenDevice(), widgetHistory == TIME_1_HOUR && !DeviceInfo.isSmallScreenDevice());
+					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_12H, widgetHistory == TimeSpan.TIME_2_HOURS  || DeviceInfo.isSmallScreenDevice(), widgetHistory == TimeSpan.TIME_1_HOUR && !DeviceInfo.isSmallScreenDevice());
 				else
 					timeFormatted = TimeSpan.formatHoursMinutes(glucoseDate.getHours(), glucoseDate.getMinutes(), TimeSpan.TIME_FORMAT_12H);
 			}

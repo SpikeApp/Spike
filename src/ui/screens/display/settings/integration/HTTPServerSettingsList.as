@@ -4,6 +4,8 @@ package ui.screens.display.settings.integration
 	import flash.net.URLLoader;
 	import flash.net.URLVariables;
 	
+	import cryptography.Keys;
+	
 	import database.LocalSettings;
 	
 	import feathers.controls.Button;
@@ -40,6 +42,7 @@ package ui.screens.display.settings.integration
 	import ui.screens.display.SpikeList;
 	
 	import utils.Constants;
+	import utils.Cryptography;
 	import utils.DataValidator;
 	import utils.DeviceInfo;
 	
@@ -102,7 +105,7 @@ package ui.screens.display.settings.integration
 		{
 			httpServiceEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_ON) == "true";
 			serverUsername = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_USERNAME);
-			serverPassword = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD);
+			serverPassword = Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD));
 		}
 		
 		private function setupContent():void
@@ -224,8 +227,9 @@ package ui.screens.display.settings.integration
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_USERNAME, userNameTextInput.text);
 				
 			//Password
-			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD) != passwordTextInput.text)
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD, passwordTextInput.text);
+			var passwordToSave:String = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, passwordTextInput.text);
+			if(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD) != passwordToSave)
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD, passwordToSave);
 			
 			needsSave = false;
 		}
@@ -279,7 +283,7 @@ package ui.screens.display.settings.integration
 				yPos = Constants.headerHeight - 10;
 			else
 			{
-				if (Constants.deviceModel != DeviceInfo.IPHONE_X)
+				if (Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 					yPos = 68;
 				else
 					yPos = Constants.isPortrait ? 98 : 68;
@@ -401,9 +405,9 @@ package ui.screens.display.settings.integration
 		{
 			//Close the callout
 			if (PopUpManager.isPopUp(instructionsSenderCallout))
-				PopUpManager.removePopUp(instructionsSenderCallout, true);
+				SystemUtil.executeWhenApplicationIsActive(PopUpManager.removePopUp, instructionsSenderCallout, true);
 			else if (instructionsSenderCallout != null)
-				instructionsSenderCallout.close(true);
+				SystemUtil.executeWhenApplicationIsActive(instructionsSenderCallout.close, true);
 		}
 
 		private function onSettingsChanged(e:starling.events.Event):void
@@ -450,7 +454,7 @@ package ui.screens.display.settings.integration
 			{
 				passwordTextInput.width = Constants.isPortrait ? 140 : 240;
 				if (DeviceInfo.isTablet()) passwordTextInput.width += 100;
-				passwordTextInput.clearFocus();
+				SystemUtil.executeWhenApplicationIsActive( passwordTextInput.clearFocus );
 			}
 			
 			if (instructionsTitleLabel != null)
@@ -458,7 +462,7 @@ package ui.screens.display.settings.integration
 			
 			if (instructionsDescriptionLabel != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 					instructionsDescriptionLabel.width = width - 40;
 				else
 					instructionsDescriptionLabel.width = width - 20;
@@ -469,7 +473,7 @@ package ui.screens.display.settings.integration
 			
 			if (developersAPIDescriptionLabel != null)
 			{
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 					developersAPIDescriptionLabel.width = width - 40;
 				else
 					developersAPIDescriptionLabel.width = width - 20;
@@ -482,7 +486,7 @@ package ui.screens.display.settings.integration
 				positionHelper.x = Constants.stageWidth / 2;
 			
 			if (emailField != null)
-				emailField.clearFocus();
+				SystemUtil.executeWhenApplicationIsActive( emailField.clearFocus );
 			
 			setupRenderFactory();
 		}

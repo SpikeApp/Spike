@@ -2,28 +2,44 @@ package ui
 {
 	import com.adobe.touch3D.Touch3D;
 	import com.adobe.touch3D.Touch3DEvent;
+	import com.coltware.airxzip.ZipEntry;
+	import com.coltware.airxzip.ZipFileReader;
 	import com.distriqt.extension.bluetoothle.BluetoothLE;
 	import com.distriqt.extension.bluetoothle.events.PeripheralEvent;
 	import com.distriqt.extension.notifications.Notifications;
+	import com.distriqt.extension.systemgestures.ScreenEdges;
+	import com.distriqt.extension.systemgestures.SystemGestures;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	import com.spikeapp.spike.airlibrary.SpikeANEEvent;
 	
+	import flash.desktop.NativeApplication;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.InvokeEvent;
+	import flash.filesystem.File;
+	import flash.filesystem.FileMode;
+	import flash.filesystem.FileStream;
 	import flash.system.Capabilities;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
 	import flash.text.engine.LineJustification;
 	import flash.text.engine.SpaceJustifier;
+	import flash.utils.ByteArray;
+	
+	import mx.utils.ObjectUtil;
 	
 	import spark.formatters.DateTimeFormatter;
 	
-	import database.BlueToothDevice;
+	import cryptography.Keys;
+	
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
 	import database.LocalSettings;
 	import database.Sensor;
+	
+	import deng.fzip.FZip;
 	
 	import events.BlueToothServiceEvent;
 	import events.DatabaseEvent;
@@ -33,15 +49,18 @@ package ui
 	import feathers.controls.Alert;
 	import feathers.controls.text.TextBlockTextRenderer;
 	import feathers.core.ITextRenderer;
-	import feathers.events.FeathersEventType;
+	import feathers.data.ListCollection;
 	import feathers.layout.HorizontalAlign;
 	
 	import model.ModelLocator;
 	
-	import services.BluetoothService;
+	import org.aszip.compression.CompressionMethod;
+	import org.aszip.zip.ASZip;
+	
 	import services.CalibrationService;
 	import services.NotificationService;
 	import services.TutorialService;
+	import services.bluetooth.CGMBluetoothService;
 	
 	import starling.core.Starling;
 	import starling.events.Event;
@@ -50,6 +69,7 @@ package ui
 	import ui.screens.Screens;
 	
 	import utils.Constants;
+	import utils.Cryptography;
 	import utils.DeviceInfo;
 	import utils.Trace;
 
@@ -59,6 +79,7 @@ package ui
 	[ResourceBundle("3dtouch")]
 	[ResourceBundle("crashreport")]
 	[ResourceBundle("disclaimerscreen")]
+	[ResourceBundle("maintenancesettingsscreen")]
 
 	public class InterfaceController extends EventDispatcher
 	{
@@ -67,6 +88,8 @@ package ui
 		public static var dateFormatterForSensorStartTimeAndDate:DateTimeFormatter;
 		public static var peripheralConnected:Boolean = false;
 		public static var peripheralConnectionStatusChangeTimestamp:Number;
+		private static var lastInvoke:Number = 0;
+		private static var backupDatabaseData:ByteArray;
 		
 		public function InterfaceController() {}
 		
@@ -87,9 +110,9 @@ package ui
 					CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 					
 					dateFormatterForSensorStartTimeAndDate = new DateTimeFormatter();
-					dateFormatterForSensorStartTimeAndDate.dateTimePattern = "dd MMM HH:mm";
+					dateFormatterForSensorStartTimeAndDate.dateTimePattern = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT).slice(0,2) == "24" ? "dd MMM HH:mm" : "dd MMM h:mm a";
 					dateFormatterForSensorStartTimeAndDate.useUTC = false;
-					dateFormatterForSensorStartTimeAndDate.setStyle("locale",Capabilities.language.substr(0,2));
+					dateFormatterForSensorStartTimeAndDate.setStyle("locale", Constants.getUserLocale());
 				}
 				else
 				{
@@ -116,6 +139,40 @@ package ui
 				Trace.myTrace("interfaceController.as", "Database initialized successfully!");
 				//at this moment the database is intialised, but the logs, bgreadings, ... might still be read in the ModelLocator, Modellocator is listening to the same event
 				
+				//Cryptography
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DATABASE_IS_ENCRYPTED) != "true")
+				{
+					Trace.myTrace("interfaceController.as", "Encrypting database passwords for backwards compatibility...");
+					
+					//Main Nightscout API Secret
+					var mainNightscoutAPISecret:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET);
+					mainNightscoutAPISecret = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, mainNightscoutAPISecret);
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_API_SECRET, mainNightscoutAPISecret);
+					
+					//Follower Nightscout API Secret
+					var followerNightscoutAPISecret:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET);
+					followerNightscoutAPISecret = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, followerNightscoutAPISecret);
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET, followerNightscoutAPISecret);
+					
+					//Dexcom Share Password
+					var dexcomSharePassword:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD);
+					dexcomSharePassword = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, dexcomSharePassword);
+					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DEXCOM_SHARE_PASSWORD, dexcomSharePassword);
+					
+					//IFTTT Maker Keys
+					var IFTTTMakerKeys:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY);
+					IFTTTMakerKeys = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, IFTTTMakerKeys);
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_IFTTT_MAKER_KEY, IFTTTMakerKeys);
+					
+					//Internal HTTP Password
+					var internalHTTPPassword:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD);
+					internalHTTPPassword = Cryptography.encryptStringLight(Keys.STRENGTH_256_BIT, internalHTTPPassword);
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD, internalHTTPPassword);
+					
+					//Update Flag
+					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_DATABASE_IS_ENCRYPTED, "true");
+				}
+				
 				//NSLog
 				if (ModelLocator.INTERNAL_TESTING)
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, "true");
@@ -123,7 +180,13 @@ package ui
 					LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NSLOG, "false");
 				
 				Database.instance.removeEventListener(DatabaseEvent.ERROR_EVENT,onInitError);
-				BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
+				CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_SERVICE_INITIATED, blueToothServiceInitiated);
+				
+				/* File Association */
+				NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, onInvoke);
+				
+				//System Gestures
+				removeSystemGestures();
 				
 				//3D Touch Management
 				setup3DTouch();
@@ -135,32 +198,42 @@ package ui
 			}
 		}
 		
+		private static function removeSystemGestures():void
+		{
+			//Completely remove ability to defer system gestures so users don't have to swipe twice to close Spike
+			if (DeviceInfo.getDeviceType() == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
+				SystemGestures.service.setDeferredScreenEdges(ScreenEdges.NONE);
+		}
+		
 		private static function onSettingsChanged(event:SettingsServiceEvent):void 
 		{
 			/* Transmitter Info Alerts */
 			if (event.data == CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) 
 			{
-				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE) == "Follower")
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) == "Follow" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE) == "Follower")
 					return;
 				
-				if (BlueToothDevice.alwaysScan()) 
+				if (CGMBlueToothDevice.alwaysScan()) 
 				{
-					if (BlueToothDevice.isDexcomG5() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
+					if ((CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6()) && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
 					{
-						var alertMessageG5:String = ModelLocator.resourceManagerInstance.getString('transmitterscreen','g5_info_screen');
-						if (Sensor.getActiveSensor() == null)
-							alertMessageG5 += "\n\n" + ModelLocator.resourceManagerInstance.getString('transmitterscreen','sensor_not_started');
+						var alertMessageG5G6:String = ModelLocator.resourceManagerInstance.getString('transmitterscreen','g5_info_screen');
+						if (CGMBlueToothDevice.isDexcomG6())
+							alertMessageG5G6.replace("G5", "G6");
 							
-						var alertG5:Alert = AlertManager.showSimpleAlert
+						if (Sensor.getActiveSensor() == null)
+							alertMessageG5G6 += "\n\n" + ModelLocator.resourceManagerInstance.getString('transmitterscreen','sensor_not_started');
+							
+						var alertG5G6:Alert = AlertManager.showSimpleAlert
 						(
 							ModelLocator.resourceManagerInstance.getString('transmitterscreen','alert_info_title'),
-							alertMessageG5
+							alertMessageG5G6
 						);
-						alertG5.height = 400;
+						alertG5G6.height = 400;
 						
-						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_INFO_SCREEN_SHOWN,"true");
+						CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_INFO_SCREEN_SHOWN,"true");
 					} 
-					else if (BlueToothDevice.isBluKon() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
+					else if (CGMBlueToothDevice.isBluKon() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BLUKON_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
 					{
 						var alertMessageBlucon:String = ModelLocator.resourceManagerInstance.getString('transmitterscreen','blucon_info_screen');
 						if (Sensor.getActiveSensor() == null)
@@ -178,7 +251,7 @@ package ui
 				} 
 				else if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_G4_INFO_SCREEN_SHOWN) == "false" && !TutorialService.isActive) 
 				{
-					if (BlueToothDevice.knowsFSLAge())
+					if (CGMBlueToothDevice.knowsFSLAge())
 					{
 						//variables are named miaomiao but this is used for all FSL peripherals, ie all type limitter
 						var alertMiaoMiao:Alert = AlertManager.showSimpleAlert
@@ -343,11 +416,16 @@ package ui
 		 */
 		private static function blueToothServiceInitiated(be:BlueToothServiceEvent):void 
 		{
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
-			BluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
+			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.DEVICE_NOT_PAIRED, deviceNotPaired);
+			CGMBluetoothService.instance.addEventListener(BlueToothServiceEvent.BLUETOOTH_DEVICE_CONNECTION_COMPLETED, bluetoothDeviceConnectionCompleted);
 			BluetoothLE.service.centralManager.addEventListener(PeripheralEvent.DISCONNECT, central_peripheralDisconnectHandler);
 			SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_CONNECTED, bluetoothDeviceConnectionCompleted);
 			SpikeANE.instance.addEventListener(SpikeANEEvent.MIAOMIAO_DISCONNECTED, central_peripheralDisconnectHandler);
+			SpikeANE.instance.addEventListener(SpikeANEEvent.G5_CONNECTED, bluetoothDeviceConnectionCompleted);
+			SpikeANE.instance.addEventListener(SpikeANEEvent.G5_DISCONNECTED, central_peripheralDisconnectHandler);
+			
+			//Statusbar
+			SpikeANE.setStatusBarToWhite();
 		}
 		
 		private static function deviceNotPaired(event:flash.events.Event):void 
@@ -355,7 +433,7 @@ package ui
 			if (SpikeANE.appIsInForeground())
 				return;
 			
-			if (BlueToothDevice.isBluKon())
+			if (CGMBlueToothDevice.isBluKon())
 				return; //blukon keeps on trying to connect, there's always a request to pair, no need to give additional comments
 			
 			AlertManager.showSimpleAlert
@@ -395,14 +473,14 @@ package ui
 		
 		public static function btScanningStopped(event:BlueToothServiceEvent):void 
 		{
-			BluetoothService.instance.removeEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped);
+			CGMBluetoothService.instance.removeEventListener(BlueToothServiceEvent.STOPPED_SCANNING, InterfaceController.btScanningStopped);
 			
-			if (!BluetoothService.bluetoothPeripheralActive()) 
+			if (!CGMBluetoothService.bluetoothPeripheralActive()) 
 			{
 				AlertManager.showSimpleAlert
 				(
 					ModelLocator.resourceManagerInstance.getString('transmitterscreen',"scanning_failed_alert_title"),
-					ModelLocator.resourceManagerInstance.getString('transmitterscreen',"scanning_failed_message") + (BlueToothDevice.known() ? (" " + ModelLocator.resourceManagerInstance.getString('transmitterscreen',"with_name") + " " + BlueToothDevice.name) + "\n\n" + ModelLocator.resourceManagerInstance.getString('transmitterscreen',"explain_expected_device_name"): ""),
+					ModelLocator.resourceManagerInstance.getString('transmitterscreen',"scanning_failed_message") + (CGMBlueToothDevice.known() ? (" " + ModelLocator.resourceManagerInstance.getString('transmitterscreen',"with_name") + " " + CGMBlueToothDevice.name) + "\n\n" + ModelLocator.resourceManagerInstance.getString('transmitterscreen',"explain_expected_device_name"): ""),
 					Number.NaN,
 					null,
 					HorizontalAlign.CENTER
@@ -424,6 +502,163 @@ package ui
 				ModelLocator.resourceManagerInstance.getString('transmitterscreen',"connected_to_peripheral_device_id_stored"),
 				30
 			);*/
+		}
+		
+		/**
+		 * Spike Database Import
+		 */
+		private static function onInvoke(event:InvokeEvent):void 
+		{
+			if (event == null || event.arguments == null || event.arguments[0] == null)
+				return;
+			
+			var now:Number = new Date().valueOf();
+			
+			if (now - lastInvoke > 5000)
+			{
+				//Do nothing.
+			}
+			else
+				return;
+			
+			var items:Array = event.arguments;
+			
+			if ( items.length > 0 ) 
+			{
+				var isZip:Boolean = false;
+				
+				var file:File = new File( event.arguments[0] );
+				if (((file.type == ".db" && file.extension == "db") || (file.type == ".zip" && file.extension == "zip")) && file.name.indexOf("spike") != -1 && file.size > 0)
+				{
+					lastInvoke = now;
+					
+					if (file.type == ".zip" && file.extension == "zip")
+					{
+						isZip = true;
+					}
+					
+					var alert:Alert = Alert.show
+						(
+							ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','database_restore_confirmation_label'),
+							ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+							new ListCollection
+							(
+								[
+									{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","no_uppercase"), triggered: ignoreRestore  },	
+									{ label: ModelLocator.resourceManagerInstance.getString("globaltranslations","yes_uppercase"), triggered: restoreDatabase }	
+								]
+							)
+						)
+					alert.buttonGroupProperties.gap = 10;
+					alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+					alert.messageFactory = function():ITextRenderer
+					{
+						var messageRenderer:TextBlockTextRenderer = new TextBlockTextRenderer();
+						messageRenderer.textJustifier = new SpaceJustifier( "en", LineJustification.ALL_BUT_MANDATORY_BREAK);
+						
+						return messageRenderer;
+					};
+					
+					function restoreDatabase(e:starling.events.Event):void
+					{
+						var canProceed:Boolean = false;
+						
+						if (!isZip)
+						{
+							//Read file into memory
+							var databaseStream:FileStream = new FileStream();
+							databaseStream.open(file, FileMode.READ);
+							
+							//Read database raw bytes into memory
+							backupDatabaseData = new ByteArray();
+							databaseStream.readBytes(backupDatabaseData);
+							databaseStream.close();
+							
+							canProceed = true;
+						}
+						else
+						{
+							var zipArchive:ZipFileReader = new ZipFileReader();
+							zipArchive.open(file);
+							
+							var list:Array = zipArchive.getEntries();
+							for each(var entry:ZipEntry in list)
+							{
+								if(!entry.isDirectory())
+								{
+									if(entry.getFilename() == "spike.db")
+									{
+										backupDatabaseData = zipArchive.unzip(entry);
+										canProceed = true;
+									}
+								}
+							}
+						}
+						
+						//Delete file
+						if (file != null)
+							file.deleteFile();
+						
+						if (canProceed && backupDatabaseData != null)
+						{
+							//Notify ANE
+							SpikeANE.setDatabaseResetStatus(true);
+							
+							//Halt Spike
+							Trace.myTrace("Spike.as", "Halting Spike...");
+							Database.instance.addEventListener(DatabaseEvent.DATABASE_CLOSED_EVENT, onLocalDatabaseClosed);
+							Spike.haltApp();
+						}
+					}
+					
+					function ignoreRestore(e:starling.events.Event):void
+					{
+						//Delete file
+						if (file != null)
+							file.deleteFile();
+					}
+				}
+			}
+		}
+		
+		private static function onLocalDatabaseClosed(e:DatabaseEvent):void
+		{
+			Trace.myTrace("Spike.as", "Spike halted and local database connection closed!");
+			
+			NativeApplication.nativeApplication.removeEventListener(InvokeEvent.INVOKE, onInvoke);
+			
+			//Restore database
+			var databaseTargetFile:File = File.applicationStorageDirectory.resolvePath("spike.db");
+			var databaseFileStream:FileStream = new FileStream();
+			databaseFileStream.open(databaseTargetFile, FileMode.WRITE);
+			databaseFileStream.writeBytes(backupDatabaseData, 0, backupDatabaseData.length);
+			databaseFileStream.close();
+			
+			//Alert user
+			var alert:Alert = Alert.show
+			(
+				ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','restore_successfull_label'),
+				ModelLocator.resourceManagerInstance.getString('globaltranslations','success_alert_title')
+			);
+			alert.buttonsDataProvider = new ListCollection(
+				[
+					{ label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','terminate_spike_button_label'), triggered: onTerminateSpike }
+				]
+			);
+			alert.messageFactory = function():ITextRenderer
+			{
+				var messageRenderer:TextBlockTextRenderer = new TextBlockTextRenderer();
+				messageRenderer.textJustifier = new SpaceJustifier( "en", LineJustification.ALL_BUT_MANDATORY_BREAK);
+				
+				return messageRenderer;
+			};
+			
+			Trace.myTrace("Spike.as", "Database successfully restored!");
+			
+			function onTerminateSpike(e:starling.events.Event):void
+			{
+				SpikeANE.terminateApp();
+			}
 		}
 		
 		/**

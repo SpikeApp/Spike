@@ -2,7 +2,12 @@ package ui.screens.display.settings.transmitter
 {
 	import com.adobe.utils.StringUtil;
 	
-	import database.BlueToothDevice;
+	import flash.utils.clearTimeout;
+	import flash.utils.setTimeout;
+	
+	import G5G6Model.TransmitterStatus;
+	
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Sensor;
 	
@@ -22,7 +27,6 @@ package ui.screens.display.settings.transmitter
 	
 	import services.TutorialService;
 	
-	import starling.core.Starling;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
 	import starling.text.TextFormat;
@@ -52,6 +56,7 @@ package ui.screens.display.settings.transmitter
 		private var transmitterIDValue:String;
 		private var currentTransmitterIndex:int;
 		private var transmitterIDisEnabled:Boolean;
+		private var sensorWarningTimeout:uint = 0;
 		
 		public function TransmitterSettingsList()
 		{
@@ -86,7 +91,7 @@ package ui.screens.display.settings.transmitter
 		{
 			/* Get Values From Database */
 			transmitterIDValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_ID);
-			if (!BlueToothDevice.needsTransmitterId())
+			if (!CGMBlueToothDevice.needsTransmitterId())
 				transmitterIDValue = "";
 			transmitterTypeValue = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE);
 			
@@ -95,20 +100,16 @@ package ui.screens.display.settings.transmitter
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon');
 			else if (transmitterTypeValue == "G5")
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5');
+			else if (transmitterTypeValue == "G6")
+				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g6');
 			else if (transmitterTypeValue == "G4")
 				transmitterTypeValue = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4');
-			else if (!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO")
+			else if (!CGMBlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_bluereader') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO")
 				transmitterIDisEnabled = false;
 			
 			if (((transmitterTypeValue != "" && transmitterTypeValue.toUpperCase() != "FOLLOW") || transmitterIDValue != "") && !TutorialService.isActive)
 			{
-				Starling.juggler.delayCall
-				(
-					AlertManager.showSimpleAlert,
-					2,
-					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-					ModelLocator.resourceManagerInstance.getString('transmitterscreen','reset_sensor_warning')
-				);
+				sensorWarningTimeout = setTimeout(displaySensorWarning, 2000);
 			}
 		}
 		
@@ -120,8 +121,8 @@ package ui.screens.display.settings.transmitter
 			var transmitterTypeList:ArrayCollection = new ArrayCollection();
 			for (var i:int = 0; i < transitterNamesList.length; i++) 
 			{
-				transmitterTypeList.push({label: transitterNamesList[i], id: i});
-				if(transitterNamesList[i] == transmitterTypeValue)
+				transmitterTypeList.push({label: StringUtil.trim(transitterNamesList[i]), id: i});
+				if(StringUtil.trim(transitterNamesList[i]) == transmitterTypeValue)
 					currentTransmitterIndex = i;
 			}
 			transitterNamesList.length = 0;
@@ -129,7 +130,7 @@ package ui.screens.display.settings.transmitter
 			transmitterType.labelField = "label";
 			transmitterType.popUpContentManager = new DropDownPopUpContentManager();
 			transmitterType.dataProvider = transmitterTypeList;
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 			{
 				transmitterType.buttonFactory = function():Button
 				{
@@ -174,9 +175,18 @@ package ui.screens.display.settings.transmitter
 			checkWarn();
 		}
 		
+		private function displaySensorWarning():void
+		{
+			AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('transmitterscreen','reset_sensor_warning')
+				)
+		}
+		
 		private function populateTransmitterIDPrompt():void
 		{
-			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') && transmitterID.text == "")
+			if ((transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g6')) && transmitterID.text == "")
 			{
 				transmitterIDisEnabled = transmitterID.isEnabled = true;
 				transmitterID.prompt = "XXXXXX";
@@ -196,7 +206,7 @@ package ui.screens.display.settings.transmitter
 				transmitterIDisEnabled = transmitterID.isEnabled = true;
 				transmitterID.prompt = "BLUXXXXX";
 			}
-			else if ((!BlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO") && transmitterID.text == "")
+			else if ((!CGMBlueToothDevice.needsTransmitterId() || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_limitter') || transmitterTypeValue.toUpperCase() == "TRANSMITER PL" || transmitterTypeValue.toUpperCase() == "MIAOMIAO") && transmitterID.text == "")
 			{
 				transmitterIDisEnabled = transmitterID.isEnabled = false;
 				transmitterID.prompt = "";
@@ -217,6 +227,8 @@ package ui.screens.display.settings.transmitter
 			var transmitterTypeToSave:String = transmitterTypeValue;
 			if (transmitterTypeToSave == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon'))
 				transmitterTypeToSave = "BluKon";
+			else if (transmitterTypeToSave == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g6'))
+				transmitterTypeToSave = "G6";
 			else if (transmitterTypeToSave == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5'))
 				transmitterTypeToSave = "G5";
 			else if (transmitterTypeToSave == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4'))
@@ -232,13 +244,13 @@ package ui.screens.display.settings.transmitter
 			if (needsReset)
 			{
 				//Reset all transmitters battery levels
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEA, "unknown");
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VOLTAGEB, "unknown");
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_RESIST, "unknown");
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_TEMPERATURE, "unknown");
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_RUNTIME, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEA, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VOLTAGEB, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RESIST, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_TEMPERATURE, "unknown");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_RUNTIME, "unknown");
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_STATUS, "unknown");
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_BATTERY_FROM_MARKER, "0");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_BATTERY_FROM_MARKER, "0");
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G4_TRANSMITTER_BATTERY_VOLTAGE, "0");
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_FSL_SENSOR_BATTERY_LEVEL, "0");
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_BLUEREADER_BATTERY_LEVEL, "0");
@@ -247,7 +259,7 @@ package ui.screens.display.settings.transmitter
 				
 				//Reset Firmware version
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_MIAOMIAO_FW, "");
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_VERSION_INFO, "");
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_G5_G6_VERSION_INFO, "");
 				
 				//Set collection mode to host
 				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_MODE, "Host");
@@ -285,10 +297,12 @@ package ui.screens.display.settings.transmitter
 			}
 			
 			/* Update Alarms */
-			//Define attery value
+			//Define Battery value
 			var batteryValue:String;
 			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5'))
-				batteryValue = "300";
+				batteryValue = String(TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G5);
+			if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g6'))
+				batteryValue = String(TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G6);
 			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4'))
 				batteryValue = "210";
 			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon'))
@@ -335,6 +349,7 @@ package ui.screens.display.settings.transmitter
 		private function checkWarn():void
 		{
 			if ((transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') ||
+				transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g6') ||
 				transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g4') ||
 				transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_blucon')) &&
 				transmitterID.text == "")
@@ -366,13 +381,6 @@ package ui.screens.display.settings.transmitter
 					ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','blucon_id_initial_warning_message')
 				);
 				alert.height = 310;
-			}
-			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') && DeviceInfo.isIphone7SE())
-			{
-				AlertManager.showSimpleAlert(
-					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
-					ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','iphone7_battery_drain_warning')
-				);
 			}
 			
 			transmitterIDValue = "";
@@ -411,10 +419,10 @@ package ui.screens.display.settings.transmitter
 				else if(isNaN(Number(transmitterID.text.slice(3, transmitterID.text.length)))) //Last 5 characters are not digits
 						warningMessage = ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','blucon_id_wrong_last_5_characters_message');
 			}
-			/* Validate Dexcom G5 ID */
-			else if (transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') && transmitterID.text.length != 6) //Incorrect number of characters
+			/* Validate Dexcom G5/G6 ID */
+			else if ((transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') || transmitterTypeValue == ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g6')) && transmitterID.text.length != 6) //Incorrect number of characters
 			{
-				warningTitle = ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5');
+				warningTitle = CGMBlueToothDevice.isDexcomG5() ? ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g5') : ModelLocator.resourceManagerInstance.getString('transmitterscreen','device_dexcom_g6');
 				warningMessage = ModelLocator.resourceManagerInstance.getString('transmittersettingsscreen','dexcom_g5_id_wrong_number_characters_message');
 			}	
 			/* Validate Dexcom G4 ID */
@@ -459,6 +467,7 @@ package ui.screens.display.settings.transmitter
 		 */
 		override public function dispose():void
 		{
+			clearTimeout(sensorWarningTimeout);
 			removeEventListener(FeathersEventType.CREATION_COMPLETE, onCreation);
 			
 			if(transmitterID != null)

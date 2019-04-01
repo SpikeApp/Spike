@@ -1,8 +1,10 @@
 package ui.screens.display.settings.alarms
 {
+	import G5G6Model.TransmitterStatus;
+	
 	import database.AlertType;
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
 	
@@ -40,6 +42,7 @@ package ui.screens.display.settings.alarms
 	import utils.Constants;
 	import utils.DeviceInfo;
 	import utils.MathHelper;
+	import utils.TimeSpan;
 	
 	[ResourceBundle("alarmsettingsscreen")]
 	[ResourceBundle("globaltranslations")]
@@ -47,8 +50,6 @@ package ui.screens.display.settings.alarms
 	public class AlarmCreatorList extends GroupedList 
 	{
 		/* Constants */
-		private static const TIME_24_HOURS:int = 24 * 60 * 60 * 1000;
-		private static const TIME_1_MINUTE:int = 60 * 1000;
 		public static const CANCEL:String = "cancel";
 		public static const MODE_ADD:String = "add";
 		public static const MODE_EDIT:String = "edit";
@@ -119,10 +120,9 @@ package ui.screens.display.settings.alarms
 		
 		private function setupInitialState(glucoseUnit:String = null):void
 		{
-			if ((alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED && alarmData.alarmID == CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT) ||
-				(alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY && alarmData.alarmID == CommonSettings.COMMON_SETTING_BATTERY_ALERT))
-					hideValue = true;
-					
+			if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED || alarmData.alarmID == CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT || ((alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY || alarmData.alarmID == CommonSettings.COMMON_SETTING_BATTERY_ALERT) && CGMBlueToothDevice.isBluKon()))
+				hideValue = true;
+			
 			if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE)
 			{
 				valueLabelValue = ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"bg_value_label");
@@ -163,6 +163,32 @@ package ui.screens.display.settings.alarms
 				minimumStepperValue = 10;
 				maximumStepperValue = 999;
 			}
+			else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY && !CGMBlueToothDevice.isBluKon())
+			{
+				valueLabelValue = ModelLocator.resourceManagerInstance.getString('alarmsettingsscreen',"battery_value_label");
+				valueStepperStep = 1;
+				
+				if (CGMBlueToothDevice.isDexcomG5() || CGMBlueToothDevice.isDexcomG6())
+				{
+					minimumStepperValue = 260;
+					maximumStepperValue = 380;
+				}
+				else if (CGMBlueToothDevice.isDexcomG4())
+				{
+					minimumStepperValue = 170;
+					maximumStepperValue = 240;
+				}
+				else if (CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isTransmiter_PL())
+				{
+					minimumStepperValue = 5;
+					maximumStepperValue = 90;
+				}
+				else if (CGMBlueToothDevice.isMiaoMiao())
+				{
+					minimumStepperValue = 10;
+					maximumStepperValue = 90;
+				}
+			}
 			
 			nowDate = new Date();
 			if (mode == MODE_ADD)
@@ -202,6 +228,19 @@ package ui.screens.display.settings.alarms
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
 						alarmValue = Math.round(((BgReading.mgdlToMmol((alarmValue))) * 10)) / 10;
 				}
+				else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY && alarmData.alarmID == CommonSettings.COMMON_SETTING_BATTERY_ALERT && !CGMBlueToothDevice.isBluKon())
+				{
+					if (CGMBlueToothDevice.isDexcomG5())
+						alarmValue = G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G5;
+					else if (CGMBlueToothDevice.isDexcomG6())
+						alarmValue = G5G6Model.TransmitterStatus.LOW_BATTERY_WARNING_LEVEL_VOLTAGEA_G6;
+					else if (CGMBlueToothDevice.isDexcomG4())
+						alarmValue = 210;
+					else if (CGMBlueToothDevice.isMiaoMiao())
+						alarmValue = 30;
+					else if (CGMBlueToothDevice.isBlueReader() || CGMBlueToothDevice.isTransmiter_PL())
+						alarmValue = 20;
+				}
 				else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION && alarmData.alarmID == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT)
 					alarmValue = 12;
 				else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_MISSED_READING && alarmData.alarmID == CommonSettings.COMMON_SETTING_MISSED_READING_ALERT)
@@ -233,10 +272,11 @@ package ui.screens.display.settings.alarms
 			
 			startTime = new DateTimeSpinner();
 			startTime.editingMode = DateTimeMode.TIME;
+			startTime.locale = Constants.getUserLocale(true);
 			startTime.minimum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 0, 0);
 			startTime.maximum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 23, 58);
 			startTime.value = startDate;
-			if(Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && Constants.deviceModel != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && Constants.deviceModel != DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS && Constants.deviceModel != DeviceInfo.IPHONE_X && Constants.deviceModel != DeviceInfo.IPHONE_6_6S_7_8 && Constants.deviceModel != DeviceInfo.IPAD_MINI_1_2_3_4)
+			if(Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && Constants.deviceModel != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && Constants.deviceModel != DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS && Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr && Constants.deviceModel != DeviceInfo.IPHONE_6_6S_7_8 && Constants.deviceModel != DeviceInfo.IPAD_MINI_1_2_3_4)
 				startTime.height = 160;
 			else if(Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
 				startTime.height = 150;
@@ -246,7 +286,7 @@ package ui.screens.display.settings.alarms
 				startTime.height = 130;
 			else if(Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 				startTime.height = 100;
-			else if(Constants.deviceModel == DeviceInfo.IPHONE_X)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				startTime.height = 60;
 			else if(Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				startTime.height = 60;
@@ -262,10 +302,11 @@ package ui.screens.display.settings.alarms
 			
 			endTime = new DateTimeSpinner();
 			endTime.editingMode = DateTimeMode.TIME;
+			endTime.locale = Constants.getUserLocale(true);
 			endTime.minimum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 0, 1);
 			endTime.maximum = new Date(nowDate.fullYear, nowDate.month, nowDate.date, 23, 59);
 			endTime.value = endDate;
-			if(Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && Constants.deviceModel != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && Constants.deviceModel != DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS && Constants.deviceModel != DeviceInfo.IPHONE_X && Constants.deviceModel != DeviceInfo.IPHONE_6_6S_7_8 && Constants.deviceModel != DeviceInfo.IPAD_MINI_1_2_3_4)
+			if(Constants.deviceModel != DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && Constants.deviceModel != DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6 && Constants.deviceModel != DeviceInfo.IPHONE_6PLUS_6SPLUS_7PLUS_8PLUS && Constants.deviceModel != DeviceInfo.IPHONE_X_Xs_XsMax_Xr && Constants.deviceModel != DeviceInfo.IPHONE_6_6S_7_8 && Constants.deviceModel != DeviceInfo.IPAD_MINI_1_2_3_4)
 				endTime.height = 160;
 			else if(Constants.deviceModel == DeviceInfo.IPAD_MINI_1_2_3_4)
 				endTime.height = 150;
@@ -275,7 +316,7 @@ package ui.screens.display.settings.alarms
 				endTime.height = 130;
 			else if(Constants.deviceModel == DeviceInfo.IPHONE_5_5S_5C_SE_ITOUCH_5_6)
 				endTime.height = 100;
-			else if(Constants.deviceModel == DeviceInfo.IPHONE_X)
+			else if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 				endTime.height = 60;
 			else if(Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4)
 				endTime.height = 60;
@@ -330,7 +371,7 @@ package ui.screens.display.settings.alarms
 				
 				return list;
 			};
-			if(Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if(Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 			{
 				alertTypeList.buttonFactory = function():Button
 				{
@@ -384,6 +425,8 @@ package ui.screens.display.settings.alarms
 				var itemRenderer:DefaultGroupedListItemRenderer = new DefaultGroupedListItemRenderer();
 				itemRenderer.labelField = "label";
 				itemRenderer.iconSourceField = "accessory";
+				itemRenderer.accessoryLabelProperties.wordWrap = true;
+				itemRenderer.defaultLabelProperties.wordWrap = true;
 				itemRenderer.paddingLeft = -5;
 				if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_GLUCOSE_CHANGE)
 					itemRenderer.paddingTop = itemRenderer.paddingBottom = 5;
@@ -541,21 +584,17 @@ package ui.screens.display.settings.alarms
 			alarmData.startTimeStamp = (Number(alarmData.startHour) * 60 * 60 * 1000) + (Number(alarmData.startMinutes) * 60 * 1000);
 				
 			/* Value */
-			if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED && alarmData.alarmID == CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT)
+			if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_PHONE_MUTED || alarmData.alarmID == CommonSettings.COMMON_SETTING_PHONE_MUTED_ALERT)
 				alarmData.value = 0;
-			else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY && alarmData.alarmID == CommonSettings.COMMON_SETTING_BATTERY_ALERT)
+			else if (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_TRANSMITTER_LOW_BATTERY || alarmData.alarmID == CommonSettings.COMMON_SETTING_BATTERY_ALERT)
 			{
-				if (BlueToothDevice.isDexcomG5())
-					alarmData.value = 300;
-				else if (BlueToothDevice.isDexcomG4())
-					alarmData.value = 210;
-				else if (BlueToothDevice.isBluKon())
+				if (!CGMBlueToothDevice.isBluKon())
+					alarmData.value = valueStepper.value;
+				else
 					alarmData.value = 5;
-				else if (BlueToothDevice.isMiaoMiao() || BlueToothDevice.isBlueReader() || BlueToothDevice.isTransmiter_PL())
-					alarmData.value = 20;
 			}
-			else if ((alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_MISSED_READING && alarmData.alarmID == CommonSettings.COMMON_SETTING_MISSED_READING_ALERT) || (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION && alarmData.alarmID == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT))
-				alarmData.value = valueStepper.value
+			else if ((alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_MISSED_READING || alarmData.alarmID == CommonSettings.COMMON_SETTING_MISSED_READING_ALERT) || (alarmData.alarmType == AlarmNavigatorData.ALARM_TYPE_CALIBRATION || alarmData.alarmID == CommonSettings.COMMON_SETTING_CALIBRATION_REQUEST_ALERT))
+				alarmData.value = valueStepper.value;
 			else
 			{
 				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "false")
@@ -581,8 +620,8 @@ package ui.screens.display.settings.alarms
 			var startTimestamp:Number = startTime.value.valueOf();
 			var endDateTimestamp:Number = endTime.value.valueOf();
 			
-			if (startTimestamp + TIME_1_MINUTE > endDateTimestamp)
-				endTime.value = new Date(startTimestamp + TIME_1_MINUTE);
+			if (startTimestamp + TimeSpan.TIME_1_MINUTE > endDateTimestamp)
+				endTime.value = new Date(startTimestamp + TimeSpan.TIME_1_MINUTE);
 		}
 		
 		private function onEndTimeChange(e:Event):void
@@ -591,7 +630,7 @@ package ui.screens.display.settings.alarms
 			var startTimestamp:Number = startTime.value.valueOf();
 			
 			if (endDateTimestamp <= startTimestamp)
-				startTime.value = new Date(endDateTimestamp - TIME_1_MINUTE);
+				startTime.value = new Date(endDateTimestamp - TimeSpan.TIME_1_MINUTE);
 		}
 		
 		/**

@@ -9,7 +9,7 @@ package ui.screens.display.extraoptions
 	import flash.media.StageWebView;
 	import flash.utils.Timer;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import events.SpikeEvent;
@@ -191,9 +191,9 @@ package ui.screens.display.extraoptions
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','full_screen_button_title'), icon: fullScreenIconImage, id: menuItems.length, action: "showFullScreen" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','snoozer_button_title'), icon: preSnoozeScreenIconImage, id: menuItems.length, action: "preSnooze" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','no_lock_button_title'), icon: noLockIconImage, id: menuItems.length, action: "enableNoLock" });
-			menuItems.push({ label: "No Rotation", icon: noRotationIconImage, id: menuItems.length, action: "enableNoRotation" });
+			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','no_rotation_button_title'), icon: noRotationIconImage, id: menuItems.length, action: "enableNoRotation" });
 			menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','speech_button_title'), icon: speechIconImage, id: menuItems.length, action: "enableSpeech" });
-			if (BlueToothDevice.isMiaoMiao() && BlueToothDevice.known() && InterfaceController.peripheralConnected) menuItems.push({ label: "On-Demand", icon: readingOnDemandIconImage, id: menuItems.length, action: "readingOnDemand" });
+			if (CGMBlueToothDevice.isMiaoMiao() && CGMBlueToothDevice.known() && InterfaceController.peripheralConnected) menuItems.push({ label: ModelLocator.resourceManagerInstance.getString('chartscreen','readings_on_demand_button_title'), icon: readingOnDemandIconImage, id: menuItems.length, action: "readingOnDemand" });
 			
 			dataProvider = new ListCollection(menuItems);
 		}
@@ -426,7 +426,7 @@ package ui.screens.display.extraoptions
 				}
 				else if ( itemAction == "readingOnDemand" ) 
 				{	
-					if (BlueToothDevice.isMiaoMiao() && BlueToothDevice.known() && InterfaceController.peripheralConnected)
+					if (CGMBlueToothDevice.isMiaoMiao() && CGMBlueToothDevice.known() && InterfaceController.peripheralConnected)
 						SpikeANE.sendStartReadingCommmandToMiaoMia();
 					
 					dispatchEventWith(CLOSE); //Close Menu
@@ -493,6 +493,8 @@ package ui.screens.display.extraoptions
 			
 			if (fullScreenIconImage != null)
 			{
+				if (fullScreenIconImage.texture != null)
+					fullScreenIconImage.texture.dispose();
 				fullScreenIconImage.dispose();
 				fullScreenIconImage = null;
 			}
@@ -505,6 +507,8 @@ package ui.screens.display.extraoptions
 			
 			if (speechIconImage != null)
 			{
+				if (speechIconImage.texture != null)
+					speechIconImage.texture.dispose();
 				speechIconImage.dispose();
 				speechIconImage = null;
 			}
@@ -517,6 +521,8 @@ package ui.screens.display.extraoptions
 			
 			if (noLockIconImage != null)
 			{
+				if (noLockIconImage.texture != null)
+					noLockIconImage.texture.dispose();
 				noLockIconImage.dispose();
 				noLockIconImage = null;
 			}
@@ -524,61 +530,71 @@ package ui.screens.display.extraoptions
 			if (nightscoutScreenIconTexture != null)
 			{
 				nightscoutScreenIconTexture.dispose();
-				nightscoutScreenIconTexture = null;;
+				nightscoutScreenIconTexture = null;
 			}
 			
 			if (nightscoutScreenIconImage != null)
 			{
+				if (nightscoutScreenIconImage.texture != null)
+					nightscoutScreenIconImage.texture.dispose();
 				nightscoutScreenIconImage.dispose();
-				nightscoutScreenIconImage = null;;
-			}
-			
-			if (glucoseScreenIconImage != null)
-			{
-				glucoseScreenIconImage.dispose();
-				glucoseScreenIconImage = null;;
+				nightscoutScreenIconImage = null;
 			}
 			
 			if (glucoseScreenIconTexture != null)
 			{
 				glucoseScreenIconTexture.dispose();
-				glucoseScreenIconTexture = null;;
+				glucoseScreenIconTexture = null;
 			}
 			
-			if (preSnoozeScreenIconImage != null)
+			if (glucoseScreenIconImage != null)
 			{
-				preSnoozeScreenIconImage.dispose();
-				preSnoozeScreenIconImage = null;;
+				if (glucoseScreenIconImage.texture != null)
+					glucoseScreenIconImage.texture.dispose();
+				glucoseScreenIconImage.dispose();
+				glucoseScreenIconImage = null;
 			}
 			
 			if (preSnoozeScreenIconTexture != null)
 			{
 				preSnoozeScreenIconTexture.dispose();
-				preSnoozeScreenIconTexture = null;;
+				preSnoozeScreenIconTexture = null;
+			}
+			
+			if (preSnoozeScreenIconImage != null)
+			{
+				if (preSnoozeScreenIconImage.texture != null)
+					preSnoozeScreenIconImage.texture.dispose();
+				preSnoozeScreenIconImage.dispose();
+				preSnoozeScreenIconImage = null;
 			}
 			
 			if (readingOnDemandIconTexture != null)
 			{
 				readingOnDemandIconTexture.dispose();
-				readingOnDemandIconTexture = null;;
+				readingOnDemandIconTexture = null;
 			}
 			
 			if (readingOnDemandIconImage != null)
 			{
+				if (readingOnDemandIconImage.texture != null)
+					readingOnDemandIconImage.texture.dispose();
 				readingOnDemandIconImage.dispose();
-				readingOnDemandIconImage = null;;
+				readingOnDemandIconImage = null;
+			}
+			
+			if (noRotationIconImage != null)
+			{
+				if (noRotationIconImage.texture != null)
+					noRotationIconImage.texture.dispose();
+				noRotationIconImage.dispose();
+				noRotationIconImage = null;
 			}
 			
 			if (noRotationIconTexture != null)
 			{
 				noRotationIconTexture.dispose();
-				noRotationIconTexture = null;;
-			}
-			
-			if (noRotationIconImage != null)
-			{
-				noRotationIconImage.dispose();
-				noRotationIconImage = null;;
+				noRotationIconTexture = null;
 			}
 			
 			super.dispose();

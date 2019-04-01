@@ -84,6 +84,8 @@ package ui.screens.display.settings.integration
 			
 			if (IFTTTIconImage != null)
 			{
+				if (IFTTTIconImage.texture != null)
+					IFTTTIconImage.texture.dispose();
 				IFTTTIconImage.dispose();
 				IFTTTIconImage = null;
 			}

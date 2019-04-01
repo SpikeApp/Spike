@@ -6,7 +6,7 @@ package services
 	import flash.utils.Dictionary;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
 	import database.LocalSettings;
@@ -14,21 +14,21 @@ package services
 	import events.CalibrationServiceEvent;
 	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	import events.TreatmentsEvent;
 	
 	import model.ModelLocator;
 	
+	import treatments.ProfileManager;
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
+	import utils.TimeSpan;
 	import utils.Trace;
 	
 	public class HealthKitService
 	{
-		//Constants
-		private static const TIME_24_HOURS:Number = 24 * 60 * 60 * 1000;
-		
 		//Properties
 		private static var _instance:HealthKitService = new HealthKitService();
 		private static var hkTreatmentsList:Dictionary = new Dictionary();
@@ -52,7 +52,7 @@ package services
 			
 			//Get existing HK treatments from DB
 			var now:Number = new Date().valueOf();
-			var hkTreatments:Array = Database.getHealthkitTreatmentsSynchronous(now - TIME_24_HOURS, now);
+			var hkTreatments:Array = Database.getHealthkitTreatmentsSynchronous(now - TimeSpan.TIME_24_HOURS, now);
 			var numTreatments:uint = hkTreatments.length;
 			for (var i:int = 0; i < numTreatments; i++) 
 			{
@@ -64,11 +64,14 @@ package services
 			Database.deleteOldHealthkitTreatments();
 			
 			//Set event listeners
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, bgReadingReceived);
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, bgReadingReceived);
 			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, bgReadingReceived);
+			DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, bgReadingReceived);
 			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, processInitialBackfillData);
 			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
+			TreatmentsManager.instance.addEventListener(TreatmentsEvent.BASAL_TREATMENT_ADDED, onTreatmentAdded);
 			
 			//Init ANE
 			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "true") {
@@ -86,32 +89,65 @@ package services
 			{
 				//Store in HealthKit
 				var treatmentAdded:Boolean = false;
+				var bolusInsulinToStore:Number = Math.round((treatment.type != Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT ? treatment.insulinAmount : treatment.getTotalInsulin()) * 100) / 100;
+				var carbsToStore:Number = treatment.carbs;
+				var basalInsulinToStore:Number = 0;
 				
-				if ((treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS) && treatment.insulinAmount > 0)
+				if ((treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT) && treatment.insulinAmount > 0)
 				{
-					Trace.myTrace("HealthKitService.as", "Treatment Type: Bolus, Quantity: " + treatment.insulinAmount + "U, Time: " + new Date(treatment.timestamp).toString());
-					SpikeANE.storeInsulin(treatment.insulinAmount, true, treatment.timestamp);
+					Trace.myTrace("HealthKitService.as", "Treatment Type: Bolus, Quantity: " + bolusInsulinToStore + "U, Time: " + new Date(treatment.timestamp).toString());
+					SpikeANE.storeInsulin(bolusInsulinToStore, true, treatment.timestamp);
 					treatmentAdded = true;
 				}
 				else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION && treatment.carbs > 0)
 				{
-					Trace.myTrace("HealthKitService.as", "Treatment Type: Carbs, Quantity: " + treatment.carbs + "g, Time: " + new Date(treatment.timestamp).toString());
-					SpikeANE.storeCarbInHealthKitGram(treatment.carbs, treatment.timestamp);
+					Trace.myTrace("HealthKitService.as", "Treatment Type: Carbs, Quantity: " + carbsToStore + "g, Time: " + new Date(treatment.timestamp).toString());
+					SpikeANE.storeCarbInHealthKitGram(carbsToStore, treatment.timestamp);
 					treatmentAdded = true;
 				}
-				else if (treatment.type == Treatment.TYPE_MEAL_BOLUS)
+				else if (treatment.type == Treatment.TYPE_MEAL_BOLUS || treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
 				{
-					Trace.myTrace("HealthKitService.as", "Treatment Type: Meal, Insulin Quantity: " + treatment.insulinAmount + "U, Carbs Quantity: " + treatment.carbs + "g, Time: " + new Date(treatment.timestamp).toString());
-					if (treatment.insulinAmount > 0)
+					Trace.myTrace("HealthKitService.as", "Treatment Type: Meal, Insulin Quantity: " + bolusInsulinToStore+ "U, Carbs Quantity: " + carbsToStore + "g, Time: " + new Date(treatment.timestamp).toString());
+					if (bolusInsulinToStore > 0)
 					{
-						SpikeANE.storeInsulin(treatment.insulinAmount, true, treatment.timestamp);
+						SpikeANE.storeInsulin(bolusInsulinToStore, true, treatment.timestamp);
 						treatmentAdded = true;
 					}
-					if (treatment.carbs > 0)
+					if (carbsToStore > 0)
 					{
-						SpikeANE.storeCarbInHealthKitGram(treatment.carbs, treatment.timestamp);
+						SpikeANE.storeCarbInHealthKitGram(carbsToStore, treatment.timestamp);
 						treatmentAdded = true;
 					}
+				}
+				else if (treatment.type == Treatment.TYPE_TEMP_BASAL)
+				{
+					if (treatment.isBasalAbsolute)
+					{
+						basalInsulinToStore = Math.round(treatment.basalAbsoluteAmount * 1000) / 1000;
+					}
+					else if (treatment.isBasalRelative)
+					{
+						var basalRate:Number = ProfileManager.getBasalRateByTime(treatment.timestamp);
+						basalInsulinToStore = basalRate * (100 + treatment.basalPercentAmount) / 100;
+					}
+					
+					if (isNaN(basalInsulinToStore) || treatment.isTempBasalEnd)
+					{
+						basalInsulinToStore = 0;
+					}
+					
+					SpikeANE.storeInsulin(basalInsulinToStore, false, treatment.timestamp);
+				}
+				else if (treatment.type == Treatment.TYPE_MDI_BASAL)
+				{
+					basalInsulinToStore = Math.round(treatment.basalAbsoluteAmount * 1000) / 1000;
+					
+					if (isNaN(basalInsulinToStore))
+					{
+						basalInsulinToStore = 0;
+					}
+					
+					SpikeANE.storeInsulin(basalInsulinToStore, false, treatment.timestamp);
 				}
 				
 				//Add treatment to memory and database to avoid duplicates on the next run
@@ -148,7 +184,7 @@ package services
 		
 		private static function processInitialBackfillData(e:Event):void
 		{
-			if (!BlueToothDevice.isMiaoMiao() || LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "false") //Only for backfil
+			if (!CGMBlueToothDevice.isMiaoMiao() || LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_HEALTHKIT_STORE_ON) == "false") //Only for backfil
 				return
 			
 			var loopLength:int = ModelLocator.bgReadings.length
@@ -161,6 +197,28 @@ package services
 					CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_HEALTHKIT_SYNC_TIMESTAMP, String(bgReading.timestamp));
 				}
 			}
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			Trace.myTrace("HealthKitService.as", "Stopping service...");
+			
+			stopService();
+		}
+		
+		private static function stopService():void
+		{
+			LocalSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, bgReadingReceived);
+			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, bgReadingReceived);
+			DexcomShareService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, bgReadingReceived);
+			CalibrationService.instance.removeEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, processInitialBackfillData);
+			TreatmentsManager.instance.removeEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentAdded);
+			
+			Trace.myTrace("HealthKitService.as", "Service stopped!");
 		}
 	}
 }

@@ -1,10 +1,11 @@
 package ui.screens.display.treatments
 {
 	import flash.display.StageOrientation;
+	import flash.geom.Point;
 	import flash.utils.Dictionary;
 	
 	import database.BgReading;
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	
 	import feathers.controls.Alert;
@@ -12,12 +13,14 @@ package ui.screens.display.treatments
 	import feathers.controls.Callout;
 	import feathers.controls.ImageLoader;
 	import feathers.controls.LayoutGroup;
+	import feathers.controls.ScrollContainer;
 	import feathers.controls.renderers.DefaultListItemRenderer;
 	import feathers.controls.renderers.IListItemRenderer;
 	import feathers.core.PopUpManager;
 	import feathers.data.ArrayCollection;
 	import feathers.layout.HorizontalAlign;
 	import feathers.layout.HorizontalLayout;
+	import feathers.layout.VerticalLayout;
 	import feathers.themes.BaseMaterialDeepGreyAmberMobileTheme;
 	import feathers.themes.MaterialDeepGreyAmberMobileThemeIcons;
 	
@@ -26,6 +29,7 @@ package ui.screens.display.treatments
 	import starling.display.Canvas;
 	import starling.display.DisplayObject;
 	import starling.display.Image;
+	import starling.display.Quad;
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
@@ -35,7 +39,7 @@ package ui.screens.display.treatments
 	import treatments.Treatment;
 	import treatments.TreatmentsManager;
 	
-	import ui.chart.GlucoseFactory;
+	import ui.chart.helpers.GlucoseFactory;
 	import ui.popups.AlertManager;
 	import ui.screens.display.SpikeList;
 	import ui.shapes.SpikeNGon;
@@ -66,6 +70,17 @@ package ui.screens.display.treatments
 		private var treatmentEditor:TreatmentEditorList;
 		private var sensorStartCanvas:Canvas;
 		private var sensorStartTexture:RenderTexture;
+		private var treatmentEditorContainer:ScrollContainer;
+		private var exerciseCanvas:Canvas;
+		private var exerciseTexture:RenderTexture;
+		private var insulinCartridgeCanvas:Canvas;
+		private var insulinCartridgeTexture:RenderTexture;
+		private var pumpSiteCanvas:Canvas;
+		private var pumpSiteTexture:RenderTexture;
+		private var pumpBatteryCanvas:Canvas;
+		private var pumpBatteryTexture:RenderTexture;
+		private var tempBasalCanvas:Canvas;
+		private var basalTexture:RenderTexture;
 		
 		/* Objects */
 		private var allTreatments:Array;
@@ -78,7 +93,7 @@ package ui.screens.display.treatments
 		private var carbsColor:uint;
 		private var bgCheckColor:uint;
 		private var sensorStartColor:uint;
-		
+
 		public function TreatmentsManagementList()
 		{
 			super();
@@ -111,6 +126,17 @@ package ui.screens.display.treatments
 		{
 			//Get treatments
 			allTreatments = TreatmentsManager.treatmentsList.concat();
+			
+			var numberOfTempBasals:uint = TreatmentsManager.basalsList.length;
+			var userType:String = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_USER_TYPE_PUMP_OR_MDI) == "pump" ? Treatment.TYPE_TEMP_BASAL : Treatment.TYPE_MDI_BASAL;
+			for (var i:int = 0; i < numberOfTempBasals; i++) 
+			{
+				var tempBasal:Treatment = TreatmentsManager.basalsList[i];
+				if (tempBasal != null && tempBasal.type == userType)
+				{
+					allTreatments.push(tempBasal);
+				}
+			}
 			
 			//Get user's date format (24H/12H)
 			dateFormat = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_CHART_DATE_FORMAT);
@@ -155,18 +181,56 @@ package ui.screens.display.treatments
 			mealTexture = new RenderTexture(mealCanvas.width, mealCanvas.height);
 			mealTexture.draw(mealCanvas);
 			
-			var dataList:Array = [];
+			exerciseCanvas = createTreatmentIcon(Treatment.TYPE_EXERCISE);
+			exerciseTexture = new RenderTexture(exerciseCanvas.width, exerciseCanvas.height);
+			exerciseTexture.draw(exerciseCanvas);
 			
-			for(var i:int = allTreatments.length - 1 ; i >= 0; i--)
+			insulinCartridgeCanvas = createTreatmentIcon(Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE);
+			insulinCartridgeTexture = new RenderTexture(insulinCartridgeCanvas.width, insulinCartridgeCanvas.height);
+			insulinCartridgeTexture.draw(insulinCartridgeCanvas);
+			
+			pumpSiteCanvas = createTreatmentIcon(Treatment.TYPE_PUMP_SITE_CHANGE);
+			pumpSiteTexture = new RenderTexture(pumpSiteCanvas.width, pumpSiteCanvas.height);
+			pumpSiteTexture.draw(pumpSiteCanvas);
+			
+			pumpBatteryCanvas = createTreatmentIcon(Treatment.TYPE_PUMP_BATTERY_CHANGE);
+			pumpBatteryTexture = new RenderTexture(pumpBatteryCanvas.width, pumpBatteryCanvas.height);
+			pumpBatteryTexture.draw(pumpBatteryCanvas);
+			
+			//Temp Basals Icons
+			tempBasalCanvas = createTreatmentIcon(Treatment.TYPE_TEMP_BASAL);
+			basalTexture = new RenderTexture(tempBasalCanvas.width, tempBasalCanvas.height);
+			basalTexture.draw(tempBasalCanvas);
+			
+			var dataList:Array = [];
+			var i:int;
+			
+			for(i = allTreatments.length - 1 ; i >= 0; i--)
 			{
 				//Treatment properties
 				var treatment:Treatment = allTreatments[i] as Treatment;
 				var treatmentValue:String;
 				var icon:RenderTexture;
-				if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
+				
+				if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD)
+				{
+					//Skip children
+					continue;
+				}
+				else if (treatment.type == Treatment.TYPE_BOLUS || treatment.type == Treatment.TYPE_CORRECTION_BOLUS)
 				{
 					treatmentValue = GlucoseFactory.formatIOB(treatment.insulinAmount);
 					icon = bolusTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_PARENT)
+				{
+					treatmentValue = GlucoseFactory.formatIOB(treatment.getTotalInsulin()) + " " + "(" + ModelLocator.resourceManagerInstance.getString('treatments','extended_bolus_small') + ")";
+					icon = bolusTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_EXTENDED_COMBO_MEAL_PARENT)
+				{
+					treatmentValue = GlucoseFactory.formatIOB(treatment.getTotalInsulin()) + "/" + GlucoseFactory.formatCOB(treatment.carbs) + " " + "(" + ModelLocator.resourceManagerInstance.getString('treatments','extended_bolus_small') + ")";
+					icon = mealTexture;
 				}
 				else if (treatment.type == Treatment.TYPE_CARBS_CORRECTION)
 				{
@@ -196,6 +260,51 @@ package ui.screens.display.treatments
 					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_sensor_start');
 					icon = sensorStartTexture;
 				}
+				else if (treatment.type == Treatment.TYPE_EXERCISE)
+				{
+					treatmentValue = treatment.duration + ModelLocator.resourceManagerInstance.getString('treatments','minutes_small_label') + " / " + TreatmentsManager.getExerciseTreatmentIntensity(treatment);
+					icon = exerciseTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+				{
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_insulin_cartridge_change');
+					icon = insulinCartridgeTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+				{
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_battery_change');
+					icon = pumpBatteryTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_PUMP_SITE_CHANGE)
+				{
+					treatmentValue = ModelLocator.resourceManagerInstance.getString('treatments','treatment_name_pump_site_change');
+					icon = pumpSiteTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_TEMP_BASAL)
+				{
+					var tempBasalValue:String = "0U";
+					
+					if (treatment.isBasalAbsolute)
+					{
+						tempBasalValue = GlucoseFactory.formatIOB(treatment.basalAbsoluteAmount);
+					}
+					else if (treatment.isBasalRelative)
+					{
+						tempBasalValue = treatment.basalPercentAmount + "%";
+					}
+					else if (treatment.isTempBasalEnd)
+					{
+						tempBasalValue = ModelLocator.resourceManagerInstance.getString('globaltranslations','not_available');
+					}
+					
+					treatmentValue = tempBasalValue;
+					icon = basalTexture;
+				}
+				else if (treatment.type == Treatment.TYPE_MDI_BASAL)
+				{
+					treatmentValue = GlucoseFactory.formatIOB(treatment.basalAbsoluteAmount);
+					icon = basalTexture;
+				}
 				
 				var treatmentTime:Date = new Date(treatment.timestamp);
 				
@@ -212,6 +321,8 @@ package ui.screens.display.treatments
 			}
 			
 			dataProvider = new ArrayCollection(dataList);
+			
+			(layout as VerticalLayout).hasVariableItemDimensions = true;
 		}
 		
 		override protected function setupRenderFactory():void
@@ -220,6 +331,8 @@ package ui.screens.display.treatments
 			{
 				var itemRenderer:DefaultListItemRenderer = new DefaultListItemRenderer();
 				itemRenderer.iconSourceField = "icon";
+				itemRenderer.accessoryLabelProperties.wordWrap = true;
+				itemRenderer.defaultLabelProperties.wordWrap = true;
 				itemRenderer.iconLoaderFactory = function():ImageLoader
 				{
 					var loader:ImageLoader = new ImageLoader();
@@ -227,7 +340,7 @@ package ui.screens.display.treatments
 				}
 				itemRenderer.iconOffsetX = 0;
 				itemRenderer.paddingRight = -25;
-				if (Constants.deviceModel == DeviceInfo.IPHONE_X && !Constants.isPortrait)
+				if (Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr && !Constants.isPortrait)
 				{
 					if (Constants.currentOrientation == StageOrientation.ROTATED_RIGHT)
 						itemRenderer.paddingLeft = 30;
@@ -236,7 +349,10 @@ package ui.screens.display.treatments
 				}
 				itemRenderer.accessoryOffsetX = -30;
 				itemRenderer.labelField = "label";
-				if (!BlueToothDevice.isFollower() || (BlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
+				itemRenderer.paddingTop = 10;
+				itemRenderer.paddingBottom = 10;
+				
+				if (!CGMBlueToothDevice.isFollower() || (CGMBlueToothDevice.isFollower() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_URL) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DATA_COLLECTION_NS_API_SECRET) != "" && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_FOLLOWER_MODE) == "Nightscout"))
 				{
 					itemRenderer.accessoryFunction = function(item:Object):LayoutGroup
 					{
@@ -333,6 +449,35 @@ package ui.screens.display.treatments
 				noteImage.scale = 0.75;
 				icon.addChild(noteImage);
 			}
+			else if (treatmentType == Treatment.TYPE_EXERCISE)
+			{
+				var exerciseImage:Image = new Image(MaterialDeepGreyAmberMobileThemeIcons.exerciseChartTexture);
+				exerciseImage.scale = 0.75;
+				icon.addChild(exerciseImage);
+			}
+			else if (treatmentType == Treatment.TYPE_INSULIN_CARTRIDGE_CHANGE)
+			{
+				var insulinCartridgeImage:Image = new Image(MaterialDeepGreyAmberMobileThemeIcons.insulinCartridgeChartTexture);
+				insulinCartridgeImage.scale = 0.75;
+				icon.addChild(insulinCartridgeImage);
+			}
+			else if (treatmentType == Treatment.TYPE_PUMP_BATTERY_CHANGE)
+			{
+				var pumpBatteryImage:Image = new Image(MaterialDeepGreyAmberMobileThemeIcons.pumpBatteryChartTexture);
+				pumpBatteryImage.scale = 0.75;
+				icon.addChild(pumpBatteryImage);
+			}
+			else if (treatmentType == Treatment.TYPE_PUMP_SITE_CHANGE)
+			{
+				var pumpSiteImage:Image = new Image(MaterialDeepGreyAmberMobileThemeIcons.pumpSiteChartTexture);
+				pumpSiteImage.scale = 0.75;
+				icon.addChild(pumpSiteImage);
+			}
+			else if (treatmentType == Treatment.TYPE_TEMP_BASAL || treatmentType == Treatment.TYPE_MDI_BASAL)
+			{
+				var tbQuad:Quad = new Quad(radius * 1.85, radius * 1.85, bolusColor);
+				icon.addChild(tbQuad);
+			}
 			
 			return icon;
 		}
@@ -347,18 +492,30 @@ package ui.screens.display.treatments
 			
 			setupCalloutPosition();
 			
-			if (Constants.deviceModel == DeviceInfo.IPHONE_2G_3G_3GS_4_4S_ITOUCH_2_3_4 && treatment.type == Treatment.TYPE_MEAL_BOLUS)
-			{
-				positionHelper.y -= 10;	
-			}
+			if (treatmentEditorContainer != null) treatmentEditorContainer.removeFromParent(true);
+			treatmentEditorContainer = new ScrollContainer();
+			treatmentEditorContainer.layout = new VerticalLayout();
 			
+			if (treatmentEditor != null) treatmentEditor.removeFromParent(true);
 			treatmentEditor = new TreatmentEditorList(treatment);
 			treatmentEditor.addEventListener(Event.CANCEL, onCancelTreatmentEditor);
 			treatmentEditor.addEventListener(Event.CHANGE, onRefreshContent);
+			treatmentEditorContainer.addChild(treatmentEditor);
+			treatmentEditorContainer.validate();
 			
+			var predictionsCalloutPointOfOrigin:Number = positionHelper.localToGlobal(new Point(0, 0)).y;
+			var predictionsContentOriginalHeight:Number = treatmentEditor.height + 60;
+			var suggestedPredictionsCalloutHeight:Number = Constants.stageHeight - predictionsCalloutPointOfOrigin - 5;
+			var finalCalloutHeight:Number = predictionsContentOriginalHeight > suggestedPredictionsCalloutHeight ?  suggestedPredictionsCalloutHeight : predictionsContentOriginalHeight;
+			
+			if (treatmentEditorCallout != null) treatmentEditorCallout.removeFromParent(true);
 			treatmentEditorCallout = new Callout();
-			treatmentEditorCallout.content = treatmentEditor;
+			treatmentEditorCallout.content = treatmentEditorContainer;
 			treatmentEditorCallout.origin = positionHelper;
+			
+			treatmentEditorCallout.height = finalCalloutHeight;
+			treatmentEditorContainer.height = finalCalloutHeight - 50;
+			treatmentEditorContainer.maxHeight = finalCalloutHeight - 50;
 			
 			PopUpManager.addPopUp(treatmentEditorCallout, false, false);
 		}
@@ -398,7 +555,7 @@ package ui.screens.display.treatments
 			function deleteTreatment(e:Event):void
 			{
 				//Delete reading from Spike, database and list
-				TreatmentsManager.deleteTreatment(treatment);
+				TreatmentsManager.deleteTreatment(treatment, true, true, !CGMBlueToothDevice.isFollower() || ModelLocator.INTERNAL_TESTING, true, false);
 				dataProvider.removeItem(item);
 			}
 		}
@@ -417,6 +574,9 @@ package ui.screens.display.treatments
 		 */
 		override public function dispose():void
 		{
+			//Common variable holders
+			var childImage:Image;
+			
 			//Clear accessories
 			if (accessoryDictionary != null)
 			{
@@ -542,7 +702,7 @@ package ui.screens.display.treatments
 				{
 					if (noteCanvas.getChildAt(i) is Image)
 					{
-						var childImage:Image = noteCanvas.getChildAt(i) as Image;
+						childImage = noteCanvas.getChildAt(i) as Image;
 						if (childImage != null)
 						{
 							childImage.removeFromParent();
@@ -583,6 +743,162 @@ package ui.screens.display.treatments
 			{
 				mealTexture.dispose();
 				mealTexture = null;
+			}
+			
+			if (exerciseCanvas != null)
+			{
+				for(i = exerciseCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					if (exerciseCanvas.getChildAt(i) is Image)
+					{
+						childImage = exerciseCanvas.getChildAt(i) as Image;
+						if (childImage != null)
+						{
+							childImage.removeFromParent();
+							if (childImage.texture != null)
+								childImage.texture.dispose();
+							childImage.dispose();
+							childImage = null;
+						}
+					}
+				}
+				exerciseCanvas.dispose();
+				exerciseCanvas = null;
+			}
+			
+			if (exerciseTexture != null)
+			{
+				exerciseTexture.dispose();
+				exerciseTexture = null;
+			}
+			
+			if (insulinCartridgeCanvas != null)
+			{
+				for(i = insulinCartridgeCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					if (insulinCartridgeCanvas.getChildAt(i) is Image)
+					{
+						childImage = insulinCartridgeCanvas.getChildAt(i) as Image;
+						if (childImage != null)
+						{
+							childImage.removeFromParent();
+							if (childImage.texture != null)
+								childImage.texture.dispose();
+							childImage.dispose();
+							childImage = null;
+						}
+					}
+				}
+				insulinCartridgeCanvas.dispose();
+				insulinCartridgeCanvas = null;
+			}
+			
+			if (insulinCartridgeTexture != null)
+			{
+				insulinCartridgeTexture.dispose();
+				insulinCartridgeTexture = null;
+			}
+			
+			if (pumpBatteryCanvas != null)
+			{
+				for(i = pumpBatteryCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					if (pumpBatteryCanvas.getChildAt(i) is Image)
+					{
+						childImage = pumpBatteryCanvas.getChildAt(i) as Image;
+						if (childImage != null)
+						{
+							childImage.removeFromParent();
+							if (childImage.texture != null)
+								childImage.texture.dispose();
+							childImage.dispose();
+							childImage = null;
+						}
+					}
+				}
+				pumpBatteryCanvas.dispose();
+				pumpBatteryCanvas = null;
+			}
+			
+			if (pumpBatteryTexture != null)
+			{
+				pumpBatteryTexture.dispose();
+				pumpBatteryTexture = null;
+			}
+			
+			if (pumpSiteCanvas != null)
+			{
+				for(i = pumpSiteCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					if (pumpSiteCanvas.getChildAt(i) is Image)
+					{
+						childImage = pumpSiteCanvas.getChildAt(i) as Image;
+						if (childImage != null)
+						{
+							childImage.removeFromParent();
+							if (childImage.texture != null)
+								childImage.texture.dispose();
+							childImage.dispose();
+							childImage = null;
+						}
+					}
+				}
+				pumpSiteCanvas.dispose();
+				pumpSiteCanvas = null;
+			}
+			
+			if (basalTexture != null)
+			{
+				basalTexture.dispose();
+				basalTexture = null;
+			}
+			
+			if (tempBasalCanvas != null)
+			{
+				for(i = tempBasalCanvas.numChildren - 1 ; i >= 0; i--)
+				{
+					if (tempBasalCanvas.getChildAt(i) is Image)
+					{
+						childImage = tempBasalCanvas.getChildAt(i) as Image;
+						if (childImage != null)
+						{
+							childImage.removeFromParent();
+							if (childImage.texture != null)
+								childImage.texture.dispose();
+							childImage.dispose();
+							childImage = null;
+						}
+					}
+				}
+				tempBasalCanvas.dispose();
+				tempBasalCanvas = null;
+			}
+			
+			if (pumpSiteTexture != null)
+			{
+				pumpSiteTexture.dispose();
+				pumpSiteTexture = null;
+			}
+			
+			if (treatmentEditor != null)
+			{
+				treatmentEditor.removeFromParent();
+				treatmentEditor.dispose();
+				treatmentEditor = null;
+			}
+			
+			if (treatmentEditorContainer != null)
+			{
+				treatmentEditorContainer.removeFromParent();
+				treatmentEditorContainer.dispose();
+				treatmentEditorContainer = null;
+			}
+			
+			if (treatmentEditorCallout != null)
+			{
+				treatmentEditorCallout.removeFromParent();
+				treatmentEditorCallout.dispose();
+				treatmentEditorCallout = null;
 			}
 			
 			super.dispose();

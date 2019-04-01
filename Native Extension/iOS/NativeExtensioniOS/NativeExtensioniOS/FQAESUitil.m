@@ -33,4 +33,16 @@
     return nil;
 }
 
++ (NSData *) calculateHash:(NSData *) data withCryptKey:(NSString*) cryptKey {
+    NSMutableData* doubleData = [NSMutableData dataWithCapacity:16];
+    [doubleData appendBytes:[data bytes] length:8];
+    [doubleData appendBytes:[data bytes] length:8];
+
+    NSData* aesBytes = [self AESEncryptWithKey:cryptKey withData:doubleData];
+    
+    NSMutableData* returnValue =[NSMutableData dataWithCapacity:8];
+    [returnValue appendBytes:[aesBytes bytes] length:8];
+    return returnValue;
+}
+
 @end

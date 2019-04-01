@@ -11,16 +11,6 @@
 
 @implementation FQApi
 
-+(void)disconnectDevice{
-    FQBleManager *manager = [FQBleManager shared];
-    [manager disconnectDevice];
-}
-
-+(void)reconnectDevice{
-    FQBleManager *manager = [FQBleManager shared];
-    [manager reconnectDevice];
-}
-
 +(void)startScaning{
     id d = UIApplication.sharedApplication.delegate;
 	FQBleManager *manager = [FQBleManager shared];
@@ -109,7 +99,6 @@
     FPANE_Log(@"spiketrace ANE FQApi.m in forgetPeripheral");
         FQBleManager *manager = [FQBleManager shared];
         manager.peripheral = nil;
-        manager.dateLastCompletePacketReceived = nil;
 }
 
 @end

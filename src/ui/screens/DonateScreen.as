@@ -7,7 +7,7 @@ package ui.screens
 	import flash.net.navigateToURL;
 	import flash.system.System;
 	
-	import database.BlueToothDevice;
+	import database.CGMBlueToothDevice;
 	
 	import feathers.controls.Button;
 	import feathers.controls.Label;
@@ -143,10 +143,10 @@ package ui.screens
 		
 		private function adjustMainMenu():void
 		{
-			if (!BlueToothDevice.isFollower())
-				AppInterface.instance.menu.selectedIndex = 7;
+			if (!CGMBlueToothDevice.isFollower())
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 9 : 8;
 			else
-				AppInterface.instance.menu.selectedIndex = 5;
+				AppInterface.instance.menu.selectedIndex = Constants.isPortrait ? 6 : 5;
 		}
 		
 		private function donate():void
@@ -189,7 +189,7 @@ package ui.screens
 		
 		private function onStarlingResize(event:ResizeEvent):void 
 		{
-			if (!Constants.isPortrait && Constants.deviceModel == DeviceInfo.IPHONE_X)
+			if (!Constants.isPortrait && Constants.deviceModel == DeviceInfo.IPHONE_X_Xs_XsMax_Xr)
 			{
 				if (donationTitle != null && donationDescription != null && contentContainer != null)
 				{

@@ -2,10 +2,13 @@ package services
 {
 	import flash.events.Event;
 	
+	import cryptography.Keys;
+	
 	import database.LocalSettings;
 	
 	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
+	import events.SpikeEvent;
 	import events.TransmitterServiceEvent;
 	
 	import network.httpserver.HttpServer;
@@ -14,6 +17,7 @@ package services
 	import network.httpserver.API.NightscoutAPIGeneralController;
 	import network.httpserver.API.SpikeTreatmentsController;
 	
+	import utils.Cryptography;
 	import utils.Trace;
 
 	public class HTTPServerService
@@ -49,6 +53,7 @@ package services
 			if (httpServerServiceEnabled)
 				activateService();
 			
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 		}
 		
@@ -56,7 +61,7 @@ package services
 		{
 			httpServerServiceEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_ON) == "true";
 			dexcomServerUsername = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_USERNAME);
-			dexcomServerPassword = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD);
+			dexcomServerPassword = Cryptography.decryptStringLight(Keys.STRENGTH_256_BIT, LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LOOP_SERVER_PASSWORD));
 			
 			if (dexcomAuthenticationController != null)
 			{
@@ -93,8 +98,9 @@ package services
 				httpServer.registerController(spikeTreatmentsController);
 				httpServer.listen(1979);
 				
-				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
+				TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgreadingReceived);
 				NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
+				DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 				
 				Trace.myTrace("HTTPServerService.as", "Service activated!");
 			} 
@@ -134,8 +140,9 @@ package services
 				httpServer = null;
 			}
 			
-			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.BGREADING_EVENT, onBgreadingReceived);
+			TransmitterService.instance.removeEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBgreadingReceived);
 			NightscoutService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
+			DexcomShareService.instance.removeEventListener(FollowerEvent.BG_READING_RECEIVED, onBgreadingReceived);
 			
 			serviceActive = false;
 		}
@@ -173,6 +180,18 @@ package services
 				if (serviceActive)
 					deactivateService();
 			}
+		}
+		
+		/**
+		 * Stops the service entirely. Useful for database restores
+		 */
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			Trace.myTrace("HTTPServerService.as", "Stopping service...");
+			
+			LocalSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+			
+			deactivateService();
 		}
 	}
 }
