@@ -189,6 +189,12 @@ package services
 			}
 			else
 			{
+				//Backup iCloud database if certificate has been revoked
+				if (String(data.message).indexOf("revoked") != -1)
+				{
+					ICloudService.backupDatabase();
+				}
+				
 				//Show the alert to the user
 				AlertManager.showSimpleAlert
 				(

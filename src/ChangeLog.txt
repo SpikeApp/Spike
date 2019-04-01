@@ -1,7 +1,8 @@
 3.6.1
-ENHANCEMENT: Several improvements to the iCloud backup feature including adding a new twice-daily backup option. (Miguel)
+ENHANCEMENT: Several improvements to the iCloud backup/restore feature including adding a new twice-daily backup option and automatically prompting the user after a clean Spike install if he/she wants to restore from a previous existing iCloud backup. (Miguel)
 ENHANCEMENT: Several improvements to the internal system that checks and notifies of new Spike updates including also notifying the user through a local notification on the lock screen. (Miguel)
 ENHANCEMENT: Several enhancements to the remote alert internal system. (Miguel)
+ENHANCEMENT: Several improvements and safeguards to avoid user data loss in case of a certificate revocation. (Miguel)
 
 3.6.0
 FEATURE: Basal support is here! Pen users can now log their basal injections in Spike. Pump users can also add their basal rates to Spike as well as temp basal treatments. All basals are rendered at the bottom of the main Spike chart. Main features are: Bidirectional sync to Nightscout, support for pen/mdi as well as pump basals, support for pump basal rates, edit basals directly on the chart, customize size and colors, etc. Spike will now behave and display different treatments depending if the user is on Pen/MDI or a pump so IT'S IMPERATIVE THAT AFTER INSTALLING THIS UPDATE ALL USERS GO TO SETTINGS > TREATMENTS -> PROFILE AND DEFINE THE CORRECT USER TYPE. To learn how to use basals please read the new updated wiki at https://github.com/SpikeApp/Spike/wiki/Treatments (Miguel)
