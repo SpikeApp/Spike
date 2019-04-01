@@ -336,6 +336,7 @@ package database
 		public static const LOCAL_SETTING_TRACKED_VENDOR_ID:int = 161;
 		public static const LOCAL_SETTING_TRACKED_DEVICE_HASH:int = 162;
 		public static const LOCAL_SETTING_TRACKED_DEVICE_LATEST_TIMESTAMP:int = 163;
+		public static const LOCAL_SETTING_STOCK_DATABASE:int = 164;
 
 		private static var localSettings:Array = [
 			"false",//LOCAL_SETTING_DETAILED_TRACING_ENABLED
@@ -501,7 +502,8 @@ package database
 			"", //LOCAL_SETTING_LAST_SHOWN_CHANGELOG
 			"", //LOCAL_SETTING_TRACKED_VENDOR_ID
 			"", //LOCAL_SETTING_TRACKED_DEVICE_HASH
-			"0" //LOCAL_SETTING_TRACKED_DEVICE_LATEST_TIMESTAMP
+			"0", //LOCAL_SETTING_TRACKED_DEVICE_LATEST_TIMESTAMP
+			"true" //LOCAL_SETTING_STOCK_DATABASE
 		];
 		
 		public function LocalSettings() {

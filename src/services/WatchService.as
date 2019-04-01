@@ -2,6 +2,7 @@ package services
 {
 	import com.distriqt.extension.calendar.AuthorisationStatus;
 	import com.distriqt.extension.calendar.Calendar;
+	import com.distriqt.extension.calendar.events.AuthorisationEvent;
 	import com.distriqt.extension.calendar.objects.EventObject;
 	
 	import flash.events.Event;
@@ -27,6 +28,7 @@ package services
 	import treatments.TreatmentsManager;
 	
 	import ui.chart.helpers.GlucoseFactory;
+	import ui.popups.AlertManager;
 	
 	import utils.BgGraphBuilder;
 	import utils.GlucoseHelper;
@@ -35,6 +37,8 @@ package services
 	import utils.UniqueId;
 	
 	[ResourceBundle("treatments")]
+	[ResourceBundle("watchsettingsscreen")]
+	[ResourceBundle("globaltranslations")]
 	
 	public class WatchService
 	{
@@ -73,12 +77,39 @@ package services
 					LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
 					
 					if (Calendar.service.authorisationStatus() == AuthorisationStatus.AUTHORISED && watchComplicationEnabled && calendarID != "")
+					{
 						activateService();
+					}
+					else if (Calendar.service.authorisationStatus() != AuthorisationStatus.AUTHORISED && watchComplicationEnabled && calendarID != "")
+					{
+						Calendar.service.addEventListener( AuthorisationEvent.CHANGED, onCalendarAuthorisation );
+						Calendar.service.requestAccess();
+					}
 				}
 			}
 			catch (e:Error)
 			{
 				Trace.myTrace("WatchService.as", "Error initiating Calendar ANE: " + e);
+			}
+		}
+		
+		private static function onCalendarAuthorisation(event:AuthorisationEvent):void
+		{
+			Calendar.service.removeEventListener( AuthorisationEvent.CHANGED, onCalendarAuthorisation );
+			
+			if (Calendar.service.authorisationStatus() == AuthorisationStatus.AUTHORISED)
+			{
+				activateService();
+			}
+			else
+			{
+				Trace.myTrace("WatchService.as", "Error authorizing calendar access. Notifying user...");
+				
+				AlertManager.showSimpleAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('globaltranslations','warning_alert_title'),
+					ModelLocator.resourceManagerInstance.getString('watchsettingsscreen','alert_message_manual_athorization_2')
+				)
 			}
 		}
 		
