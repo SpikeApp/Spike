@@ -301,11 +301,25 @@ package database
 			var oldDbPath:File = File.applicationStorageDirectory.resolvePath(dbFileName);
 			if (oldDbPath.exists)
 			{
-				trace("MOVING DATABASE TO NEW LOCATION")
+				trace("Database.as : Moving database to Documents directory...");
 				oldDbPath.moveTo(File.documentsDirectory.resolvePath(dbFileName), true);
 			}
 			
-
+			//Check database leftovers
+			var importedFilesFolder:File = File.documentsDirectory.resolvePath("Inbox");
+			if (importedFilesFolder.exists)
+			{
+				var files:Array = importedFilesFolder.getDirectoryListing();
+				for (var i:uint = 0; i < files.length; i++)
+				{
+					var file:File = files[i] as File;
+					
+					trace("Database.as : Deleting leftover database file: " + file.name);
+					
+					file.deleteFile();
+				}
+			}
+			
 			dbFile  = File.documentsDirectory.resolvePath(dbFileName);
 			
 			aConn = new SQLConnection();
