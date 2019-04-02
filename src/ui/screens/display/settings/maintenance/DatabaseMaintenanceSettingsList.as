@@ -250,7 +250,7 @@ package ui.screens.display.settings.maintenance
 			var fileName:String;
 			var mimeType:String;
 			
-			var db:File = File.applicationStorageDirectory.resolvePath("spike.db");
+			var db:File = File.documentsDirectory.resolvePath("spike.db");
 			//If database is bigger than 14mb, zip it efore sending it.
 			if (db.size > 14000000)
 			{

@@ -33,6 +33,8 @@ package ui
 	import flash.utils.ByteArray;
 	import flash.utils.setTimeout;
 	
+	import mx.utils.ObjectUtil;
+	
 	import spark.formatters.DateTimeFormatter;
 	
 	import cryptography.Keys;
@@ -624,17 +626,18 @@ package ui
 		 */
 		private static function onInvoke(event:InvokeEvent):void 
 		{
-			if (event == null || event.arguments == null || event.arguments[0] == null)
+			if (event == null || event.arguments == null || (event.arguments as Array).length == 0 || event.arguments[0] == null)
 				return;
 			
 			var now:Number = new Date().valueOf();
-			
 			if (now - lastInvoke > 5000)
 			{
 				//Do nothing.
 			}
 			else
+			{
 				return;
+			}
 			
 			var items:Array = event.arguments;
 			
@@ -743,7 +746,7 @@ package ui
 			NativeApplication.nativeApplication.removeEventListener(InvokeEvent.INVOKE, onInvoke);
 			
 			//Restore database
-			var databaseTargetFile:File = File.applicationStorageDirectory.resolvePath("spike.db");
+			var databaseTargetFile:File = File.documentsDirectory.resolvePath("spike.db");
 			var databaseFileStream:FileStream = new FileStream();
 			databaseFileStream.open(databaseTargetFile, FileMode.WRITE);
 			databaseFileStream.writeBytes(backupDatabaseData, 0, backupDatabaseData.length);

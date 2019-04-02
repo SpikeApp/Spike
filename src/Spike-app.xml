@@ -303,6 +303,10 @@
 		                </dict>
 		            </dict>
 		        </array>
+		        <key>UIFileSharingEnabled</key>
+				<true/>
+				<key>UISupportsDocumentBrowser</key>
+				<true/>
             ]]>
 		</InfoAdditions>
 		<!-- A list of plist key/value pairs to be added to the application Entitlements.plist -->

@@ -182,7 +182,7 @@ package services
 					remoteDatabaseData.uncompress(CompressionAlgorithm.ZLIB);
 					
 					//Load local database
-					var localDB:File = File.applicationStorageDirectory.resolvePath("spike.db");
+					var localDB:File = File.documentsDirectory.resolvePath("spike.db");
 					
 					if (localDB != null && localDB.size < remoteDatabaseData.length)
 					{
@@ -278,7 +278,7 @@ package services
 						if (CloudStorage.service.documentStore.isAvailable)
 						{
 							//Load database into memory
-							var localDatabaseFile:File = File.applicationStorageDirectory.resolvePath("spike.db");
+							var localDatabaseFile:File = File.documentsDirectory.resolvePath("spike.db");
 							if (localDatabaseFile.exists && localDatabaseFile.size > 0)
 							{
 								//Create database file stream
@@ -511,7 +511,7 @@ package services
 			Trace.myTrace("ICloudService.as", "Spike halted and local database connection closed!");
 			
 			//Restore database
-			var databaseTargetFile:File = File.applicationStorageDirectory.resolvePath("spike.db");
+			var databaseTargetFile:File = File.documentsDirectory.resolvePath("spike.db");
 			var databaseFileStream:FileStream = new FileStream();
 			databaseFileStream.open(databaseTargetFile, FileMode.WRITE);
 			databaseFileStream.writeBytes(remoteDatabaseData, 0, remoteDatabaseData.length);

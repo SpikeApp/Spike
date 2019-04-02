@@ -296,8 +296,17 @@ package database
 			
 			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution, false, -1000);
 			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, bgReadingEventReceived);
+			
+			//Check old database file path
+			var oldDbPath:File = File.applicationStorageDirectory.resolvePath(dbFileName);
+			if (oldDbPath.exists)
+			{
+				trace("MOVING DATABASE TO NEW LOCATION")
+				oldDbPath.moveTo(File.documentsDirectory.resolvePath(dbFileName), true);
+			}
+			
 
-			dbFile  = File.applicationStorageDirectory.resolvePath(dbFileName);
+			dbFile  = File.documentsDirectory.resolvePath(dbFileName);
 			
 			aConn = new SQLConnection();
 			aConn.addEventListener(SQLEvent.OPEN, onConnOpen);
