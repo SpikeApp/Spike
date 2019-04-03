@@ -28,7 +28,6 @@
 		961EB7732089460D005F0E9F /* ExtensionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 961EB7722089460D005F0E9F /* ExtensionDelegate.swift */; };
 		961EB7752089460D005F0E9F /* NotificationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 961EB7742089460D005F0E9F /* NotificationController.swift */; };
 		961EB7772089460D005F0E9F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 961EB7762089460D005F0E9F /* Assets.xcassets */; };
-		961EB77C2089460D005F0E9F /* watch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 961EB75F2089460D005F0E9F /* watch.app */; };
 		961EB786208946A1005F0E9F /* GlanceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 961EB785208946A1005F0E9F /* GlanceController.swift */; };
 		961EB788208946B3005F0E9F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 961EB787208946B3005F0E9F /* Images.xcassets */; };
 		961EB78E2089488B005F0E9F /* PushNotificationPayload.apns in Resources */ = {isa = PBXBuildFile; fileRef = 961EB78C2089488B005F0E9F /* PushNotificationPayload.apns */; };
@@ -47,6 +46,7 @@
 		96A54793212C8AFB00FDE960 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96A54792212C8AFB00FDE960 /* CloudKit.framework */; };
 		96B9CB5520969B9300782124 /* FSInterfaceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B9CB5420969B9300782124 /* FSInterfaceController.swift */; };
 		96D5EE94208F7B3900308288 /* UIColor+colorFromHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB729D62029FD3500965219 /* UIColor+colorFromHex.swift */; };
+		96FD53392254374F00F546AB /* watch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 961EB75F2089460D005F0E9F /* watch.app */; };
 		A9F0B0D10FA7E63562B1D19D /* Pods_SpikeTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D1C13DD723CC3C77D2D1D0E /* Pods_SpikeTests.framework */; };
 		DE6AF41AC6B6BE56B457596D /* Pods_SpikeUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F4F850F9FEC9EE7AB5D05EB4 /* Pods_SpikeUITests.framework */; };
 /* End PBXBuildFile section */
@@ -80,19 +80,19 @@
 			remoteGlobalIDString = 961EB76A2089460D005F0E9F;
 			remoteInfo = "watch Extension";
 		};
-		961EB77A2089460D005F0E9F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 1C510116202806B400872D37 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 961EB75E2089460D005F0E9F;
-			remoteInfo = watch;
-		};
 		9654C7FB2087C35F0021B684 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1C510116202806B400872D37 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 9654C7F12087C35F0021B684;
 			remoteInfo = fswidget;
+		};
+		96FD53372254374500F546AB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1C510116202806B400872D37 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 961EB75E2089460D005F0E9F;
+			remoteInfo = watch;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -126,7 +126,7 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolderSpec = 16;
 			files = (
-				961EB77C2089460D005F0E9F /* watch.app in Embed Watch Content */,
+				96FD53392254374F00F546AB /* watch.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -430,9 +430,9 @@
 			buildRules = (
 			);
 			dependencies = (
+				96FD53382254374500F546AB /* PBXTargetDependency */,
 				1C51015F202806D600872D37 /* PBXTargetDependency */,
 				9654C7FC2087C35F0021B684 /* PBXTargetDependency */,
-				961EB77B2089460D005F0E9F /* PBXTargetDependency */,
 			);
 			name = Spike;
 			productName = Spike;
@@ -1057,15 +1057,15 @@
 			target = 961EB76A2089460D005F0E9F /* watch Extension */;
 			targetProxy = 961EB76D2089460D005F0E9F /* PBXContainerItemProxy */;
 		};
-		961EB77B2089460D005F0E9F /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 961EB75E2089460D005F0E9F /* watch */;
-			targetProxy = 961EB77A2089460D005F0E9F /* PBXContainerItemProxy */;
-		};
 		9654C7FC2087C35F0021B684 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 9654C7F12087C35F0021B684 /* fswidget */;
 			targetProxy = 9654C7FB2087C35F0021B684 /* PBXContainerItemProxy */;
+		};
+		96FD53382254374500F546AB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 961EB75E2089460D005F0E9F /* watch */;
+			targetProxy = 96FD53372254374500F546AB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

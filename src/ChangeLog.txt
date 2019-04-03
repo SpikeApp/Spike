@@ -1,5 +1,4 @@
-3.6.1
-FEATURE: File sharing support! Users can now export/import Spike's database by connecting their devices to iTunes and navigating to the "File Sharing" screen or directly from the Files app on their devices. (Miguel)
+3.6.2
 ENHANCEMENT: Several improvements to the iCloud backup/restore feature including adding a new twice-daily backup option and automatically prompting the user after a clean Spike install if he/she wants to restore from a previous existing iCloud backup. (Miguel)
 ENHANCEMENT: Several improvements to the internal system that checks and notifies of new Spike updates including also notifying the user through a local notification on the lock screen. (Miguel)
 ENHANCEMENT: Several enhancements to the remote alert internal system. (Miguel)
