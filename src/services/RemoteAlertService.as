@@ -1,6 +1,7 @@
 package services
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
+	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
@@ -8,12 +9,21 @@ package services
 	import flash.net.URLLoaderDataFormat;
 	import flash.net.URLRequest;
 	import flash.net.URLRequestMethod;
+	import flash.net.navigateToURL;
 	
+	import database.Database;
 	import database.LocalSettings;
 	
+	import events.DatabaseEvent;
+	import events.ICloudEvent;
 	import events.SpikeEvent;
 	
+	import feathers.controls.Alert;
+	import feathers.layout.HorizontalAlign;
+	
 	import model.ModelLocator;
+	
+	import starling.events.Event;
 	
 	import ui.popups.AlertManager;
 	
@@ -192,15 +202,40 @@ package services
 				//Backup iCloud database if certificate has been revoked
 				if (String(data.message).indexOf("revoked") != -1)
 				{
-					ICloudService.backupDatabase();
+					//Backup to iCloud
+					if (ICloudService.serviceStartedAt != 0)
+					{
+						ICloudService.backupDatabase();
+					}
+					
+					//Show action alert to the user with a link to the revoke guide
+					var alert:Alert = AlertManager.showActionAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations', "warning_alert_title"),
+						String(data.message),
+						Number.NaN,
+						[
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations', "revoke_guide_button_label"), triggered: onShowRevokeGuide },
+							{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations', "ok_alert_button_label") }	
+						]
+					);
+					alert.buttonGroupProperties.gap = 3;
+					
+					function onShowRevokeGuide(e:starling.events.Event):void
+					{
+						//Navigate to guide
+						navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/Fix-For-Revoked-Certificates"));
+					}
 				}
-				
-				//Show the alert to the user
-				AlertManager.showSimpleAlert
-				(
-					ModelLocator.resourceManagerInstance.getString('globaltranslations', "info_alert_title"),
-					data.message
-				);
+				else
+				{
+					//Show a simple alert to the user
+					AlertManager.showSimpleAlert
+					(
+						ModelLocator.resourceManagerInstance.getString('globaltranslations', "info_alert_title"),
+						String(data.message)
+					);
+				}
 				
 				//Update Database
 				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_REMOTE_ALERT_LAST_ID, String(currentIDCheck));

@@ -57,7 +57,7 @@ package services
 		private static var localDatabaseData:ByteArray;
 		private static var remoteDatabaseData:ByteArray;
 		private static var appHalted:Boolean = false;
-		private static var serviceStartedAt:int = 0;
+		public static var serviceStartedAt:int = 0;
 		
 		public function ICloudService()
 		{
