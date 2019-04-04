@@ -1,7 +1,6 @@
 package services
 {
 	import com.distriqt.extension.networkinfo.NetworkInfo;
-	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
@@ -11,15 +10,11 @@ package services
 	import flash.net.URLRequestMethod;
 	import flash.net.navigateToURL;
 	
-	import database.Database;
 	import database.LocalSettings;
 	
-	import events.DatabaseEvent;
-	import events.ICloudEvent;
 	import events.SpikeEvent;
 	
 	import feathers.controls.Alert;
-	import feathers.layout.HorizontalAlign;
 	
 	import model.ModelLocator;
 	
