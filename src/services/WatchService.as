@@ -291,7 +291,7 @@ package services
 		
 		private static function onTreatmentsChanged(e:TreatmentsEvent):void
 		{
-			if (e.treatment != null && e.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD)
+			if (e != null && e.treatment != null && e.treatment.type == Treatment.TYPE_EXTENDED_COMBO_BOLUS_CHILD)
 				return;
 			
 			if (displayCOBEnabled || displayIOBEnabled)
