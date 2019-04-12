@@ -34,9 +34,10 @@ class TodayViewController: UIViewController, NCWidgetProviding
     }
     
     //Variables
+    var dynamicAppGroup:String = ""
     var chartGlucoseValues = [Double]()
     var chartGlucoseTimes = [String]()
-    var fileUrl:URL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.miguelkennedy.spike")!
+    var fileUrl:URL?
     var externalData:[String : AnyObject] = [:]
     var latestWidgetUpdate:String = ""
     var latestGlucoseValue:String = ""
@@ -85,36 +86,7 @@ class TodayViewController: UIViewController, NCWidgetProviding
     {
         super.viewDidLoad()
         
-        //Dummy data
-        /*latestWidgetUpdate = "Lat Update: 05, Jun, 22:35"
-         latestGlucoseValue = "600"
-         latestGlucoseSlopeArrow = "-"
-         latestGlucoseDelta = "+4"
-         latestGlucoseTime = String(Date().toTimestamp())
-         glucoseUnit = "mg/dL"
-         urgenLowThreshold = "50"
-         lowThreshold = "60"
-         highThreshold = "110"
-         urgentHighThreshold = "130"
-         urgenLowColor = "#FF0000"
-         lowColor = "#FFFF00"
-         inRangeColor = "#00FF00"
-         highColor = "#0000FF"
-         urgentHighColor = "#FF0000"
-         oldDataColor = "#CCCCCC"
-         backgroundColor = "#FF0000"
-         backgroundOpacity = "0.2"
-         displayLabelsColor = "#FFFFFF"
-         hourAgo = "h"
-         minAgo = "m"
-         ago = "ago"
-         now = "now"
-         openSpike = "open spike"
-         IOB = "6.05"
-         COB = "25.4"
-         predictionsDuration = "1h30m"
-         predictionsOutcome = "101"
-         */
+        noData.text = ""
         
         //Widget Properties
         if #available(iOSApplicationExtension 10.0, *)
@@ -132,18 +104,33 @@ class TodayViewController: UIViewController, NCWidgetProviding
         glucoseDisplay.baselineAdjustment = .alignCenters
         glucoseDisplay.textAlignment = .center
         
-        if getExternalData()
+        
+        //Get App Groups address directly from the mobile provisioning file.
+        if let provision = MobileProvision.read()
         {
-            if populateProperties()
+            dynamicAppGroup = provision.entitlements.appGroups[0]
+            
+            if (!dynamicAppGroup.isEmpty)
             {
-                setBackground()
-                setLabels()
+                //Populate Widget
+                if getExternalData()
+                {
+                    if populateProperties()
+                    {
+                        setBackground()
+                        setLabels()
+                    }
+                }
+            }
+            else
+            {
+                noData.text = "Can't connect to Spike. Not enough permissions!"
             }
         }
-        
-        //DEBUG
-        //setBackground()
-        //setLabels()
+        else
+        {
+            noData.text = "Can't connect to Spike. Not enough permissions!"
+        }
     }
     
     /**
@@ -151,21 +138,29 @@ class TodayViewController: UIViewController, NCWidgetProviding
      */
     func getExternalData()->Bool
     {
-        //External Data
+        if (dynamicAppGroup.isEmpty)
+        {
+            print("Can't connect to Spike. Not enough permissions!")
+            
+            noData.text = "Can't connect to Spike. Not enough permissions!"
+            return false
+        }
+        
         //Define database file path
-        fileUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.miguelkennedy.spike")!.appendingPathComponent("Library/Preferences/group.com.miguelkennedy.spike.plist")
+        fileUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: dynamicAppGroup)!.appendingPathComponent("Library/Preferences/" + dynamicAppGroup + ".plist")
         
         //Check if file exists
         let fileManager = FileManager.default
-        if !fileManager.fileExists(atPath: fileUrl.path)
+        if !fileManager.fileExists(atPath: fileUrl!.path)
         {
             print("Database file doesn't exist!")
-            noData.text = "No Data!"
+            
+            noData.text = "Can't connect to Spike!"
             return false
         }
         
         //Parse database file into a dictionary
-        externalData = (NSDictionary(contentsOfFile: fileUrl.path) as? [String: AnyObject])!;
+        externalData = (NSDictionary(contentsOfFile: fileUrl!.path) as? [String: AnyObject])!;
         
         return true
     }
@@ -523,5 +518,66 @@ extension Date
     func toTimestamp() -> Int64!
     {
         return Int64(self.timeIntervalSince1970 * 1000)
+    }
+}
+
+struct MobileProvision: Decodable {
+    var entitlements: Entitlements
+    
+    private enum CodingKeys : String, CodingKey {
+        case entitlements = "Entitlements"
+    }
+    
+    // Sublevel: decode entitlements informations
+    struct Entitlements: Decodable {
+        let appGroups: [String]
+        
+        private enum CodingKeys: String, CodingKey {
+            case appGroups = "com.apple.security.application-groups"
+        }
+        
+        init(appGroups: Array<String>) {
+            self.appGroups = appGroups
+        }
+        
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let appGroups: [String] = (try? container.decode([String].self, forKey: .appGroups)) ?? []
+            
+            self.init(appGroups: appGroups)
+        }
+    }
+}
+
+extension MobileProvision {
+    // Read mobileprovision file embedded in app.
+    static func read() -> MobileProvision? {
+        let profilePath: String? = Bundle.main.path(forResource: "embedded", ofType: "mobileprovision")
+        guard let path = profilePath else { return nil }
+        return read(from: path)
+    }
+    
+    // Read a .mobileprovision file on disk
+    static func read(from profilePath: String) -> MobileProvision? {
+        guard let plistDataString = try? NSString.init(contentsOfFile: profilePath,
+                                                       encoding: String.Encoding.isoLatin1.rawValue) else { return nil }
+        
+        // Skip binary part at the start of the mobile provisionning profile
+        let scanner = Scanner(string: plistDataString as String)
+        guard scanner.scanUpTo("<plist", into: nil) != false else { return nil }
+        
+        // ... and extract plist until end of plist payload (skip the end binary part.
+        var extractedPlist: NSString?
+        guard scanner.scanUpTo("</plist>", into: &extractedPlist) != false else { return nil }
+        
+        guard let plist = extractedPlist?.appending("</plist>").data(using: .isoLatin1) else { return nil }
+        let decoder = PropertyListDecoder()
+        do {
+            let provision = try decoder.decode(MobileProvision.self, from: plist)
+            return provision
+        } catch {
+            // TODO: log / handle error
+            return nil
+        }
     }
 }

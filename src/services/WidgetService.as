@@ -72,27 +72,34 @@ package services
 		
 		public static function init():void
 		{
-			Trace.myTrace("WidgetService.as", "Service started!");
+			Trace.myTrace("WidgetService.as", "Starting service...");
 			
-			SpikeANE.initUserDefaults();
-			
-			if (!CGMBlueToothDevice.isFollower())
-				Starling.juggler.delayCall(setInitialGraphData, 3);
-			
-			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
-			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
-			TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBloodGlucoseReceived, false, 150, false);
-			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived, false, 150, false);
-			DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived, false, 150, false);
-			CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onBloodGlucoseReceived, false, 150, false);
-			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onBloodGlucoseReceived, false, 150, false);
-			CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, setInitialGraphData);
-			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentRefresh);
-			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentRefresh);
-			TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentRefresh);
-			TreatmentsManager.instance.addEventListener(TreatmentsEvent.IOB_COB_UPDATED, onTreatmentRefresh);
-			
-			IOBCOBIntervalID = setInterval(updateTreatments, TimeSpan.TIME_2_MINUTES_30_SECONDS);
+			if (!SpikeANE.initUserDefaults())
+			{
+				Trace.myTrace("WidgetService.as", "Can't start service. Missing App Group entitlement!");
+			}
+			else
+			{
+				Trace.myTrace("WidgetService.as", "Service started!");
+				
+				if (!CGMBlueToothDevice.isFollower())
+					Starling.juggler.delayCall(setInitialGraphData, 3);
+				
+				Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
+				CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+				TransmitterService.instance.addEventListener(TransmitterServiceEvent.BGREADING_RECEIVED, onBloodGlucoseReceived, false, 150, false);
+				NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived, false, 150, false);
+				DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBloodGlucoseReceived, false, 150, false);
+				CalibrationService.instance.addEventListener(CalibrationServiceEvent.NEW_CALIBRATION_EVENT, onBloodGlucoseReceived, false, 150, false);
+				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, onBloodGlucoseReceived, false, 150, false);
+				CalibrationService.instance.addEventListener(CalibrationServiceEvent.INITIAL_CALIBRATION_EVENT, setInitialGraphData);
+				TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_ADDED, onTreatmentRefresh);
+				TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_DELETED, onTreatmentRefresh);
+				TreatmentsManager.instance.addEventListener(TreatmentsEvent.TREATMENT_UPDATED, onTreatmentRefresh);
+				TreatmentsManager.instance.addEventListener(TreatmentsEvent.IOB_COB_UPDATED, onTreatmentRefresh);
+				
+				IOBCOBIntervalID = setInterval(updateTreatments, TimeSpan.TIME_2_MINUTES_30_SECONDS);
+			}
 		}
 		
 		private static function onSettingsChanged(e:SettingsServiceEvent):void

@@ -282,10 +282,73 @@ FREObject applicationInBackGround (FREContext ctx, void* funcData, uint32_t argc
 
 FREObject initUserDefaults (FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
 {
-    _userDefaults = [[NSUserDefaults alloc]initWithSuiteName:@"group.com.miguelkennedy.spike"];
-    [_userDefaults synchronize];
-    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m UserDefaults Initiated!");
-    return nil;
+    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m initUserDefaults called!");
+    
+    @try
+    {
+        NSString *provisionPath = [[NSBundle mainBundle] pathForResource:@"embedded" ofType:@"mobileprovision"];
+        if (![[NSFileManager defaultManager] fileExistsAtPath:provisionPath])
+        {
+            FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Can't find provisioning file!");
+            return FPANE_BOOLToFREObject(NO);
+        }
+        else
+        {
+            NSError *err;
+            NSString *stringContent = [NSString stringWithContentsOfFile:provisionPath encoding:NSASCIIStringEncoding error:&err];
+            stringContent = [stringContent componentsSeparatedByString:@"<plist version=\"1.0\">"][1];
+            stringContent = [NSString stringWithFormat:@"%@%@", @"<plist version=\"1.0\">", stringContent];
+            stringContent = [stringContent componentsSeparatedByString:@"</plist>"][0];
+            stringContent = [NSString stringWithFormat:@"%@%@", stringContent, @"</plist>"];
+            
+            NSData *stringData = [stringContent dataUsingEncoding:NSASCIIStringEncoding];
+            
+            NSError *error;
+            NSPropertyListFormat format;
+            
+            id plist = [NSPropertyListSerialization propertyListWithData:stringData options:NSPropertyListImmutable format:&format error:&error];
+            
+            NSDictionary *provision = plist;
+            NSDictionary *entitlements = [provision objectForKey:@"Entitlements"];
+            NSArray *appGroups = [entitlements objectForKey:@"com.apple.security.application-groups"];
+            
+            if (appGroups != nil && appGroups.count > 0)
+            {
+                NSString *defaultAppGroup = appGroups[0];
+                
+                if (defaultAppGroup == nil ||
+                    ([defaultAppGroup respondsToSelector:@selector(length)] && [(NSData *)defaultAppGroup length] == 0) ||
+                    ([defaultAppGroup respondsToSelector:@selector(count)]&& [(NSArray *)defaultAppGroup count] == 0))
+                {
+                    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m There's no default App Group defined in the provisioning file!");
+                    
+                    return FPANE_BOOLToFREObject(NO);
+                }
+                else
+                {
+                    FPANE_Log([NSString stringWithFormat:@"spiketrace ANE NativeExtensioniOS.m Found default App Group: %@", defaultAppGroup]);
+                    
+                    _userDefaults = [[NSUserDefaults alloc]initWithSuiteName:defaultAppGroup];
+                    [_userDefaults synchronize];
+                    
+                    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m UserDefaults Initiated!");
+                    return FPANE_BOOLToFREObject(YES);
+                }
+            }
+            else
+            {
+                FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Provisioning file doesn't contain any app groups!");
+                return FPANE_BOOLToFREObject(NO);
+            }
+        }
+    }
+    @catch (NSException *exception)
+    {
+        FPANE_Log([NSString stringWithFormat:@"spiketrace ANE NativeExtensioniOS.m Exception encountered when initing user defaults. Aborting call. Exception: %@", [exception name]]);
+        return FPANE_BOOLToFREObject(NO);
+    }
+    
+    return FPANE_BOOLToFREObject(NO);
 }
 
 FREObject setUserDefaultsData (FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
@@ -403,6 +466,291 @@ FREObject openWithDefaultApplication(FREContext ctx, void* funcData, uint32_t ar
     }
     
     return nil;
+}
+
+FREObject getFullEntitlements(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
+{
+    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Getting full entitlements...");
+    
+    @try
+    {
+        NSString *provisionPath = [[NSBundle mainBundle] pathForResource:@"embedded" ofType:@"mobileprovision"];
+        if (![[NSFileManager defaultManager] fileExistsAtPath:provisionPath])
+        {
+            FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Can't find provisioning file!");
+            
+            return FPANE_NSStringToFREObject(@"");
+        }
+        else
+        {
+            NSError *err;
+            NSString *stringContent = [NSString stringWithContentsOfFile:provisionPath encoding:NSASCIIStringEncoding error:&err];
+            stringContent = [stringContent componentsSeparatedByString:@"<plist version=\"1.0\">"][1];
+            stringContent = [NSString stringWithFormat:@"%@%@", @"<plist version=\"1.0\">", stringContent];
+            stringContent = [stringContent componentsSeparatedByString:@"</plist>"][0];
+            stringContent = [NSString stringWithFormat:@"%@%@", stringContent, @"</plist>"];
+            
+            NSData *stringData = [stringContent dataUsingEncoding:NSASCIIStringEncoding];
+            
+            NSError *error;
+            NSPropertyListFormat format;
+            
+            id plist = [NSPropertyListSerialization propertyListWithData:stringData options:NSPropertyListImmutable format:&format error:&error];
+            
+            NSDictionary *provision = plist;
+            NSDictionary *entitlements = [provision objectForKey:@"Entitlements"];
+            
+            return FPANE_NSStringToFREObject([NSString stringWithFormat:@"%@", entitlements]);
+            
+        }
+    }
+    @catch (NSException *exception)
+    {
+        FPANE_Log([NSString stringWithFormat:@"spiketrace ANE NativeExtensioniOS.m Exception encountered when getting full entitlements. Aborting call. Exception: %@", [exception name]]);
+         return FPANE_NSStringToFREObject(@"");
+    }
+    
+    return FPANE_NSStringToFREObject(@"");
+}
+
+FREObject getCertificateExpirationDate(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
+{
+    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Getting certificate expiration date...");
+    
+    @try
+    {
+        NSString *provisionPath = [[NSBundle mainBundle] pathForResource:@"embedded" ofType:@"mobileprovision"];
+        if (![[NSFileManager defaultManager] fileExistsAtPath:provisionPath])
+        {
+            FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Can't find provisioning file!");
+            
+            return FPANE_DoubleToFREObject(-1);
+        }
+        else
+        {
+            NSError *err;
+            NSString *stringContent = [NSString stringWithContentsOfFile:provisionPath encoding:NSASCIIStringEncoding error:&err];
+            stringContent = [stringContent componentsSeparatedByString:@"<plist version=\"1.0\">"][1];
+            stringContent = [NSString stringWithFormat:@"%@%@", @"<plist version=\"1.0\">", stringContent];
+            stringContent = [stringContent componentsSeparatedByString:@"</plist>"][0];
+            stringContent = [NSString stringWithFormat:@"%@%@", stringContent, @"</plist>"];
+            
+            NSData *stringData = [stringContent dataUsingEncoding:NSASCIIStringEncoding];
+            
+            NSError *error;
+            NSPropertyListFormat format;
+            
+            id plist = [NSPropertyListSerialization propertyListWithData:stringData options:NSPropertyListImmutable format:&format error:&error];
+            
+            NSDictionary *provision = plist;
+            NSDate *expirationDate = [provision objectForKey:@"ExpirationDate"];
+            
+            if (expirationDate != nil)
+            {
+                FPANE_Log([NSString stringWithFormat:@"spiketrace ANE NativeExtensioniOS.m Expiration Date: %@", expirationDate]);
+                
+                return FPANE_DoubleToFREObject([@(floor([expirationDate timeIntervalSince1970] * 1000)) longLongValue]);
+            }
+            else
+            {
+                FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Provisioning file doesn't contain any expiration date!");
+                
+                return FPANE_DoubleToFREObject(-1);
+            }
+        }
+    }
+    @catch (NSException *exception)
+    {
+        FPANE_Log([NSString stringWithFormat:@"spiketrace ANE NativeExtensioniOS.m Exception encountered when getting certificate expiration call. Aborting call. Exception: %@", [exception name]]);
+        return FPANE_DoubleToFREObject(-1);
+    }
+    
+    return FPANE_DoubleToFREObject(-1);
+}
+
+FREObject getCertificateCreationDate(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
+{
+    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Getting certificate creation date...");
+    
+    @try
+    {
+        NSString *provisionPath = [[NSBundle mainBundle] pathForResource:@"embedded" ofType:@"mobileprovision"];
+        if (![[NSFileManager defaultManager] fileExistsAtPath:provisionPath])
+        {
+            FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Can't find provisioning file!");
+            
+            return FPANE_DoubleToFREObject(-1);
+        }
+        else
+        {
+            NSError *err;
+            NSString *stringContent = [NSString stringWithContentsOfFile:provisionPath encoding:NSASCIIStringEncoding error:&err];
+            stringContent = [stringContent componentsSeparatedByString:@"<plist version=\"1.0\">"][1];
+            stringContent = [NSString stringWithFormat:@"%@%@", @"<plist version=\"1.0\">", stringContent];
+            stringContent = [stringContent componentsSeparatedByString:@"</plist>"][0];
+            stringContent = [NSString stringWithFormat:@"%@%@", stringContent, @"</plist>"];
+            
+            NSData *stringData = [stringContent dataUsingEncoding:NSASCIIStringEncoding];
+            
+            NSError *error;
+            NSPropertyListFormat format;
+            
+            id plist = [NSPropertyListSerialization propertyListWithData:stringData options:NSPropertyListImmutable format:&format error:&error];
+            
+            NSDictionary *provision = plist;
+            NSDate *creationDate = [provision objectForKey:@"CreationDate"];
+            
+            if (creationDate != nil)
+            {
+                FPANE_Log([NSString stringWithFormat:@"spiketrace ANE NativeExtensioniOS.m Creation Date: %@", creationDate]);
+                
+                return FPANE_DoubleToFREObject([@(floor([creationDate timeIntervalSince1970] * 1000)) longLongValue]);
+            }
+            else
+            {
+                FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Provisioning file doesn't contain any creation date!");
+                
+                return FPANE_DoubleToFREObject(-1);
+            }
+        }
+    }
+    @catch (NSException *exception)
+    {
+        FPANE_Log([NSString stringWithFormat:@"spiketrace ANE NativeExtensioniOS.m Exception encountered when getting certificate creation date. Aborting call. Exception: %@", [exception name]]);
+        return FPANE_DoubleToFREObject(-1);
+    }
+    
+    return FPANE_DoubleToFREObject(-1);
+}
+
+
+FREObject hasHealthKitEntitlements(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
+{
+    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Checking HealthKit entitlements...");
+    
+    @try
+    {
+        NSString *provisionPath = [[NSBundle mainBundle] pathForResource:@"embedded" ofType:@"mobileprovision"];
+        if (![[NSFileManager defaultManager] fileExistsAtPath:provisionPath])
+        {
+            FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Can't find provisioning file!");
+            
+            return FPANE_BOOLToFREObject(NO);
+        }
+        else
+        {
+            NSError *err;
+            NSString *stringContent = [NSString stringWithContentsOfFile:provisionPath encoding:NSASCIIStringEncoding error:&err];
+            stringContent = [stringContent componentsSeparatedByString:@"<plist version=\"1.0\">"][1];
+            stringContent = [NSString stringWithFormat:@"%@%@", @"<plist version=\"1.0\">", stringContent];
+            stringContent = [stringContent componentsSeparatedByString:@"</plist>"][0];
+            stringContent = [NSString stringWithFormat:@"%@%@", stringContent, @"</plist>"];
+            
+            NSData *stringData = [stringContent dataUsingEncoding:NSASCIIStringEncoding];
+            
+            NSError *error;
+            NSPropertyListFormat format;
+            
+            id plist = [NSPropertyListSerialization propertyListWithData:stringData options:NSPropertyListImmutable format:&format error:&error];
+            
+            NSDictionary *provision = plist;
+            NSDictionary *entitlements = [provision objectForKey:@"Entitlements"];
+            
+            if ([entitlements objectForKey:@"com.apple.developer.healthkit"] != nil)
+            {
+                int hk = [[entitlements objectForKey:@"com.apple.developer.healthkit"] intValue];
+                
+                if (hk == 1)
+                {
+                    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m HealthKit is supported!");
+                    
+                    return FPANE_BOOLToFREObject(YES);
+                }
+                else
+                {
+                    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m HealthKit is NOT suppoted!");
+                    
+                    return FPANE_BOOLToFREObject(NO);
+                }
+            }
+            else
+            {
+                return FPANE_BOOLToFREObject(NO);
+            }
+        }
+    }
+    @catch (NSException *exception)
+    {
+        FPANE_Log([NSString stringWithFormat:@"spiketrace ANE NativeExtensioniOS.m Exception encountered when checking HealthKit entitlements. Aborting call. Exception: %@", [exception name]]);
+        return FPANE_BOOLToFREObject(NO);
+    }
+    
+    return FPANE_BOOLToFREObject(NO);
+}
+
+FREObject hasiCloudEntitlements(FREContext ctx, void* funcData, uint32_t argc, FREObject argv[0])
+{
+    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Checking iCloud entitlements...");
+    
+    @try
+    {
+        NSString *provisionPath = [[NSBundle mainBundle] pathForResource:@"embedded" ofType:@"mobileprovision"];
+        if (![[NSFileManager defaultManager] fileExistsAtPath:provisionPath])
+        {
+            FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Can't find provisioning file!");
+            return FPANE_BOOLToFREObject(NO);
+        }
+        else
+        {
+            NSError *err;
+            NSString *stringContent = [NSString stringWithContentsOfFile:provisionPath encoding:NSASCIIStringEncoding error:&err];
+            stringContent = [stringContent componentsSeparatedByString:@"<plist version=\"1.0\">"][1];
+            stringContent = [NSString stringWithFormat:@"%@%@", @"<plist version=\"1.0\">", stringContent];
+            stringContent = [stringContent componentsSeparatedByString:@"</plist>"][0];
+            stringContent = [NSString stringWithFormat:@"%@%@", stringContent, @"</plist>"];
+            
+            NSData *stringData = [stringContent dataUsingEncoding:NSASCIIStringEncoding];
+            
+            NSError *error;
+            NSPropertyListFormat format;
+            
+            id plist = [NSPropertyListSerialization propertyListWithData:stringData options:NSPropertyListImmutable format:&format error:&error];
+            
+            NSDictionary *provision = plist;
+            NSDictionary *entitlements = [provision objectForKey:@"Entitlements"];
+            NSArray *icloudContainers = [entitlements objectForKey:@"com.apple.developer.icloud-container-identifiers"];
+            NSArray *icloudUbiquityIdentifiers = [entitlements objectForKey:@"com.apple.developer.ubiquity-container-identifiers"];
+            
+            if (icloudContainers != nil && [icloudContainers isKindOfClass:[NSArray class]] && icloudContainers.count > 0 && icloudUbiquityIdentifiers != nil && [icloudUbiquityIdentifiers isKindOfClass:[NSArray class]] && icloudUbiquityIdentifiers.count > 0)
+            {
+                NSString *iCloudContainer = icloudContainers[0];
+                NSString *icloudUbiquityIdentifier = icloudUbiquityIdentifiers[0];
+                
+                if (iCloudContainer.length != 0 && icloudUbiquityIdentifier.length != 0)
+                {
+                    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m iCloud is supported!");
+                    return FPANE_BOOLToFREObject(YES);
+                }
+                else
+                {
+                    FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Some iCloud entitlements are empty. iCloud NOT supported!");
+                    return FPANE_BOOLToFREObject(NO);
+                }
+            }
+            else
+            {
+                FPANE_Log(@"spiketrace ANE NativeExtensioniOS.m Some iCloud entitlements are missing. iCloud NOT supported!");
+                return FPANE_BOOLToFREObject(NO);
+            }
+        }
+    }
+    @catch (NSException *exception)
+    {
+        FPANE_Log([NSString stringWithFormat:@"spiketrace ANE NativeExtensioniOS.m Exception encountered when checking iCloud entitlements. Aborting call. Exception: %@", [exception name]]);
+        return FPANE_BOOLToFREObject(NO);
+    }
+    
+    return FPANE_BOOLToFREObject(NO);
 }
 
 /**********
@@ -697,111 +1045,131 @@ void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FR
     func[29].name = (const uint8_t*) "openWithDefaultApplication";
     func[29].functionData = NULL;
     func[29].function = &openWithDefaultApplication;
+    
+    func[30].name = (const uint8_t*) "getCertificateExpirationDate";
+    func[30].functionData = NULL;
+    func[30].function = &getCertificateExpirationDate;
+    
+    func[31].name = (const uint8_t*) "getCertificateCreationDate";
+    func[31].functionData = NULL;
+    func[31].function = &getCertificateCreationDate;
+    
+    func[32].name = (const uint8_t*) "hasHealthKitEntitlements";
+    func[32].functionData = NULL;
+    func[32].function = &hasHealthKitEntitlements;
+    
+    func[33].name = (const uint8_t*) "hasiCloudEntitlements";
+    func[33].functionData = NULL;
+    func[33].function = &hasiCloudEntitlements;
+    
+    func[34].name = (const uint8_t*) "getFullEntitlements";
+    func[34].functionData = NULL;
+    func[34].function = &getFullEntitlements;
 
     /**********
      ** DEVICE
      **********/
-    func[30].name = (const uint8_t*) "checkMute";
-    func[30].functionData = NULL;
-    func[30].function = &checkMute;
+    func[35].name = (const uint8_t*) "checkMute";
+    func[35].functionData = NULL;
+    func[35].function = &checkMute;
     
-    func[31].name = (const uint8_t*) "vibrate";
-    func[31].functionData = NULL;
-    func[31].function = &vibrate;
+    func[36].name = (const uint8_t*) "vibrate";
+    func[36].functionData = NULL;
+    func[36].function = &vibrate;
     
-    func[32].name = (const uint8_t*) "getBatteryLevel";
-    func[32].functionData = NULL;
-    func[32].function = &getBatteryLevel;
+    func[37].name = (const uint8_t*) "getBatteryLevel";
+    func[37].functionData = NULL;
+    func[37].function = &getBatteryLevel;
     
-    func[33].name = (const uint8_t*) "getBatteryStatus";
-    func[33].functionData = NULL;
-    func[33].function = &getBatteryStatus;
+    func[38].name = (const uint8_t*) "getBatteryStatus";
+    func[38].functionData = NULL;
+    func[38].function = &getBatteryStatus;
 
     /************
      ** UTILITIES
      ************/
-    func[34].name = (const uint8_t*) "generateHMAC_SHA1";
-    func[34].functionData = NULL;
-    func[34].function = &generateHMAC_SHA1;
-    
-    func[35].name = (const uint8_t*) "AESEncryptWithKey";
-    func[35].functionData = NULL;
-    func[35].function = &AESEncryptWithKey;
-    
-    func[36].name = (const uint8_t*) "startMonitoringAndRangingBeaconsInRegion";
-    func[36].functionData = NULL;
-    func[36].function = &startMonitoringAndRangingBeaconsInRegion;
-    
-    func[37].name = (const uint8_t*) "stopMonitoringAndRangingBeaconsInRegion";
-    func[37].functionData = NULL;
-    func[37].function = &stopMonitoringAndRangingBeaconsInRegion;
-
-    func[38].name = (const uint8_t*) "writeTraceToFile";
-    func[38].functionData = NULL;
-    func[38].function = &writeTraceToFile;
-
-    func[39].name = (const uint8_t*) "resetTraceFilePath";
+    func[39].name = (const uint8_t*) "generateHMAC_SHA1";
     func[39].functionData = NULL;
-    func[39].function = &resetTraceFilePath;
+    func[39].function = &generateHMAC_SHA1;
+    
+    func[40].name = (const uint8_t*) "AESEncryptWithKey";
+    func[40].functionData = NULL;
+    func[40].function = &AESEncryptWithKey;
+    
+    func[41].name = (const uint8_t*) "startMonitoringAndRangingBeaconsInRegion";
+    func[41].functionData = NULL;
+    func[41].function = &startMonitoringAndRangingBeaconsInRegion;
+    
+    func[42].name = (const uint8_t*) "stopMonitoringAndRangingBeaconsInRegion";
+    func[42].functionData = NULL;
+    func[42].function = &stopMonitoringAndRangingBeaconsInRegion;
+
+    func[43].name = (const uint8_t*) "writeTraceToFile";
+    func[43].functionData = NULL;
+    func[43].function = &writeTraceToFile;
+
+    func[44].name = (const uint8_t*) "resetTraceFilePath";
+    func[44].functionData = NULL;
+    func[44].function = &resetTraceFilePath;
 
     /**********************
      **  G5 FUNCTIONS
      *********************/
-    func[40].name = (const uint8_t*) "ScanAndConnectToG5Device";
-    func[40].functionData = NULL;
-    func[40].function = &ScanAndConnectToG5Device;
-    
-    func[41].name = (const uint8_t*) "setG5MAC";
-    func[41].functionData = NULL;
-    func[41].function = &setG5MAC;
-   
-    func[42].name = (const uint8_t*) "resetG5Mac";
-    func[42].functionData = NULL;
-    func[42].function = &resetG5Mac;
-    
-    func[43].name = (const uint8_t*) "cancelG5ConnectionWithMAC";
-    func[43].functionData = NULL;
-    func[43].function = &cancelG5ConnectionWithMAC;
-    
-    func[44].name = (const uint8_t*) "stopScanningG5";
-    func[44].functionData = NULL;
-    func[44].function = &stopScanningG5;
-    
-    func[45].name = (const uint8_t*) "forgetG5";
+    func[45].name = (const uint8_t*) "ScanAndConnectToG5Device";
     func[45].functionData = NULL;
-    func[45].function = &forgetG5;
+    func[45].function = &ScanAndConnectToG5Device;
     
-    func[46].name = (const uint8_t*) "startScanDeviceG5";
+    func[46].name = (const uint8_t*) "setG5MAC";
     func[46].functionData = NULL;
-    func[46].function = &startScanDeviceG5;
-    
-    func[47].name = (const uint8_t*) "stopScanDeviceG5";
-    func[47].functionData = NULL;
-    func[47].function = &stopScanDeviceG5;
-    
-    func[48].name = (const uint8_t*) "setTransmitterIdG5";
-    func[48].functionData = NULL;
-    func[48].function = &setTransmitterIdG5;
-    
-    func[49].name = (const uint8_t*) "setTestData";
-    func[49].functionData = NULL;
-    func[49].function = &setTestData;
-    
-    func[50].name = (const uint8_t*) "setG5Reset";
-    func[50].functionData = NULL;
-    func[50].function = &setG5Reset;
-    
-    func[51].name = (const uint8_t*) "doG5FirmwareVersionRequest";
-    func[51].functionData = NULL;
-    func[51].function = &doG5FirmwareVersionRequest;
+    func[46].function = &setG5MAC;
    
-    func[52].name = (const uint8_t*) "doG5BatteryInfoRequest";
-    func[52].functionData = NULL;
-    func[52].function = &doG5BatteryInfoRequest;
+    func[47].name = (const uint8_t*) "resetG5Mac";
+    func[47].functionData = NULL;
+    func[47].function = &resetG5Mac;
     
-    func[53].name = (const uint8_t*) "disconnectG5";
+    func[48].name = (const uint8_t*) "cancelG5ConnectionWithMAC";
+    func[48].functionData = NULL;
+    func[48].function = &cancelG5ConnectionWithMAC;
+    
+    func[49].name = (const uint8_t*) "stopScanningG5";
+    func[49].functionData = NULL;
+    func[49].function = &stopScanningG5;
+    
+    func[50].name = (const uint8_t*) "forgetG5";
+    func[50].functionData = NULL;
+    func[50].function = &forgetG5;
+    
+    func[51].name = (const uint8_t*) "startScanDeviceG5";
+    func[51].functionData = NULL;
+    func[51].function = &startScanDeviceG5;
+    
+    func[52].name = (const uint8_t*) "stopScanDeviceG5";
+    func[52].functionData = NULL;
+    func[52].function = &stopScanDeviceG5;
+    
+    func[53].name = (const uint8_t*) "setTransmitterIdG5";
     func[53].functionData = NULL;
-    func[53].function = &disconnectG5;
+    func[53].function = &setTransmitterIdG5;
+    
+    func[54].name = (const uint8_t*) "setTestData";
+    func[54].functionData = NULL;
+    func[54].function = &setTestData;
+    
+    func[55].name = (const uint8_t*) "setG5Reset";
+    func[55].functionData = NULL;
+    func[55].function = &setG5Reset;
+    
+    func[56].name = (const uint8_t*) "doG5FirmwareVersionRequest";
+    func[56].functionData = NULL;
+    func[56].function = &doG5FirmwareVersionRequest;
+   
+    func[57].name = (const uint8_t*) "doG5BatteryInfoRequest";
+    func[57].functionData = NULL;
+    func[57].function = &doG5BatteryInfoRequest;
+    
+    func[58].name = (const uint8_t*) "disconnectG5";
+    func[58].functionData = NULL;
+    func[58].function = &disconnectG5;
     
     *functionsToSet = func;
 }

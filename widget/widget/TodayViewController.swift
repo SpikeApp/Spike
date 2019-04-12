@@ -34,10 +34,11 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     }
     
     //Variables
+    var dynamicAppGroup:String = ""
     var chart:PNLineChart! = nil
     var chartGlucoseValues = [Double]()
     var chartGlucoseTimes = [String]()
-    var fileUrl:URL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.miguelkennedy.spike")!
+    var fileUrl:URL?
     var externalData:[String : AnyObject] = [:]
     var latestWidgetUpdate:String = ""
     var latestGlucoseValue:String = ""
@@ -98,57 +99,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
     {
         super.viewDidLoad()
         
-        //Dummy data
-        /*latestWidgetUpdate = "Lat Update: 05, Jun, 22:35"
-         latestGlucoseValue = "600"
-         latestGlucoseSlopeArrow = "-"
-         latestGlucoseDelta = "+0.5"
-         latestGlucoseTime = String(Date().toTimestamp())
-         glucoseUnit = "mg/dL"
-         //chartData = (externalData["chartData"] as? String)!
-         //externalDataEncoded = chartData.data(using: String.Encoding.utf8, allowLossyConversion: false)!
-         urgenLowThreshold = "50"
-         lowThreshold = "60"
-         highThreshold = "110"
-         urgentHighThreshold = "130"
-         urgenLowColor = "#FF0000"
-         lowColor = "#FFFF00"
-         inRangeColor = "#00FF00"
-         highColor = "#0000FF"
-         urgentHighColor = "#FF0000"
-         oldDataColor = "#CCCCCC"
-         markerColor = "#FFFFFF"
-         axisColor = "#FFFFFF"
-         axisFontColor = "#FFFFFF"
-         gridLinesColor = "#FFFFFF"
-         backgroundColor = "#FF0000"
-         backgroundOpacity = "0.2"
-         displayLabelsColor = "#FFFFFF"
-         hourAgo = "h"
-         minAgo = "m"
-         ago = "ago"
-         now = "now"
-         openSpike = "open spike"
-         smoothLine = "true"
-         showMarkers = "true"
-         showMarkerLabel = "true"
-         showGridLines = "false"
-         lineThickness = "2"
-         markerRadius = "6"
-         IOB = "6.05"
-         COB = "25.4"
-         predictionsDuration = "1h30m"
-         predictionsOutcome = "101"
-         */
-        
-        //Get App Groups address directly from the mobile provisioning file.
-        if let provision = MobileProvision.read() {
-            let entitlementAppGroup = provision.entitlements.appGroups[0]
-            if (entitlementAppGroup != "")
-            {
-                fileUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: entitlementAppGroup)!
-            }
-        }
+        noData.text = ""
         
         //Widget Properties
         chartView.backgroundColor = UIColor.clear
@@ -161,26 +112,32 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             self.preferredContentSize = CGSize(width: mainView.frame.size.width, height: 300)
         }
         
-        if getExternalData()
+        //Get App Groups address directly from the mobile provisioning file.
+        if let provision = MobileProvision.read()
         {
-            if populateProperties()
+            dynamicAppGroup = provision.entitlements.appGroups[0]
+            
+            if (!dynamicAppGroup.isEmpty)
             {
-                setBackground()
-                setLabels()
-                /*if #available(iOSApplicationExtension 10.0, *)
+                //Populate Widget
+                if getExternalData()
                 {
-                    if parseChartData()
+                    if populateProperties()
                     {
-                        setChart()
+                        setBackground()
+                        setLabels()
                     }
-                }*/
+                }
+            }
+            else
+            {
+                 noData.text = "Can't connect to Spike. Not enough permissions!"
             }
         }
-        
-        //DEBUG
-        //setBackground()
-        //setLabels()
-        //setChart()
+        else
+        {
+            noData.text = "Can't connect to Spike. Not enough permissions!"
+        }
     }
     
     /**
@@ -188,21 +145,29 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
      */
     func getExternalData()->Bool
     {
-        //External Data
+        if (dynamicAppGroup.isEmpty)
+        {
+            print("Can't connect to Spike. Not enough permissions!")
+            
+            noData.text = "Can't connect to Spike. Not enough permissions!"
+            return false
+        }
+        
         //Define database file path
-        fileUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.miguelkennedy.spike")!.appendingPathComponent("Library/Preferences/group.com.miguelkennedy.spike.plist")
+        fileUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: dynamicAppGroup)!.appendingPathComponent("Library/Preferences/" + dynamicAppGroup + ".plist")
         
         //Check if file exists
         let fileManager = FileManager.default
-        if !fileManager.fileExists(atPath: fileUrl.path)
+        if !fileManager.fileExists(atPath: fileUrl!.path)
         {
             print("Database file doesn't exist!")
-            noData.text = "No Data!"
+            
+            noData.text = "Can't connect to Spike!"
             return false
         }
         
         //Parse database file into a dictionary
-        externalData = (NSDictionary(contentsOfFile: fileUrl.path) as? [String: AnyObject])!;
+        externalData = (NSDictionary(contentsOfFile: fileUrl!.path) as? [String: AnyObject])!;
         
         return true
     }
@@ -256,6 +221,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         {
             print("Missing data in database!")
             noData.text = "Missing data in database!"
+            
             return false
         }
         
@@ -472,6 +438,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         {
             print("Error parsing chart data! Error: \(error)")
             noData.text = "Error parsing chart data"
+            
             return false
         }
         
@@ -537,9 +504,6 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
         
         //Chart Data
         let data = PNLineChartData()
-        //chart.xLabels = ["Sep 1", "Sep 2", "Sep 3", "Sep 4", "Sep 5", "Sep 6", "Sep 7", "Sep 7", "Sep 7", "Sep 7", "Sep 7", "Sep 7", "Sep 7"]
-        //let dataArr = [40, 47, 55, 70, 80, 95, 110, 115, 130, 150, 170, 600, 40]
-        //data.itemCount = UInt(dataArr.count)
         chart.xLabels = chartGlucoseTimes
         data.itemCount = UInt(chartGlucoseValues.count)
         
@@ -717,6 +681,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
      */
     @available(iOSApplicationExtension 10.0, *)
     func widgetActiveDisplayModeDidChange(_ activeDisplayMode: NCWidgetDisplayMode, withMaximumSize maxSize: CGSize) {
+       
         if activeDisplayMode == .compact {
             self.preferredContentSize = maxSize
         } else if activeDisplayMode == .expanded {
@@ -759,30 +724,7 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
      */
     func widgetPerformUpdate(completionHandler: (@escaping (NCUpdateResult) -> Void))
     {
-        /*let currentData = externalData
-        if getExternalData()
-        {
-            if NSDictionary(dictionary: currentData).isEqual(to: externalData)
-            {
-                completionHandler(NCUpdateResult.noData)
-            }
-            else
-            {
-                if populateProperties()
-                {
-                    setBackground()
-                    setLabels()
-                    if #available(iOSApplicationExtension 10.0, *)
-                    {
-                        if parseChartData()
-                        {
-                            setChart()
-                        }
-                    }
-                }
-                completionHandler(NCUpdateResult.newData)
-            }
-        }*/
+        
     }
 }
 
@@ -824,66 +766,6 @@ struct MobileProvision: Decodable {
         }
     }
 }
-
-/*struct MobileProvision: Decodable {
-    var name: String
-    var appIDName: String
-    var applicationIdentifierPrefix: [String]
-    var teamIdentifier: [String]
-    var platform: [String]
-    var isXcodeManaged: Bool? = false
-    var creationDate: Date
-    var expirationDate: Date
-    var entitlements: Entitlements
-    
-    private enum CodingKeys : String, CodingKey {
-        case name = "Name"
-        case appIDName = "AppIDName"
-        case applicationIdentifierPrefix = "ApplicationIdentifierPrefix"
-        case teamIdentifier = "TeamIdentifier"
-        case platform = "Platform"
-        case isXcodeManaged = "IsXcodeManaged"
-        case creationDate = "CreationDate"
-        case expirationDate = "ExpirationDate"
-        case entitlements = "Entitlements"
-    }
-    
-    // Sublevel: decode entitlements informations
-    struct Entitlements: Decodable {
-        let keychainAccessGroups: [String]
-        let appGroups: [String]
-        let getTaskAllow: Bool
-        let apsEnvironment: Environment
-        
-        private enum CodingKeys: String, CodingKey {
-            case keychainAccessGroups = "keychain-access-groups"
-            case appGroups = "com.apple.security.application-groups"
-            case getTaskAllow = "get-task-allow"
-            case apsEnvironment = "aps-environment"
-        }
-        
-        enum Environment: String, Decodable {
-            case development, production, disabled
-        }
-        
-        init(keychainAccessGroups: Array<String>, appGroups: Array<String>,getTaskAllow: Bool, apsEnvironment: Environment) {
-            self.keychainAccessGroups = keychainAccessGroups
-            self.appGroups = appGroups
-            self.getTaskAllow = getTaskAllow
-            self.apsEnvironment = apsEnvironment
-        }
-        
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            let keychainAccessGroups: [String] = (try? container.decode([String].self, forKey: .keychainAccessGroups)) ?? []
-            let appGroups: [String] = (try? container.decode([String].self, forKey: .appGroups)) ?? []
-            let getTaskAllow: Bool = (try? container.decode(Bool.self, forKey: .getTaskAllow)) ?? false
-            let apsEnvironment: Environment = (try? container.decode(Environment.self, forKey: .apsEnvironment)) ?? .disabled
-            
-            self.init(keychainAccessGroups: keychainAccessGroups, appGroups: appGroups, getTaskAllow: getTaskAllow, apsEnvironment: apsEnvironment)
-        }
-    }
-}*/
 
 extension MobileProvision {
     // Read mobileprovision file embedded in app.

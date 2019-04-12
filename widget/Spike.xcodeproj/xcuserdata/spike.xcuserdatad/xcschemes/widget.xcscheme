@@ -67,16 +67,26 @@
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES"
       launchAutomaticallySubstyle = "2">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
+      <RemoteRunnable
+         runnableDebuggingMode = "2"
+         BundleIdentifier = "com.apple.springboard">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "1C51011D202806B400872D37"
-            BuildableName = "Spike.app"
-            BlueprintName = "Spike"
+            BlueprintIdentifier = "1C510152202806D600872D37"
+            BuildableName = "widget.appex"
+            BlueprintName = "widget"
             ReferencedContainer = "container:Spike.xcodeproj">
          </BuildableReference>
-      </BuildableProductRunnable>
+      </RemoteRunnable>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "1C510152202806D600872D37"
+            BuildableName = "widget.appex"
+            BlueprintName = "widget"
+            ReferencedContainer = "container:Spike.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>

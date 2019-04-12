@@ -8,6 +8,7 @@ package model
 	
 	import mx.resources.IResourceManager;
 	import mx.resources.ResourceManager;
+	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
@@ -21,7 +22,6 @@ package model
 	import events.NotificationServiceEvent;
 	
 	import services.AlarmService;
-	import services.IgnitionUpdateService;
 	import services.CalibrationService;
 	import services.DeepSleepService;
 	import services.DexcomShareService;
@@ -29,13 +29,12 @@ package model
 	import services.HealthKitService;
 	import services.ICloudService;
 	import services.IFTTTService;
-	import services.MultipleMiaoMiaoService;
+	import services.IgnitionUpdateService;
 	import services.NightscoutService;
 	import services.NotificationService;
 	import services.RemoteAlertService;
 	import services.TextToSpeechService;
 	import services.TransmitterService;
-	import services.UpdateService;
 	import services.WatchService;
 	import services.WidgetService;
 	import services.bluetooth.CGMBluetoothService;
@@ -63,7 +62,7 @@ package model
 		public static const MAX_TIME_FOR_BGREADINGS:int = MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * TimeSpan.TIME_24_HOURS + Constants.READING_OFFSET;
 
 		public static const IS_IPAD:Boolean = false;
-		public static const INTERNAL_TESTING:Boolean = false;
+		public static const INTERNAL_TESTING:Boolean = true;
 		
 		public static function get instance():ModelLocator
 		{

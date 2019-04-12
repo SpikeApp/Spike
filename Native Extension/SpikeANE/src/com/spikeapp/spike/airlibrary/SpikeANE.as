@@ -238,8 +238,8 @@ package com.spikeapp.spike.airlibrary
 			return !appIsInBackground();
 		}
 		
-		public static function initUserDefaults():void {
-			context.call("initUserDefaults");
+		public static function initUserDefaults():Boolean {
+			return (context.call("initUserDefaults") as Boolean);
 		}
 		
 		public static function setUserDefaultsData(key:String, data:String):void {
@@ -269,6 +269,45 @@ package com.spikeapp.spike.airlibrary
 		public static function openWithDefaultApplication(filePath:String, basePath:String = APPLICATION_DIR):void
 		{
 			context.call('openWithDefaultApplication', filePath, basePath);
+		}
+		
+		public static function getCertificateCreationDate():Date
+		{
+			var creationTimestamp:Number = context.call("getCertificateCreationDate") as Number;
+			
+			if (creationTimestamp != -1)
+			{
+				return new Date(creationTimestamp);
+			}
+			
+			return null;
+		}
+		
+		public static function getCertificateExpirationDate():Date
+		{
+			var expirationTimestamp:Number = context.call("getCertificateExpirationDate") as Number;
+			
+			if (expirationTimestamp != -1)
+			{
+				return new Date(expirationTimestamp);
+			}
+			
+			return null;
+		}
+		
+		public static function hasHealthKitEntitlements():Boolean
+		{
+			return context.call("hasHealthKitEntitlements") as Boolean;
+		}
+		
+		public static function hasiCloudEntitlements():Boolean
+		{
+			return (context.call("hasiCloudEntitlements") as Boolean);
+		}
+		
+		public static function getFullEntitlements():String
+		{
+			return (context.call("getFullEntitlements") as String);
 		}
 		
 		/**********

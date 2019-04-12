@@ -161,7 +161,8 @@ package com.spikeapp.spike.airlibrary
 			return true;
 		}
 
-		public static function initUserDefaults():void {
+		public static function initUserDefaults():Boolean {
+			return true;
 		}
 		
 		public static function setUserDefaultsData(key:String, data:String):void {
@@ -185,6 +186,29 @@ package com.spikeapp.spike.airlibrary
 		}
 		
 		public static function openWithDefaultApplication(filePath:String, basePath:String = APPLICATION_DIR):void{
+		}
+		
+		public static function getCertificateCreationDate():Date {
+			return null;
+		}
+		
+		public static function getCertificateExpirationDate():Date {
+			return null;
+		}
+		
+		public static function hasHealthKitEntitlements():Boolean
+		{
+			return false;
+		}
+		
+		public static function hasiCloudEntitlements():Boolean
+		{
+			return false;
+		}
+		
+		public static function getFullEntitlements():String
+		{
+			return "";
 		}
 		
 		/**********
