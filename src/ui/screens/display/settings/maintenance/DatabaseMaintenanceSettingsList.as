@@ -44,6 +44,7 @@ package ui.screens.display.settings.maintenance
 	import org.aszip.saving.Method;
 	import org.aszip.zip.ASZip;
 	
+	import services.CertificateService;
 	import services.ICloudService;
 	
 	import starling.events.Event;
@@ -226,14 +227,20 @@ package ui.screens.display.settings.maintenance
 			
 			//Set Data
 			var data:Array = [];
-			data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','schedule_backups_label'), accessory: backupScheduler } );
-			data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','automatic_backups_only_on_wifi_label'), accessory: wifiOnlyCheck } );
-			data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','icloud_actions_label'), accessory: actionsContainer } );
+			if (CertificateService.hasiCloudCapabilities)
+			{
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','schedule_backups_label'), accessory: backupScheduler } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','automatic_backups_only_on_wifi_label'), accessory: wifiOnlyCheck } );
+				data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','icloud_actions_label'), accessory: actionsContainer } );
+			}
 			data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','email_actions_label'), accessory: emailDatabaseButton } );
-			if (isLoading)
-				data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','status_label'), accessory: preloaderContainer } );
-			data.push( { label: "", accessory: lastBackupLabel } );
-			data.push( { label: "", accessory: instructionsLabel } );
+			if (CertificateService.hasiCloudCapabilities)
+			{
+				if (isLoading)
+					data.push( { label: ModelLocator.resourceManagerInstance.getString('maintenancesettingsscreen','status_label'), accessory: preloaderContainer } );
+				data.push( { label: "", accessory: lastBackupLabel } );
+				data.push( { label: "", accessory: instructionsLabel } );
+			}
 			
 			dataProvider = new ArrayCollection( data );
 		}

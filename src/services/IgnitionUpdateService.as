@@ -228,8 +228,7 @@ package services
 								{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_update_button_label"), triggered: onUpdate }	
 							]
 						);
-						alert.buttonGroupProperties.gap = 0;
-						alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+						alert.buttonGroupProperties.gap = 5;
 						
 						if (!SystemUtil.isApplicationActive)
 						{

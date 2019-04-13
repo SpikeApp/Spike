@@ -23,6 +23,7 @@ package model
 	
 	import services.AlarmService;
 	import services.CalibrationService;
+	import services.CertificateService;
 	import services.DeepSleepService;
 	import services.DexcomShareService;
 	import services.HTTPServerService;
@@ -167,6 +168,7 @@ package model
 				updateApplicationVersion();
 				
 				//Services Initialization
+				CertificateService.init();
 				ProfileManager.init();
 				TreatmentsManager.init();
 				SystemUtil.executeWhenApplicationIsActive( AppInterface.instance.init ); //Start rendering interface now that all data is available but only when app is active
@@ -179,14 +181,14 @@ package model
 				CalibrationService.init();
 				AlarmService.init();
 				HTTPServerService.init();
-				if (!IS_IPAD) HealthKitService.init();
+				if (!IS_IPAD && CertificateService.hasHealthKitCapabilities) HealthKitService.init();
 				NightscoutService.init();
 				DexcomShareService.init();
 				IFTTTService.init();
 				TextToSpeechService.init();
 				WidgetService.init();
 				WatchService.init();
-				ICloudService.init();
+				if (CertificateService.hasiCloudCapabilities) ICloudService.init();
 				RemoteAlertService.init();
 				IgnitionUpdateService.init();
 				//MultipleMiaoMiaoService.init();

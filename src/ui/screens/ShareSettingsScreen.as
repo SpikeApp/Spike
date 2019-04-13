@@ -12,6 +12,8 @@ package ui.screens
 	
 	import model.ModelLocator;
 	
+	import services.CertificateService;
+	
 	import starling.display.DisplayObject;
 	import starling.events.Event;
 	import starling.events.ResizeEvent;
@@ -92,7 +94,7 @@ package ui.screens
 			appBadgeSettings = new AppBadgeSettingsList();
 			screenRenderer.addChild(appBadgeSettings);
 			
-			if (!ModelLocator.IS_IPAD)
+			if (!ModelLocator.IS_IPAD && CertificateService.hasHealthKitCapabilities)
 			{
 				//Healthkit Section Label
 				healthkitLabel = LayoutFactory.createSectionLabel(ModelLocator.resourceManagerInstance.getString('sharesettingsscreen','healthkit_section_label'), true);

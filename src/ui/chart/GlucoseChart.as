@@ -56,6 +56,7 @@ package ui.chart
 	import model.ModelLocator;
 	
 	import services.CalibrationService;
+	import services.CertificateService;
 	import services.NightscoutService;
 	
 	import starling.animation.Transitions;
@@ -474,6 +475,8 @@ package ui.chart
 		private var localBasalPillAdded:Boolean = false;
 		private var basalAreaSizePercentage:Number = 0.2;
 		private var lastNumberOfRenderedBasals:uint = 0;
+
+		private var certificateExpirationPill:ChartTreatmentPill;
 
 		public function GlucoseChart(timelineRange:int, chartWidth:Number, chartHeight:Number, dontDisplayIOB:Boolean = false, dontDisplayCOB:Boolean = false, dontDisplayInfoPill:Boolean = false, dontDisplayPredictionsPill:Boolean = false, isHistoricalData:Boolean = false, headerProperties:Object = null)
 		{
@@ -9225,7 +9228,7 @@ package ui.chart
 		
 		private function onDisplayMoreInfo(e:starling.events.TouchEvent):void
 		{
-			if (!SystemUtil.isApplicationActive || dummyModeActive)
+			if (!SystemUtil.isApplicationActive)
 				return;
 			
 			var touch:Touch = e.getTouch(stage);
@@ -9244,8 +9247,17 @@ package ui.chart
 				localBAGEAdded = false;
 				localBasalPillAdded = false;
 				
+				//Certificate Expiration (All Users)
+				if (certificateExpirationPill != null) certificateExpirationPill.dispose();
+				var certificateStatus:Object = CertificateService.getFormattedTimeUntilExpiration()
+				certificateExpirationPill = new ChartTreatmentPill(ModelLocator.resourceManagerInstance.getString('chartscreen','certificate_expiration_pill'));
+				certificateExpirationPill.setValue(certificateStatus.label);
+				certificateExpirationPill.colorizeLabel(certificateStatus.color);
+				certificateExpirationPill.touchable = false;
+				infoContainer.addChild(certificateExpirationPill);
+				
 				//Raw & Sage for master
-				if (!CGMBlueToothDevice.isFollower())
+				if (!CGMBlueToothDevice.isFollower() && !dummyModeActive)
 				{
 					//Transmitter Battery
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TRANSMITTER_BATTERY_ON) == "true")
@@ -9354,7 +9366,7 @@ package ui.chart
 					}
 				}
 				
-				if (!CGMBlueToothDevice.isFollower() || displayMDIBasals)
+				if ((!CGMBlueToothDevice.isFollower() || displayMDIBasals) && !dummyModeActive)
 				{
 					//Basal
 					if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_BASAL_ON) == "true")
@@ -9377,7 +9389,7 @@ package ui.chart
 				infoCallout.maxHeight = availableScreenHeight;
 				infoCallout.addEventListener(starling.events.Event.CLOSE, onMoreInfoCalloutClosed);
 				
-				if (!NetworkInfo.networkInfo.isReachable())
+				if (!NetworkInfo.networkInfo.isReachable() || dummyModeActive)
 					return;
 				
 				//Get user info
@@ -9878,6 +9890,13 @@ package ui.chart
 			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_RETRIEVED, onUserInfoRetrieved);
 			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_API_NOT_FOUND, onUserInfoAPINotFound);
 			NightscoutService.instance.removeEventListener(UserInfoEvent.USER_INFO_ERROR, onUserInfoError);
+			
+			if (certificateExpirationPill != null)
+			{
+				certificateExpirationPill.removeFromParent();
+				certificateExpirationPill.dispose();
+				certificateExpirationPill = null;
+			}
 			
 			if (tBatteryPill != null)
 			{

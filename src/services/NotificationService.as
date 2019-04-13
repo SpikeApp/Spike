@@ -107,6 +107,7 @@ package services
 		public static const ID_FOR_FAST_DROP_ALERT:int = 26;
 		public static const ID_FOR_EXTENDED_BOLUS_ALERT:int = 27;
 		public static const ID_FOR_NEW_APP_UPDATE_ALERT:int = 28;
+		public static const ID_FOR_CERTIFICATE_EXPIRATION_ALERT:int = 29;
 		
 		public static const ID_FOR_ALERT_LOW_CATEGORY:String = "LOW_ALERT_CATEGORY";
 		public static const ID_FOR_ALERT_HIGH_CATEGORY:String = "HIGH_ALERT_CATEGORY";
