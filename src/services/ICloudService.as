@@ -105,7 +105,7 @@ package services
 				}
 				
 				//Check for non-optimal iCloud backup settings
-				setTimeout(checkAutomaticBackupSchedule, TimeSpan.TIME_3_HOURS);
+				//setTimeout(checkAutomaticBackupSchedule, TimeSpan.TIME_3_HOURS);
 			} 
 			catch(error:Error) 
 			{
