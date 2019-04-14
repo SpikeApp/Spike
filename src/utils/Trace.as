@@ -3,7 +3,6 @@ package utils
 	
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
-	import flash.events.Event;
 	import flash.filesystem.File;
 	import flash.system.Capabilities;
 	
@@ -23,7 +22,8 @@ package utils
 	import database.Sensor;
 	
 	import events.SettingsServiceEvent;
-	import events.SpikeEvent;
+	
+	import services.CertificateService;
 	
 	
 	public class Trace
@@ -33,7 +33,6 @@ package utils
 		private static const debugMode:Boolean = true;
 		private static var initialStart:Boolean = true;
 		private static var filePath:String = "";
-		private static var stringToWrite:String = "";
 		
 		public function Trace()
 		{
@@ -44,21 +43,6 @@ package utils
 				initialStart = false;
 				LocalSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, localSettingChanged);
 				filePath = "";
-				Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onAppActivated);
-			}
-		}
-		
-		protected static function onAppActivated(event:Event):void
-		{
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_DETAILED_TRACING_ENABLED) == "true")
-			{
-				if (filePath == "")
-					getSaveStream();
-				
-				//Now that Spike is in the foreground we write the log
-				SpikeANE.writeTraceToFile(filePath, stringToWrite);
-				
-				stringToWrite = "";
 			}
 		}
 		
@@ -102,10 +86,7 @@ package utils
 				if (filePath == "")
 					getSaveStream();
 				
-				stringToWrite += traceText.replace(" spiketrace ", " ");
-				//Write to log only if Spike is in the foreground, otherwise queue it for later. This is to avoid crashes on some specific devices and/or iOS versions
-				SpikeANE.writeTraceToFile(filePath, stringToWrite);
-					stringToWrite = "";
+				SpikeANE.writeTraceToFile(filePath, traceText.replace(" spiketrace ", " "));		
 			}
 		}
 		
@@ -176,6 +157,7 @@ package utils
 					texttoadd += "\n";
 					additionalInfoToWrite += texttoadd;
 				}
+				additionalInfoToWrite += "\nCertificate Entitlements = " + CertificateService.fullEntitlements + "\n";
 				
 				SpikeANE.writeTraceToFile(filePath, additionalInfoToWrite);
 			} else {
