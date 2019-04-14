@@ -44,7 +44,6 @@
 		96B9CB5520969B9300782124 /* FSInterfaceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B9CB5420969B9300782124 /* FSInterfaceController.swift */; };
 		96C0447A22602ADB003B4D5F /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96C0447922602ADB003B4D5F /* CloudKit.framework */; };
 		96D5EE94208F7B3900308288 /* UIColor+colorFromHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB729D62029FD3500965219 /* UIColor+colorFromHex.swift */; };
-		96FD53392254374F00F546AB /* watch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 961EB75F2089460D005F0E9F /* watch.app */; };
 		A9F0B0D10FA7E63562B1D19D /* Pods_SpikeTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D1C13DD723CC3C77D2D1D0E /* Pods_SpikeTests.framework */; };
 		DE6AF41AC6B6BE56B457596D /* Pods_SpikeUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F4F850F9FEC9EE7AB5D05EB4 /* Pods_SpikeUITests.framework */; };
 /* End PBXBuildFile section */
@@ -85,13 +84,6 @@
 			remoteGlobalIDString = 9654C7F12087C35F0021B684;
 			remoteInfo = fswidget;
 		};
-		96FD53372254374500F546AB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 1C510116202806B400872D37 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 961EB75E2089460D005F0E9F;
-			remoteInfo = watch;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -124,7 +116,6 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolderSpec = 16;
 			files = (
-				96FD53392254374F00F546AB /* watch.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -426,7 +417,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				96FD53382254374500F546AB /* PBXTargetDependency */,
 				1C51015F202806D600872D37 /* PBXTargetDependency */,
 				9654C7FC2087C35F0021B684 /* PBXTargetDependency */,
 			);
@@ -1057,11 +1047,6 @@
 			isa = PBXTargetDependency;
 			target = 9654C7F12087C35F0021B684 /* fswidget */;
 			targetProxy = 9654C7FB2087C35F0021B684 /* PBXContainerItemProxy */;
-		};
-		96FD53382254374500F546AB /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 961EB75E2089460D005F0E9F /* watch */;
-			targetProxy = 96FD53372254374500F546AB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
