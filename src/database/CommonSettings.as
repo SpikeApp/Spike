@@ -511,7 +511,7 @@ package database
 		 /**
 		 * App Center
 		 */
-		 public static const COMMON_SETTING_APP_CENTER_UPDATE_NOTIFICATIONS_ON:int = 191;
+		 public static const COMMON_SETTING_SPIKE_UPDATE_NOTIFICATIONS_ON:int = 191;
 		 
 		 /**
 		 * Speech System Volume

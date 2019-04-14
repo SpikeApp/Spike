@@ -1,152 +1,325 @@
 package services
 {
-	import com.distriqt.extension.networkinfo.NetworkInfo;
+	import com.distriqt.extension.notifications.Notifications;
+	import com.distriqt.extension.notifications.builders.NotificationBuilder;
 	
 	import flash.events.Event;
-	import flash.events.EventDispatcher;
-	import flash.events.IEventDispatcher;
 	import flash.events.IOErrorEvent;
 	import flash.net.URLLoader;
-	import flash.net.URLLoaderDataFormat;
 	import flash.net.URLRequest;
 	import flash.net.URLRequestMethod;
 	import flash.net.navigateToURL;
+	import flash.utils.setTimeout;
 	
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
+	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
+	import events.TransmitterServiceEvent;
 	
 	import feathers.controls.Alert;
+	import feathers.layout.HorizontalAlign;
 	
 	import model.ModelLocator;
 	
+	import network.NetworkConnector;
+	
 	import starling.events.Event;
+	import starling.utils.SystemUtil;
 	
 	import ui.popups.AlertManager;
 	
-	import utils.SpikeJSON;
+	import utils.BadgeBuilder;
+	import utils.TimeSpan;
 	import utils.Trace;
 	
 	[ResourceBundle('updateservice')]
-	
-	public class UpdateService extends EventDispatcher
+	[ResourceBundle('globaltranslations')]
+
+	public class UpdateService
 	{
-		//Instance
-		private static var _instance:UpdateService = new UpdateService();
-		
-		//Variables 
+		//Properties
+		private static var latestVersion:String = "";
 		private static var updateURL:String = "";
-		private static var latestAppVersion:String = "";
-		private static var awaitingLoadResponse:Boolean = false;
+		private static var lastReminded:Number = 0;
+		private static var lastChecked:Number = 0;
 		private static var serviceHalted:Boolean = false;
+		private static var serviceActive:Boolean = false;
 		
-		public function UpdateService(target:IEventDispatcher=null)
+		public function UpdateService()
 		{
-			if (_instance != null) {
-				throw new Error("UpdateService class constructor can not be used");	
+			throw new Error("IgnitionUpdateService class is not meant to be instantiated!");	
+		}
+		
+		public static function init():void
+		{
+			//Listen for settings changed
+			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+			
+			//Activate Service
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPIKE_UPDATE_NOTIFICATIONS_ON) == "true")
+				activateService();
+			
+			setTimeout(displayChangeLog, TimeSpan.TIME_5_SECONDS);
+		}
+		
+		private static function displayChangeLog():void
+		{
+			var currentAppVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
+			var lastChangelogVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_LAST_SHOWN_CHANGELOG);
+			
+			if (lastChangelogVersion != "" && lastChangelogVersion != "x.x.x" && currentAppVersion != "x.x.x" && versionAIsSmallerThanB(lastChangelogVersion, currentAppVersion))
+			{
+				var alert:Alert = AlertManager.showActionAlert
+				(
+					ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_changelog"),
+					ModelLocator.resourceManagerInstance.getString('updateservice', "changelog_request_message").replace("{app_version_do_not_translate_this_word}", currentAppVersion),
+					Number.NaN,
+					[
+						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations', "no_uppercase") },
+						{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations', "yes_uppercase"), triggered: onDisplayChangelog }	
+					]
+				);
+				alert.buttonGroupProperties.gap = 0;
+				alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+			}
+			
+			if (currentAppVersion != lastChangelogVersion)
+			{
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_LAST_SHOWN_CHANGELOG, currentAppVersion, true, false);
 			}
 		}
 		
-		//Start Engine
-		public static function init():void
+		private static function onDisplayChangelog(e:starling.events.Event):void
 		{
-			//Setup Event Listeners
-			createEventListeners();
+			//Display changelog
+			navigateToURL(new URLRequest("https://github.com/SpikeApp/Spike/wiki/Changelog"));
 		}
 		
-		//Getters/Setters
-		public static function get instance():UpdateService {
-			return _instance;
+		private static function activateService():void
+		{	
+			myTrace("Activating service...");
+			
+			serviceActive = true;
+			
+			//Register event listener for app halted
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
+			
+			//Register event listener for new reading
+			TransmitterService.instance.addEventListener(TransmitterServiceEvent.LAST_BGREADING_RECEIVED, onBGReadingReceived, false, -900, true);
+			NightscoutService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBGReadingReceived, false, -900, true);
+			DexcomShareService.instance.addEventListener(FollowerEvent.BG_READING_RECEIVED, onBGReadingReceived, false, -900, true);
+		}
+		
+		private static function deactivateService():void
+		{
+			myTrace("Deactivating service...");
+			
+			serviceActive = false;
+			
+			//Unregister event listener for app halted
+			Spike.instance.removeEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
+			
+			//Unregister event listener for app in foreground
+			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onBGReadingReceived);
+		}
+		
+		private static function checkUpdate():void
+		{
+			//Validation
+			if (serviceHalted)
+				return;
+			
+			myTrace("Checking App Updates...");
+			
+			const API_URL:String = "https://spike-app.com/app/latest_spike_update.json";
+			
+			NetworkConnector.createSpikeUpdateConnector(
+				API_URL, 
+				URLRequestMethod.GET, 
+				null, 
+				null, 
+				onUpdateResponse, 
+				onConnectionFailed
+			);
 		}
 		
 		/**
-		 * Functionality
+		 * Event Listeners
 		 */
-		private static function createEventListeners():void
+		private static function onBGReadingReceived(event:flash.events.Event = null):void
 		{
-			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
-			
-			//Register event listener for app in foreground
-			Spike.instance.addEventListener(SpikeEvent.APP_IN_FOREGROUND, onApplicationActivated);
-			
-			//Register event listener for changed settings
-			CommonSettings.instance.addEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
-		}
-		
-		private static function getUpdate():void
-		{
-			myTrace("in getUpdate");
-			
 			//Validation
 			if (serviceHalted)
-				true;
+				return;
 			
-			if (!NetworkInfo.networkInfo.isReachable())
-			{
-				myTrace("No internet connection. Aborting");
+			//App is in foreground. Let's see if we can make an update
+			//but not the very first start of the app, otherwise there's too many pop ups
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UPDATE_SERVICE_INITIALCHECK) == "true") {
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_UPDATE_SERVICE_INITIALCHECK, "false");
+				myTrace("in onApplicationActivated, not doing update check at app startup");
 				return;
 			}
 			
-			//Create and configure loader and url request
-			var request:URLRequest = new URLRequest(CommonSettings.APP_UPDATE_API_URL);
-			request.method = URLRequestMethod.GET;
-			var loader:URLLoader = new URLLoader(); 
-			loader.dataFormat = URLLoaderDataFormat.TEXT;
-			
-			//Make connection and define listener
-			loader.addEventListener(flash.events.Event.COMPLETE, onResponseReceived);
-			loader.addEventListener(IOErrorEvent.IO_ERROR, onResponseReceived);
-			awaitingLoadResponse = true;
-			
-			try 
+			//Check updates (if possible)
+			var nowDate:Date = new Date();
+			var now:Number = nowDate.valueOf();
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_ENABLED) == "true")
 			{
-				loader.load(request);
+				var currentHour:Number = nowDate.hours;
+				var currentMinutes:Number = nowDate.minutes;
+				var quiteStartHour:Number = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_START_HOUR));
+				var quietStartMinutes:Number = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_START_MINUTES));
+				var quietEndHour:Number = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_END_HOUR));
+				var quietEndMinutes:Number = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_END_MINUTES));
+				
+				if ((currentHour >= quiteStartHour && currentMinutes >= quietStartMinutes) || (currentHour <= quietEndHour && currentMinutes <= quietEndMinutes))
+				{
+					myTrace("in onApplicationActivated, device in quiet time, aborting!");
+					return;
+				}
 			}
-			catch (error:Error) 
-			{
-				myTrace("in getUpdate, Unable to load Spike Update API: " + error.getStackTrace().toString());
-			}
+			
+			if (now - lastReminded >= TimeSpan.TIME_24_HOURS && now - lastChecked >= TimeSpan.TIME_1_HOUR)
+				checkUpdate();
 		}
 		
-		private static function checkDaysBetweenLastUpdateCheck(previousUpdateStamp:Number, currentStamp:Number):Number
-		{
-			var oneDay:Number = 1000 * 60 * 60 * 24;
-			var differenceMilliseconds:Number = Math.abs(previousUpdateStamp - currentStamp);
-			var daysAgo:Number =  differenceMilliseconds/oneDay;
-			return daysAgo;
-		}
-		
-		private static function canDoUpdate():Boolean
+		private static function onUpdateResponse(e:flash.events.Event):void
 		{
 			//Validation
 			if (serviceHalted)
-				true;
+				return;
 			
-			/**
-			 * Uncomment next line and comment the other one for testing
-			 * We are hardcoding a timestamp of more than 1 day ago for testing purposes otherwise the update popup wont fire 
-			 */
-			//var lastUpdateCheckStamp:Number = 1511014007853;
-			var lastUpdateCheckStamp:Number = new Number(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK));
-			var currentTimeStamp:Number = (new Date()).valueOf();
-			var daysSinceLastUpdateCheck:Number = checkDaysBetweenLastUpdateCheck(lastUpdateCheckStamp, currentTimeStamp);
+			myTrace("In onUpdateResponse!");
 			
-			myTrace("in canDoUpdate, currentTimeStamp: " + currentTimeStamp);
-			myTrace("in canDoUpdate, time between last update in days " + daysSinceLastUpdateCheck);
+			//Get loader
+			var loader:URLLoader = e.currentTarget as URLLoader;
 			
-			//If it has been more than 1 day since the last check for updates or it's the first time the app checks for updates and app updates are enebled in the settings
-			if((daysSinceLastUpdateCheck > 1 || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK) == "") && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true")
+			//Get response
+			var response:String = loader.data;
+			
+			//Dispose loader
+			loader.removeEventListener(flash.events.Event.COMPLETE, onUpdateResponse);
+			loader.removeEventListener(IOErrorEvent.IO_ERROR, onConnectionFailed);
+			loader = null;
+			
+			try
 			{
-				myTrace("App can check for new updates");
-				return true;
+				var updateProperties:Object = JSON.parse(response) as Object;
+				if (updateProperties != null && updateProperties.version != null && updateProperties.url != null)
+				{
+					updateURL = updateProperties.url as String;
+					latestVersion = updateProperties.version as String;
+					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION) != "x.x.x" && latestVersion != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE) && versionAIsSmallerThanB(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION), latestVersion))
+					{
+						//There's an update in App Center
+						myTrace("Notifying user of new Ignition update! New version: " + latestVersion);
+						
+						var buttonsList:Array = [];
+						buttonsList.push({ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_remind_later"), triggered: onRemindLater });
+						buttonsList.push({ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_ignore_update"), triggered: onIgnoreUpdate });
+						if (updateURL != null && updateURL != "")
+						{
+							buttonsList.push({ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_update_button_label"), triggered: onUpdate });
+						}
+						
+						var alert:Alert = AlertManager.showActionAlert
+						(
+							ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title"),
+							ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_preversion_message") + " " + latestVersion + " " + ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_postversion_message") + ".",
+							Number.NaN,
+							buttonsList
+						);
+						alert.buttonGroupProperties.gap = updateURL == null || updateURL == "" ? 5 : 3;
+						
+						if (!SystemUtil.isApplicationActive)
+						{
+							//Notification
+							var notificationBuilder:NotificationBuilder = new NotificationBuilder()
+								.setCount(BadgeBuilder.getAppBadge())
+								.setId(NotificationService.ID_FOR_NEW_APP_UPDATE_ALERT)
+								.setAlert(ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title"))
+								.setTitle(ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title"))
+								.setBody(ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_preversion_message") + " " + latestVersion + " " + ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_postversion_message") + ".")
+								.enableVibration(true)
+								.enableLights(true)
+								.setSound("default");
+							
+							Notifications.service.notify(notificationBuilder.build());
+						}
+					}
+					else
+					{
+						myTrace("Not updating. User already has the latest version!");
+					}
+				}
+				
+				lastChecked = new Date().valueOf();
+			} 
+			catch(error:Error) 
+			{
+				myTrace("Error parsing Update API response! Error: " + error.message);
 			}
-			
-			myTrace("App can not check for new updates");
-			return false;
 		}
 		
+		private static function onRemindLater(e:starling.events.Event):void
+		{
+			//Update properties
+			lastReminded = new Date().valueOf();
+		}
+		
+		private static function onIgnoreUpdate(e:starling.events.Event):void
+		{
+			//Add ignored version to database settings
+			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE, latestVersion as String);
+		}
+		
+		private static function onUpdate(e:starling.events.Event):void
+		{
+			//Go to App Center control panel 
+			navigateToURL(new URLRequest(updateURL));
+		}
+		
+		private static function onConnectionFailed(error:Error, mode:String):void
+		{
+			myTrace("Failed to connect to Update API! Error: " + error.message);
+		}
+		
+		private static function onSettingsChanged(event:SettingsServiceEvent):void 
+		{
+			//Check if an update check can be made
+			if (event.data == CommonSettings.COMMON_SETTING_SPIKE_UPDATE_NOTIFICATIONS_ON) 
+			{
+				myTrace("Settings changed! Ignition update checker is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPIKE_UPDATE_NOTIFICATIONS_ON));
+				
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPIKE_UPDATE_NOTIFICATIONS_ON) == "true")
+				{
+					if (!serviceActive)
+						activateService();
+				}
+				else
+				{
+					if (serviceActive)
+						deactivateService();
+				}
+			}
+		}
+		
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			myTrace("Stopping service...");
+			
+			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
+			
+			serviceHalted = true;
+			deactivateService();
+		}
+		
+		/**
+		 * Utility
+		 */
 		private static function versionAIsSmallerThanB(versionA:String, versionB:String):Boolean 
 		{
 			var versionaSplitted:Array = versionA.split(".");
@@ -166,166 +339,6 @@ package services
 			return false;
 		}
 		
-		/**
-		 * Event Listeners
-		 */
-		protected static function onResponseReceived(event:flash.events.Event):void
-		{
-			//Validation
-			if (serviceHalted)
-				true;
-			
-			if (awaitingLoadResponse) {
-				myTrace("in onLoadSuccess");
-				awaitingLoadResponse = false;
-			} else {
-				return;
-			}
-			
-			if (!event.target) {
-				myTrace("in onLoadSuccess, no event.target");
-				return;
-			}
-			//Parse response and validate presence if mandatory objects 
-			var loader:URLLoader = URLLoader(event.target);
-			if (loader.data == null) {
-				myTrace("in onLoadSuccess, no loader.data");
-				return;
-			}
-			
-			if (String(loader.data).indexOf("version") == -1)
-			{
-				myTrace("in onLoadSuccess, wrong response from server");
-				return;
-			}
-			
-			try
-			{
-				//var data:Object = JSON.parse(loader.data as String);
-				var data:Object = SpikeJSON.parse(loader.data as String);
-			} 
-			catch(error:Error) 
-			{
-				myTrace("in onLoadSuccess, error parsing json... returning!");
-				return;
-			}
-			
-			
-			if (data.version == null) {
-				myTrace("in onLoadSuccess, no data.version");
-				return;
-			}
-			if (data.changelog == null) {
-				myTrace("in onLoadSuccess, no data.changelog");
-				return;
-			}
-			if (data.url == null) {
-				myTrace("in onLoadSuccess, no data.url");
-				return;
-			}
-			
-			var currentAppVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
-			//var currentAppVersion:String = "0.5";
-			latestAppVersion = data.version;
-			var updateAvailable:Boolean = versionAIsSmallerThanB(currentAppVersion, latestAppVersion);
-			
-			//Here's the right time to set last update check
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_LAST_UPDATE_CHECK, (new Date()).valueOf().toString());
-			
-			//Handle User Update
-			if(updateAvailable && latestAppVersion != CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE))
-			{
-				//We are here because the lastest Spike version is higher than the one installed and the user hasn't chosen to ignore this new version
-				updateURL = data.url;
-					
-				//Warn User
-				var message:String = ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_preversion_message") + " " + latestAppVersion + " " + ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_postversion_message") + ".\n\n"; 
-				message += ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_changelog") + ":\n" + data.changelog;		
-				
-				var alert:Alert = AlertManager.showActionAlert
-				(
-					ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_title"),
-					message,
-					Number.NaN,
-					[
-						{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_ignore_update"), triggered: onIgnoreUpdate },
-						{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_remind_later") },
-						{ label: ModelLocator.resourceManagerInstance.getString('updateservice', "update_dialog_download"), triggered: onDownload }	
-					]
-				);
-				alert.buttonGroupProperties.gap = 0;
-				alert.buttonGroupProperties.paddingLeft = 14;
-			}
-		}
-		
-		private static function onIgnoreUpdate(e:starling.events.Event):void
-		{
-			//Add ignored version to database settings
-			CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_IGNORE_UPDATE, latestAppVersion as String);
-		}
-		
-		private static function onDownload(e:starling.events.Event):void
-		{
-			//Go to github release page
-			if (updateURL != "")
-			{
-				navigateToURL(new URLRequest(updateURL));
-				updateURL = "";
-			}
-		}
-		
-		//Event fired when app settings are changed
-		private static function onSettingsChanged(event:SettingsServiceEvent):void 
-		{
-			//Check if an update check can be made
-			if (event.data == CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) 
-			{
-				myTrace("Settings changed! App update checker is now " + CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON));
-				
-				//Let's see if we can make an update
-				if(canDoUpdate())
-					getUpdate();
-			}
-		}
-		
-		protected static function onApplicationActivated(event:flash.events.Event = null):void
-		{
-			//App is in foreground. Let's see if we can make an update
-			//but not the very first start of the app, otherwise there's too many pop ups
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_UPDATE_SERVICE_INITIALCHECK) == "true") {
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_UPDATE_SERVICE_INITIALCHECK, "false");
-				myTrace("in onApplicationActivated, LOCAL_SETTING_UPDATE_SERVICE_INITIALCHECK = true, not doing update check at app startup");
-				return;
-			}
-			
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_UPDATE_NOTIFICATIONS_ON) == "true")
-				if(canDoUpdate())
-					getUpdate();
-		}
-		
-		/**
-		 * Stops the service entirely. Useful for database restores
-		 */
-		private static function onHaltExecution(e:SpikeEvent):void
-		{
-			myTrace("Stopping service...");
-			
-			serviceHalted = true;
-			
-			stopService();
-		}
-		
-		private static function stopService():void
-		{
-			Spike.instance.removeEventListener(SpikeEvent.APP_IN_FOREGROUND, onApplicationActivated);
-			CommonSettings.instance.removeEventListener(SettingsServiceEvent.SETTING_CHANGED, onSettingsChanged);
-			
-			myTrace("Service stopped!");
-		}
-		
-		/**
-		 * Utility
-		 */
 		private static function myTrace(log:String):void 
 		{
 			Trace.myTrace("UpdateService.as", log);

@@ -30,7 +30,7 @@ package model
 	import services.HealthKitService;
 	import services.ICloudService;
 	import services.IFTTTService;
-	import services.IgnitionUpdateService;
+	import services.UpdateService;
 	import services.NightscoutService;
 	import services.NotificationService;
 	import services.RemoteAlertService;
@@ -190,7 +190,7 @@ package model
 				WatchService.init();
 				if (CertificateService.hasiCloudCapabilities) ICloudService.init();
 				RemoteAlertService.init();
-				IgnitionUpdateService.init();
+				UpdateService.init();
 				//MultipleMiaoMiaoService.init();
 			}
 		}

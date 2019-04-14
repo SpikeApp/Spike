@@ -78,12 +78,12 @@ package ui.screens.display.settings.general
 		
 		private function setupInitialState():void
 		{
-			updatesEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_CENTER_UPDATE_NOTIFICATIONS_ON) == "true";
-			quietTimeEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_ENABLED) == "true";
-			quietTimeStartHour = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_START_HOUR));
-			quietTimeStartMinutes = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_START_MINUTES));
-			quietTimeEndHour = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_END_HOUR));
-			quietTimeEndMinutes =  Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_END_MINUTES));
+			updatesEnabled = CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPIKE_UPDATE_NOTIFICATIONS_ON) == "true";
+			quietTimeEnabled = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_ENABLED) == "true";
+			quietTimeStartHour = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_START_HOUR));
+			quietTimeStartMinutes = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_START_MINUTES));
+			quietTimeEndHour = Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_END_HOUR));
+			quietTimeEndMinutes =  Number(LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_END_MINUTES));
 		}
 		
 		private function setupContent():void
@@ -149,23 +149,23 @@ package ui.screens.display.settings.general
 		
 		public function save():void
 		{
-			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_APP_CENTER_UPDATE_NOTIFICATIONS_ON) != String(updatesEnabled))
-				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_APP_CENTER_UPDATE_NOTIFICATIONS_ON, String(updatesEnabled));
+			if(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_SPIKE_UPDATE_NOTIFICATIONS_ON) != String(updatesEnabled))
+				CommonSettings.setCommonSetting(CommonSettings.COMMON_SETTING_SPIKE_UPDATE_NOTIFICATIONS_ON, String(updatesEnabled));
 			
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_ENABLED) != String(quietTimeEnabled))
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_ENABLED, String(quietTimeEnabled));
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_ENABLED) != String(quietTimeEnabled))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_ENABLED, String(quietTimeEnabled));
 			
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_START_HOUR) != String(quietTimeStartHour))
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_START_HOUR, String(quietTimeStartHour));
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_START_HOUR) != String(quietTimeStartHour))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_START_HOUR, String(quietTimeStartHour));
 			
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_START_MINUTES) != String(quietTimeStartMinutes))
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_START_MINUTES, String(quietTimeStartMinutes));
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_START_MINUTES) != String(quietTimeStartMinutes))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_START_MINUTES, String(quietTimeStartMinutes));
 			
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_END_HOUR) != String(quietTimeEndHour))
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_END_HOUR, String(quietTimeEndHour));
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_END_HOUR) != String(quietTimeEndHour))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_END_HOUR, String(quietTimeEndHour));
 			
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_END_MINUTES) != String(quietTimeEndMinutes))
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_APP_CENTER_UPDATER_QUIET_TIME_END_MINUTES, String(quietTimeEndMinutes));
+			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_END_MINUTES) != String(quietTimeEndMinutes))
+				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_SPIKE_UPDATER_QUIET_TIME_END_MINUTES, String(quietTimeEndMinutes));
 		}
 		
 		/**
