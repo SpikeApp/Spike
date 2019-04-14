@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "9847B885F6583A6A4227ACFC3CEC4E4E"
-               BuildableName = "Pods_SpikeUITests.framework"
-               BlueprintName = "Pods-SpikeUITests"
+               BlueprintIdentifier = "67A358CC4648AB77C6DB7B127B76DEA1"
+               BuildableName = "Pods_fswidget.framework"
+               BlueprintName = "Pods-fswidget"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,9 +45,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "9847B885F6583A6A4227ACFC3CEC4E4E"
-            BuildableName = "Pods_SpikeUITests.framework"
-            BlueprintName = "Pods-SpikeUITests"
+            BlueprintIdentifier = "67A358CC4648AB77C6DB7B127B76DEA1"
+            BuildableName = "Pods_fswidget.framework"
+            BlueprintName = "Pods-fswidget"
             ReferencedContainer = "container:Pods.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

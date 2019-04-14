@@ -17,6 +17,7 @@ package network.httpserver.API
 	import network.httpserver.ActionController;
 	
 	import services.AlarmService;
+	import services.WidgetService;
 	
 	import stats.BasicUserStats;
 	import stats.StatsManager;
@@ -218,6 +219,19 @@ package network.httpserver.API
 			{
 				Trace.myTrace("NightscoutAPIGeneralController.as", "Error performing sgv endpoint call. Error: " + error.message);
 			}
+			
+			return responseSuccess(response);
+		}
+		
+		public function spikewidget(params:URLVariables):String
+		{
+			var response:String = "";
+			
+			try
+			{
+				response = WidgetService.getWidgetData();
+			} 
+			catch(error:Error) {}
 			
 			return responseSuccess(response);
 		}
