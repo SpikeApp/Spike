@@ -8,77 +8,44 @@
 		<dict>
 			<key>isShown</key>
 			<false/>
-			<key>orderHint</key>
-			<integer>5</integer>
 		</dict>
 		<key>Pods-Spike.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
-			<key>orderHint</key>
-			<integer>6</integer>
 		</dict>
 		<key>Pods-SpikeTests.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
-			<key>orderHint</key>
-			<integer>7</integer>
 		</dict>
 		<key>Pods-SpikeUITests.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
-			<key>orderHint</key>
-			<integer>8</integer>
+		</dict>
+		<key>Pods-fswidget.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
 		</dict>
 		<key>Pods-widget.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
-			<key>orderHint</key>
-			<integer>9</integer>
+		</dict>
+		<key>SwiftyJSON.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
 		</dict>
 		<key>UICountingLabel.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
-			<key>orderHint</key>
-			<integer>10</integer>
 		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
-	<dict>
-		<key>0FC1CB21D1B64FAAC47A6478616DA728</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>34FC08BCBFB493BCAA9A169BDE4C4FA4</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>71DD3C05A732CDEC02CD4B66CD92728C</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>DA392EE8E5B24D16FB9910405A0AFC2E</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>E6C6AA8374E13B554A0F02AADFBC12EE</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>F2CAE933F20E59E3356D4832565379AF</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-	</dict>
+	<dict/>
 </dict>
 </plist>

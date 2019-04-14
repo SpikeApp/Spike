@@ -8,6 +8,7 @@
 
 import UIKit
 import NotificationCenter
+import SwiftyJSON
 
 class TodayViewController: UIViewController, NCWidgetProviding
 {
@@ -34,11 +35,14 @@ class TodayViewController: UIViewController, NCWidgetProviding
     }
     
     //Variables
+    var globalChartSize:CGFloat?
+    var offlineTask:DispatchWorkItem?
     var dynamicAppGroup:String = ""
     var chartGlucoseValues = [Double]()
     var chartGlucoseTimes = [String]()
     var fileUrl:URL?
     var externalData:[String : AnyObject] = [:]
+    var externalDataJSON:JSON?
     var latestWidgetUpdate:String = ""
     var latestGlucoseValue:String = ""
     var latestGlucoseSlopeArrow:String = ""
@@ -104,32 +108,28 @@ class TodayViewController: UIViewController, NCWidgetProviding
         glucoseDisplay.baselineAdjustment = .alignCenters
         glucoseDisplay.textAlignment = .center
         
-        
         //Get App Groups address directly from the mobile provisioning file.
         if let provision = MobileProvision.read()
         {
             dynamicAppGroup = provision.entitlements.appGroups[0]
             
-            if (!dynamicAppGroup.isEmpty)
+            if (dynamicAppGroup.isEmpty)
             {
-                //Populate Widget
-                if getExternalData()
-                {
-                    if populateProperties()
-                    {
-                        setBackground()
-                        setLabels()
-                    }
-                }
-            }
-            else
-            {
-                noData.text = "Can't connect to Spike. Not enough permissions!"
+                mainView.backgroundColor = UIColor.colorFromHex(hexString: "#000000").withAlphaComponent(0.7)
             }
         }
         else
         {
-            noData.text = "Can't connect to Spike. Not enough permissions!"
+            mainView.backgroundColor = UIColor.colorFromHex(hexString: "#000000").withAlphaComponent(0.7)
+        }
+        
+        if getExternalData()
+        {
+            if populateProperties()
+            {
+                setBackground()
+                setLabels()
+            }
         }
     }
     
@@ -138,113 +138,238 @@ class TodayViewController: UIViewController, NCWidgetProviding
      */
     func getExternalData()->Bool
     {
-        if (dynamicAppGroup.isEmpty)
+        var success: Bool = false
+        
+        if (!dynamicAppGroup.isEmpty)
         {
-            print("Can't connect to Spike. Not enough permissions!")
+            //Define database file path
+            fileUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: dynamicAppGroup)!.appendingPathComponent("Library/Preferences/" + dynamicAppGroup + ".plist")
             
-            noData.text = "Can't connect to Spike. Not enough permissions!"
-            return false
+            //Check if file exists
+            let fileManager = FileManager.default
+            if !fileManager.fileExists(atPath: fileUrl!.path)
+            {
+                print("Database file doesn't exist!")
+                
+                noData.text = "Can't connect to Spike!"
+                return false
+            }
+            
+            //Parse database file into a dictionary
+            externalData = (NSDictionary(contentsOfFile: fileUrl!.path) as? [String: AnyObject])!;
+        }
+        else
+        {
+            let urlPath: String = "http://127.0.0.1:1979/spikewidget"
+            
+            guard let url = URL(string: urlPath) else
+            {
+                print ("URL Parsing Error")
+                noData.text = "No Data!"
+                return false
+            }
+            
+            let task = URLSession.shared.dataTask(with: url) { data, response, error in
+                guard error == nil else {
+                    print(error!)
+                    self.noData.text = "No Data!"
+                    success = false;
+                    
+                    return
+                }
+                guard let data = data else {
+                    print("Data is empty")
+                    self.noData.text = "No Data!"
+                    success = false;
+                    
+                    return
+                }
+                
+                DispatchQueue.main.sync()
+                    {
+                        print("Got response from server!")
+                        
+                        self.externalDataJSON = try! JSON(data: data)
+                        success = true;
+                        
+                        if self.populateProperties()
+                        {
+                            self.setBackground()
+                            self.setLabels()
+                        }
+                } //end dispatch
+            } //end urlsession
+            
+            task.resume()
         }
         
-        //Define database file path
-        fileUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: dynamicAppGroup)!.appendingPathComponent("Library/Preferences/" + dynamicAppGroup + ".plist")
-        
-        //Check if file exists
-        let fileManager = FileManager.default
-        if !fileManager.fileExists(atPath: fileUrl!.path)
-        {
-            print("Database file doesn't exist!")
-            
-            noData.text = "Can't connect to Spike!"
-            return false
-        }
-        
-        //Parse database file into a dictionary
-        externalData = (NSDictionary(contentsOfFile: fileUrl!.path) as? [String: AnyObject])!;
-        
-        return true
+        return success
     }
     
     func populateProperties()->Bool
     {
         //Validate Data
-        if  externalData["latestWidgetUpdate"] == nil ||
-            externalData["latestGlucoseValue"] == nil ||
-            externalData["latestGlucoseSlopeArrow"] == nil ||
-            externalData["latestGlucoseDelta"] == nil ||
-            externalData["latestGlucoseTime"] == nil ||
-            externalData["glucoseUnit"] == nil ||
-            externalData["glucoseUnitInternal"] == nil ||
-            externalData["urgenLowThreshold"] == nil ||
-            externalData["lowThreshold"] == nil ||
-            externalData["highThreshold"] == nil ||
-            externalData["urgentHighThreshold"] == nil ||
-            externalData["urgenLowColor"] == nil ||
-            externalData["lowColor"] == nil ||
-            externalData["inRangeColor"] == nil ||
-            externalData["highColor"] == nil ||
-            externalData["urgentHighColor"] == nil ||
-            externalData["oldDataColor"] == nil ||
-            externalData["backgroundColor"] == nil ||
-            externalData["backgroundOpacity"] == nil ||
-            externalData["displayLabelsColor"] == nil ||
-            externalData["hourAgo"] == nil ||
-            externalData["minAgo"] == nil ||
-            externalData["ago"] == nil ||
-            externalData["now"] == nil ||
-            externalData["openSpike"] == nil ||
-            externalData["high"] == nil ||
-            externalData["low"] == nil ||
-            externalData["IOBString"] == nil ||
-            externalData["COBString"] == nil ||
-            externalData["predictionDuration"] == nil ||
-            externalData["predictionOutcome"] == nil
+        if (!dynamicAppGroup.isEmpty)
         {
-            print("Missing data in database!")
-            noData.text = "Missing data in database!"
-            return false
+            if  externalData["latestWidgetUpdate"] == nil ||
+                externalData["latestGlucoseValue"] == nil ||
+                externalData["latestGlucoseSlopeArrow"] == nil ||
+                externalData["latestGlucoseDelta"] == nil ||
+                externalData["latestGlucoseTime"] == nil ||
+                externalData["glucoseUnit"] == nil ||
+                externalData["glucoseUnitInternal"] == nil ||
+                externalData["urgenLowThreshold"] == nil ||
+                externalData["lowThreshold"] == nil ||
+                externalData["highThreshold"] == nil ||
+                externalData["urgentHighThreshold"] == nil ||
+                externalData["urgenLowColor"] == nil ||
+                externalData["lowColor"] == nil ||
+                externalData["inRangeColor"] == nil ||
+                externalData["highColor"] == nil ||
+                externalData["urgentHighColor"] == nil ||
+                externalData["oldDataColor"] == nil ||
+                externalData["backgroundColor"] == nil ||
+                externalData["backgroundOpacity"] == nil ||
+                externalData["displayLabelsColor"] == nil ||
+                externalData["hourAgo"] == nil ||
+                externalData["minAgo"] == nil ||
+                externalData["ago"] == nil ||
+                externalData["now"] == nil ||
+                externalData["openSpike"] == nil ||
+                externalData["high"] == nil ||
+                externalData["low"] == nil ||
+                externalData["IOBString"] == nil ||
+                externalData["COBString"] == nil ||
+                externalData["predictionDuration"] == nil ||
+                externalData["predictionOutcome"] == nil
+            {
+                print("Missing data in database!")
+                noData.text = "Missing data in database!"
+                return false
+            }
+            
+            //Get properties
+            latestWidgetUpdate = (externalData["latestWidgetUpdate"] as? String)!
+            latestGlucoseValue = (externalData["latestGlucoseValue"] as? String)!
+            latestGlucoseSlopeArrow = (externalData["latestGlucoseSlopeArrow"] as? String)!
+            latestGlucoseDelta = (externalData["latestGlucoseDelta"] as? String)!
+            latestGlucoseTime = (externalData["latestGlucoseTime"] as? String)!
+            glucoseUnit = (externalData["glucoseUnit"] as? String)!
+            glucoseUnitInternal = (externalData["glucoseUnitInternal"] as? String)!
+            urgenLowThreshold = (externalData["urgenLowThreshold"] as? String)!
+            lowThreshold = (externalData["lowThreshold"] as? String)!
+            highThreshold = (externalData["highThreshold"] as? String)!
+            urgentHighThreshold = (externalData["urgentHighThreshold"] as? String)!
+            urgenLowColor = (externalData["urgenLowColor"] as? String)!
+            lowColor = (externalData["lowColor"] as? String)!
+            inRangeColor = (externalData["inRangeColor"] as? String)!
+            highColor = (externalData["highColor"] as? String)!
+            urgentHighColor = (externalData["urgentHighColor"] as? String)!
+            oldDataColor = (externalData["oldDataColor"] as? String)!
+            backgroundColor = (externalData["backgroundColor"] as? String)!
+            backgroundOpacity = (externalData["backgroundOpacity"] as? NSString)!
+            displayLabelsColor = (externalData["displayLabelsColor"] as? String)!
+            hourAgo = (externalData["hourAgo"] as? String)!
+            minAgo = (externalData["minAgo"] as? String)!
+            ago = (externalData["ago"] as? String)!
+            now = (externalData["now"] as? String)!
+            openSpike = (externalData["openSpike"] as? String)!
+            highString = (externalData["high"] as? String)!
+            lowString = (externalData["low"] as? String)!
+            IOBString = (externalData["IOBString"] as? String)!
+            COBString = (externalData["COBString"] as? String)!
+            predictionsDuration = (externalData["predictionDuration"] as? String)!
+            predictionsOutcome = (externalData["predictionOutcome"] as? String)!
+            
+            if (externalData["IOB"] != nil)
+            {
+                IOB = (externalData["IOB"] as? String)!
+            }
+            if (externalData["COB"] != nil)
+            {
+                COB = (externalData["COB"] as? String)!
+            }
         }
-        
-        //Get properties
-        latestWidgetUpdate = (externalData["latestWidgetUpdate"] as? String)!
-        latestGlucoseValue = (externalData["latestGlucoseValue"] as? String)!
-        latestGlucoseSlopeArrow = (externalData["latestGlucoseSlopeArrow"] as? String)!
-        latestGlucoseDelta = (externalData["latestGlucoseDelta"] as? String)!
-        latestGlucoseTime = (externalData["latestGlucoseTime"] as? String)!
-        glucoseUnit = (externalData["glucoseUnit"] as? String)!
-        glucoseUnitInternal = (externalData["glucoseUnitInternal"] as? String)!
-        urgenLowThreshold = (externalData["urgenLowThreshold"] as? String)!
-        lowThreshold = (externalData["lowThreshold"] as? String)!
-        highThreshold = (externalData["highThreshold"] as? String)!
-        urgentHighThreshold = (externalData["urgentHighThreshold"] as? String)!
-        urgenLowColor = (externalData["urgenLowColor"] as? String)!
-        lowColor = (externalData["lowColor"] as? String)!
-        inRangeColor = (externalData["inRangeColor"] as? String)!
-        highColor = (externalData["highColor"] as? String)!
-        urgentHighColor = (externalData["urgentHighColor"] as? String)!
-        oldDataColor = (externalData["oldDataColor"] as? String)!
-        backgroundColor = (externalData["backgroundColor"] as? String)!
-        backgroundOpacity = (externalData["backgroundOpacity"] as? NSString)!
-        displayLabelsColor = (externalData["displayLabelsColor"] as? String)!
-        hourAgo = (externalData["hourAgo"] as? String)!
-        minAgo = (externalData["minAgo"] as? String)!
-        ago = (externalData["ago"] as? String)!
-        now = (externalData["now"] as? String)!
-        openSpike = (externalData["openSpike"] as? String)!
-        highString = (externalData["high"] as? String)!
-        lowString = (externalData["low"] as? String)!
-        IOBString = (externalData["IOBString"] as? String)!
-        COBString = (externalData["COBString"] as? String)!
-        predictionsDuration = (externalData["predictionDuration"] as? String)!
-        predictionsOutcome = (externalData["predictionOutcome"] as? String)!
-        
-        if (externalData["IOB"] != nil)
+        else
         {
-            IOB = (externalData["IOB"] as? String)!
-        }
-        if (externalData["COB"] != nil)
-        {
-            COB = (externalData["COB"] as? String)!
+            if  externalDataJSON?["latestWidgetUpdate"].string == nil ||
+                externalDataJSON?["latestGlucoseValue"].string == nil ||
+                externalDataJSON?["latestGlucoseSlopeArrow"].string == nil ||
+                externalDataJSON?["latestGlucoseDelta"].string == nil ||
+                externalDataJSON?["latestGlucoseTime"].string == nil ||
+                externalDataJSON?["glucoseUnit"].string == nil ||
+                externalDataJSON?["glucoseUnitInternal"].string == nil ||
+                externalDataJSON?["urgenLowThreshold"].string == nil ||
+                externalDataJSON?["lowThreshold"].string == nil ||
+                externalDataJSON?["highThreshold"].string == nil ||
+                externalDataJSON?["urgentHighThreshold"].string == nil ||
+                externalDataJSON?["urgenLowColor"].string == nil ||
+                externalDataJSON?["lowColor"].string == nil ||
+                externalDataJSON?["inRangeColor"].string == nil ||
+                externalDataJSON?["highColor"].string == nil ||
+                externalDataJSON?["urgentHighColor"].string == nil ||
+                externalDataJSON?["oldDataColor"].string == nil ||
+                externalDataJSON?["backgroundColor"].string == nil ||
+                externalDataJSON?["backgroundOpacity"].string == nil ||
+                externalDataJSON?["displayLabelsColor"].string == nil ||
+                externalDataJSON?["hourAgo"].string == nil ||
+                externalDataJSON?["minAgo"].string == nil ||
+                externalDataJSON?["ago"].string == nil ||
+                externalDataJSON?["now"].string == nil ||
+                externalDataJSON?["openSpike"].string == nil ||
+                externalDataJSON?["high"].string == nil ||
+                externalDataJSON?["low"].string == nil ||
+                externalDataJSON?["IOBString"].string == nil ||
+                externalDataJSON?["COBString"].string == nil ||
+                externalDataJSON?["predictionDuration"].string == nil ||
+                externalDataJSON?["predictionOutcome"].string == nil
+            {
+                print("Missing data in database!")
+                noData.text = "Missing data in database!"
+                return false
+            }
+            
+            //Get properties∫
+            latestWidgetUpdate = (externalDataJSON?["latestWidgetUpdate"].string)!
+            latestGlucoseValue = (externalDataJSON?["latestGlucoseValue"].string)!
+            latestGlucoseSlopeArrow = (externalDataJSON?["latestGlucoseSlopeArrow"].string)!
+            latestGlucoseDelta = (externalDataJSON?["latestGlucoseDelta"].string)!
+            latestGlucoseTime = (externalDataJSON?["latestGlucoseTime"].string)!
+            glucoseUnit = (externalDataJSON?["glucoseUnit"].string)!
+            glucoseUnitInternal = (externalDataJSON?["glucoseUnitInternal"].string)!
+            urgenLowThreshold = (externalDataJSON?["urgenLowThreshold"].string)!
+            lowThreshold = (externalDataJSON?["lowThreshold"].string)!
+            highThreshold = (externalDataJSON?["highThreshold"].string)!
+            urgentHighThreshold = (externalDataJSON?["urgentHighThreshold"].string)!
+            urgenLowColor = (externalDataJSON?["urgenLowColor"].string)!
+            lowColor = (externalDataJSON?["lowColor"].string)!
+            inRangeColor = (externalDataJSON?["inRangeColor"].string)!
+            highColor = (externalDataJSON?["highColor"].string)!
+            urgentHighColor = (externalDataJSON?["urgentHighColor"].string)!
+            oldDataColor = (externalDataJSON?["oldDataColor"].string)!
+            backgroundColor = (externalDataJSON?["backgroundColor"].string)!
+            backgroundOpacity = (externalDataJSON?["backgroundOpacity"].string)! as NSString
+            displayLabelsColor = (externalDataJSON?["displayLabelsColor"].string)!
+            hourAgo = (externalDataJSON?["hourAgo"].string)!
+            minAgo = (externalDataJSON?["minAgo"].string)!
+            ago = (externalDataJSON?["ago"].string)!
+            now = (externalDataJSON?["now"].string)!
+            openSpike = (externalDataJSON?["openSpike"].string)!
+            highString = (externalDataJSON?["high"].string)!
+            lowString = (externalDataJSON?["low"].string)!
+            IOBString = (externalDataJSON?["IOBString"].string)!
+            COBString = (externalDataJSON?["COBString"].string)!
+            predictionsDuration = (externalDataJSON?["predictionDuration"].string)!
+            predictionsOutcome = (externalDataJSON?["predictionOutcome"].string)!
+            
+            if (externalDataJSON?["IOB"].string != nil)
+            {
+                IOB = (externalDataJSON?["IOB"].string)!
+            }
+            if (externalDataJSON?["COB"].string != nil)
+            {
+                COB = (externalDataJSON?["COB"].string)!
+            }
         }
         
         return true
@@ -477,23 +602,7 @@ class TodayViewController: UIViewController, NCWidgetProviding
      */
     func widgetPerformUpdate(completionHandler: (@escaping (NCUpdateResult) -> Void))
     {
-        let currentData = externalData
-        if getExternalData()
-        {
-            if NSDictionary(dictionary: currentData).isEqual(to: externalData)
-            {
-                completionHandler(NCUpdateResult.noData)
-            }
-            else
-            {
-                if populateProperties()
-                {
-                    setBackground()
-                    setLabels()
-                }
-                completionHandler(NCUpdateResult.newData)
-            }
-        }
+        //Do nothing
     }
 }
 
