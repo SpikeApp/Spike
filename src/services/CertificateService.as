@@ -7,10 +7,14 @@ package services
 	import flash.events.EventDispatcher;
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
+	import flash.utils.clearInterval;
+	import flash.utils.clearTimeout;
 	import flash.utils.setInterval;
 	import flash.utils.setTimeout;
 	
 	import database.LocalSettings;
+	
+	import events.SpikeEvent;
 	
 	import feathers.controls.Alert;
 	
@@ -23,6 +27,7 @@ package services
 	
 	import utils.BadgeBuilder;
 	import utils.TimeSpan;
+	import utils.Trace;
 	
 	[ResourceBundle("globaltranslations")]
 	[ResourceBundle("chartscreen")]
@@ -32,13 +37,16 @@ package services
 	{
 		//Objects & Properties
 		private static var _instance:CertificateService = new CertificateService();
+		private static var serviceHalted:Boolean = false;
+		private static var checkExpirationTimeout:uint;
+		private static var checkExpirationInterval:uint;
 		public static var certificateCreationDate:Date;
 		public static var certificateExpirationDate:Date;
 		public static var hasHealthKitCapabilities:Boolean = false;
 		public static var hasiCloudCapabilities:Boolean = false;
 		public static var fullEntitlements:String = "";
 		public static var isFreeCertificate:Boolean = true;
-		
+
 		public function CertificateService()
 		{
 			if (_instance != null)
@@ -63,9 +71,12 @@ package services
 			
 			if (certificateExpirationDate != null)
 			{
-				setTimeout(checkCertificateExpiration, TimeSpan.TIME_1_MINUTE);
-				setInterval(checkCertificateExpiration, TimeSpan.TIME_1_HOUR);
+				checkExpirationTimeout = setTimeout(checkCertificateExpiration, TimeSpan.TIME_1_MINUTE);
+				checkExpirationInterval = setInterval(checkCertificateExpiration, TimeSpan.TIME_1_HOUR);
 			}
+			
+			//Register event listener for app halted
+			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 		}
 		
 		/**
@@ -153,7 +164,7 @@ package services
 		 */
 		private static function checkCertificateExpiration():void
 		{
-			if (certificateExpirationDate == null || certificateCreationDate == null)
+			if (certificateExpirationDate == null || certificateCreationDate == null || serviceHalted)
 			{
 				return;
 			}
@@ -367,6 +378,23 @@ package services
 		private static function onResignHelp(e:Event):void
 		{
 			navigateToURL(new URLRequest(""));
+		}
+		
+		private static function onHaltExecution(e:SpikeEvent):void
+		{
+			myTrace("Stopping service...");
+			
+			clearTimeout(checkExpirationTimeout);
+			clearInterval(checkExpirationInterval);
+			serviceHalted = true;
+		}
+		
+		/**
+		 * Utility
+		 */
+		private static function myTrace(log:String):void 
+		{
+			Trace.myTrace("CertificateService.as", log);
 		}
 			
 		/**
