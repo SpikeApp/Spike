@@ -157,6 +157,8 @@ class TodayViewController: UIViewController, NCWidgetProviding
             
             //Parse database file into a dictionary
             externalData = (NSDictionary(contentsOfFile: fileUrl!.path) as? [String: AnyObject])!;
+            
+            success = true;
         }
         else
         {
@@ -211,7 +213,7 @@ class TodayViewController: UIViewController, NCWidgetProviding
         //Validate Data
         if (!dynamicAppGroup.isEmpty)
         {
-            if  externalData["latestWidgetUpdate"] == nil ||
+           if  externalData["latestWidgetUpdate"] == nil ||
                 externalData["latestGlucoseValue"] == nil ||
                 externalData["latestGlucoseSlopeArrow"] == nil ||
                 externalData["latestGlucoseDelta"] == nil ||

@@ -165,6 +165,8 @@ class TodayViewController: UIViewController, NCWidgetProviding, PNChartDelegate
             
             //Parse database file into a dictionary
             externalData = (NSDictionary(contentsOfFile: fileUrl!.path) as? [String: AnyObject])!;
+            
+            success = true
         }
         else
         {
