@@ -435,7 +435,7 @@ private static var basalProfileForceRefresh:Boolean = false;
 			Trace.myTrace("NightscoutService.as", "uploadPredictions called");
 			
 			//Validation #1
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) != "true" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_PREDICTIONS_UPLOADER_ON) != "true" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true" || CGMBlueToothDevice.isFollower() || !serviceActive || serviceHalted)
+			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_GLUCOSE_PREDICTIONS_ENABLED) != "true" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_NIGHTSCOUT_PREDICTIONS_UPLOADER_ON) != "true" || CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_TREATMENTS_LOOP_OPENAPS_USER_ENABLED) == "true" || CGMBlueToothDevice.isFollower() || !serviceActive || serviceHalted || !NetworkInfo.networkInfo.isReachable())
 				return;
 			
 			//Validation #2
