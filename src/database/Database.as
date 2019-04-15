@@ -2660,63 +2660,79 @@ package database
 				conn.begin();
 				var insertRequest:SQLStatement = new SQLStatement();
 				insertRequest.sqlConnection = conn;
-				var text:String = "INSERT INTO treatments (";
-				text += "id, ";
-				text += "type, ";
-				text += "insulinamount, ";
-				text += "insulinid, ";
-				text += "carbs, ";
-				text += "glucose, ";
-				text += "glucoseestimated, ";
-				text += "note, ";
-				text += "lastmodifiedtimestamp, ";
-				text += "carbdelay, ";
-				text += "basalduration, ";
-				text += "children, ";
-				text += "prebolus, ";
-				text += "duration, ";
-				text += "intensity, ";
-				text += "isbasalabsolute, ";
-				text += "isbasalrelative, ";
-				text += "istempbasalend, ";
-				text += "basalabsoluteamount, ";
-				text += "basalpercentamount, ";
-				text += "needsadjustment) ";
-				text += "VALUES (";
-				text += "'" + treatment.ID + "', ";
-				text += "'" + treatment.type + "', ";
-				text += treatment.insulinAmount + ", ";
-				text += "'" + treatment.insulinID + "', ";
-				text += treatment.carbs + ", ";
-				text += treatment.glucose + ", ";
-				text += treatment.glucoseEstimated + ", ";
-				text += "'" + treatment.note + "', ";
-				text += treatment.timestamp + ", ";
-				text += treatment.carbDelayTime + ", ";
-				text += treatment.basalDuration + ", ";
-				text += "'" + treatment.extractChildren() + "', ";
-				text += (!isNaN(treatment.preBolus) ? treatment.preBolus : "NULL") + ", ";
-				text += (!isNaN(treatment.duration) ? treatment.duration : "NULL") + ", ";
-				text += "'" + treatment.exerciseIntensity + "', ";
-				text += "'" + String(treatment.isBasalAbsolute) + "', ";
-				text += "'" + String(treatment.isBasalRelative) + "', ";
-				text += "'" + String(treatment.isTempBasalEnd) + "', ";
-				text += treatment.basalAbsoluteAmount + ", ";
-				text += treatment.basalPercentAmount + ", ";
-				text += "'" + String(treatment.needsAdjustment) + "')";
 				
-				insertRequest.text = text;
+				var select:String =  "SELECT type FROM treatments WHERE id = '" + treatment.ID + "'";
+				insertRequest.text = select;
 				insertRequest.execute();
-				conn.commit();
-				conn.close();
+				var selectResult:SQLResult = insertRequest.getResult();
+				insertRequest.clearParameters();
 				
+				if (selectResult.data != null && (selectResult.data as Array).length > 0)
+				{
+					//Update
+					conn.commit();
+					conn.close();
+					updateTreatmentSynchronous(treatment);
+				}
+				else
+				{
+					//Insert
+					var insert:String = "INSERT INTO treatments (";
+					insert += "id, ";
+					insert += "type, ";
+					insert += "insulinamount, ";
+					insert += "insulinid, ";
+					insert += "carbs, ";
+					insert += "glucose, ";
+					insert += "glucoseestimated, ";
+					insert += "note, ";
+					insert += "lastmodifiedtimestamp, ";
+					insert += "carbdelay, ";
+					insert += "basalduration, ";
+					insert += "children, ";
+					insert += "prebolus, ";
+					insert += "duration, ";
+					insert += "intensity, ";
+					insert += "isbasalabsolute, ";
+					insert += "isbasalrelative, ";
+					insert += "istempbasalend, ";
+					insert += "basalabsoluteamount, ";
+					insert += "basalpercentamount, ";
+					insert += "needsadjustment) ";
+					insert += "VALUES (";
+					insert += "'" + treatment.ID + "', ";
+					insert += "'" + treatment.type + "', ";
+					insert += treatment.insulinAmount + ", ";
+					insert += "'" + treatment.insulinID + "', ";
+					insert += treatment.carbs + ", ";
+					insert += treatment.glucose + ", ";
+					insert += treatment.glucoseEstimated + ", ";
+					insert += "'" + treatment.note + "', ";
+					insert += treatment.timestamp + ", ";
+					insert += treatment.carbDelayTime + ", ";
+					insert += treatment.basalDuration + ", ";
+					insert += "'" + treatment.extractChildren() + "', ";
+					insert += (!isNaN(treatment.preBolus) ? treatment.preBolus : "NULL") + ", ";
+					insert += (!isNaN(treatment.duration) ? treatment.duration : "NULL") + ", ";
+					insert += "'" + treatment.exerciseIntensity + "', ";
+					insert += "'" + String(treatment.isBasalAbsolute) + "', ";
+					insert += "'" + String(treatment.isBasalRelative) + "', ";
+					insert += "'" + String(treatment.isTempBasalEnd) + "', ";
+					insert += treatment.basalAbsoluteAmount + ", ";
+					insert += treatment.basalPercentAmount + ", ";
+					insert += "'" + String(treatment.needsAdjustment) + "')";
+					
+					insertRequest.text = insert;
+					insertRequest.execute();
+					conn.commit();
+					conn.close();
+				}
 			} catch (error:SQLError) {
 				if (conn.connected) {
 					conn.rollback();
 					conn.close();
 				}
 				dispatchInformation('error_while_inserting_treatment_in_db', error.message + " - " + error.details);
-				trace("ERROR ADDING TREATMENT  TO DABATASE!!!!",  error.message + " - " + error.details);
 			}
 		}
 		
