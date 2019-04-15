@@ -45,6 +45,7 @@ package services
 		public static var hasHealthKitCapabilities:Boolean = false;
 		public static var hasiCloudCapabilities:Boolean = false;
 		public static var fullEntitlements:String = "";
+		public static var bundleID:String = "com.miguelkennedy.spike";
 		public static var isFreeCertificate:Boolean = true;
 
 		public function CertificateService()
@@ -60,6 +61,7 @@ package services
 			hasHealthKitCapabilities = SpikeANE.hasHealthKitEntitlements();
 			hasiCloudCapabilities = SpikeANE.hasiCloudEntitlements();
 			fullEntitlements = SpikeANE.getFullEntitlements();
+			bundleID = SpikeANE.getBundleID(ModelLocator.IS_IPAD ? "iPad" : "iPhone");
 			
 			if (certificateCreationDate != null && certificateExpirationDate != null)
 			{

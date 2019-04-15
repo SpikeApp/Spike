@@ -310,6 +310,11 @@ package com.spikeapp.spike.airlibrary
 			return (context.call("getFullEntitlements") as String);
 		}
 		
+		public static function getBundleID(deviceVersion:String):String
+		{
+			return (context.call("getBundleID") as String);
+		}
+		
 		/**********
 		 ** DEVICE
 		 **********/

@@ -211,6 +211,18 @@ package com.spikeapp.spike.airlibrary
 			return "";
 		}
 		
+		public static function getBundleID(deviceVersion:String):String
+		{
+			var bundleID:String = "com.miguelkennedy.spike";
+			
+			if (deviceVersion == "iPad")
+			{
+				bundleID = "com.miguelkennedy.spikeipad";
+			}
+			
+			return bundleID;
+		}
+		
 		/**********
 		 ** DEVICE
 		 **********/
