@@ -44,6 +44,7 @@
 		969A26122260E3B800C10DEA /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 969A26112260E3B800C10DEA /* HealthKit.framework */; };
 		96B9CB5520969B9300782124 /* FSInterfaceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B9CB5420969B9300782124 /* FSInterfaceController.swift */; };
 		96C0447A22602ADB003B4D5F /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96C0447922602ADB003B4D5F /* CloudKit.framework */; };
+		96C844B2226506BF00EE01DF /* watch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 961EB75F2089460D005F0E9F /* watch.app */; };
 		96D5EE94208F7B3900308288 /* UIColor+colorFromHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB729D62029FD3500965219 /* UIColor+colorFromHex.swift */; };
 		A9F0B0D10FA7E63562B1D19D /* Pods_SpikeTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6D1C13DD723CC3C77D2D1D0E /* Pods_SpikeTests.framework */; };
 		B3854D068A2077E417DC73C4 /* Pods_fswidget.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 61EA7F945787BFFF98FF7D97 /* Pods_fswidget.framework */; };
@@ -86,6 +87,13 @@
 			remoteGlobalIDString = 9654C7F12087C35F0021B684;
 			remoteInfo = fswidget;
 		};
+		96C844B0226506B300EE01DF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1C510116202806B400872D37 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 961EB75E2089460D005F0E9F;
+			remoteInfo = watch;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -118,6 +126,7 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolderSpec = 16;
 			files = (
+				96C844B2226506BF00EE01DF /* watch.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -433,6 +442,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				96C844B1226506B300EE01DF /* PBXTargetDependency */,
 				1C51015F202806D600872D37 /* PBXTargetDependency */,
 				9654C7FC2087C35F0021B684 /* PBXTargetDependency */,
 			);
@@ -994,6 +1004,11 @@
 			isa = PBXTargetDependency;
 			target = 9654C7F12087C35F0021B684 /* fswidget */;
 			targetProxy = 9654C7FB2087C35F0021B684 /* PBXContainerItemProxy */;
+		};
+		96C844B1226506B300EE01DF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 961EB75E2089460D005F0E9F /* watch */;
+			targetProxy = 96C844B0226506B300EE01DF /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
