@@ -17,13 +17,12 @@ package G5G6Model
 		public var temperature:int;
 		
 		public function BatteryInfoRxMessage(packet:ByteArray) {
-			if (packet.length >= 12) {
+			if (packet.length >= 10) {
 				byteSequence = new ByteArray();
 				byteSequence.endian = Endian.LITTLE_ENDIAN;
 				byteSequence.writeBytes(packet);
 				byteSequence.position = 0;
 				if (byteSequence.readByte() == opcode) {
-					//status = byteSequence.readByte();
 					status = byteSequence.readByte();
 					voltagea = byteSequence.readUnsignedShort();
 					voltageb = byteSequence.readUnsignedShort();
@@ -35,6 +34,9 @@ package G5G6Model
 				}
 				byteSequence.position = 0;
 			}
+			else {
+				myTrace("Invalid length for BatteryInfoMessage: " + packet.length);
+			}			
 		}
 		
 		private static function myTrace(log:String):void {
