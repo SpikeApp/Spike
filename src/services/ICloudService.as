@@ -192,8 +192,7 @@ package services
 								{ label: ModelLocator.resourceManagerInstance.getString('globaltranslations', "yes_uppercase"), triggered: onRestoreInitialDatabase }	
 							]
 						);
-						alert.buttonGroupProperties.gap = 0;
-						alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+						alert.buttonGroupProperties.gap = 5;
 						
 						function onRestoreInitialDatabase(e:starling.events.Event):void
 						{
