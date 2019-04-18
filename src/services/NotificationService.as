@@ -23,8 +23,6 @@ package services
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
-	import distriqtkey.DistriqtKey;
-	
 	import events.BlueToothServiceEvent;
 	import events.CalibrationServiceEvent;
 	import events.FollowerEvent;
@@ -35,10 +33,11 @@ package services
 	
 	import model.ModelLocator;
 	
+	import services.bluetooth.CGMBluetoothService;
+	
 	import utils.BadgeBuilder;
 	import utils.BgGraphBuilder;
 	import utils.Trace;
-	import services.bluetooth.CGMBluetoothService;
 	
 	/**
 	 * This service<br>
@@ -194,7 +193,6 @@ package services
 			Spike.instance.addEventListener(SpikeEvent.APP_HALTED, onHaltExecution);
 			
 			Core.init();
-			Notifications.init(!ModelLocator.IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
 			if (!Notifications.isSupported) {
 				return;
 			}

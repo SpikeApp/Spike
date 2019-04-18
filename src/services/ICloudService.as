@@ -22,8 +22,6 @@ package services
 	import database.Database;
 	import database.LocalSettings;
 	
-	import distriqtkey.DistriqtKey;
-	
 	import events.DatabaseEvent;
 	import events.FollowerEvent;
 	import events.ICloudEvent;
@@ -68,8 +66,6 @@ package services
 		public static function init():void
 		{
 			serviceStartedAt = getTimer();
-			
-			CloudStorage.init( !ModelLocator.IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad );
 			
 			try
 			{

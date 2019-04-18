@@ -13,8 +13,6 @@ package services
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
-	import distriqtkey.DistriqtKey;
-	
 	import events.FollowerEvent;
 	import events.SettingsServiceEvent;
 	import events.SpikeEvent;
@@ -70,7 +68,6 @@ package services
 			
 			try
 			{
-				Calendar.init( !ModelLocator.IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad );
 				if (Calendar.isSupported)
 				{
 					getInitialProperties();

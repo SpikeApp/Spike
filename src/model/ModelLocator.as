@@ -1,22 +1,17 @@
 package model
 {
-	import com.distriqt.extension.networkinfo.NetworkInfo;
-	import com.distriqt.extension.scanner.Scanner;
 	import com.spikeapp.spike.airlibrary.SpikeANE;
 	
 	import flash.events.EventDispatcher;
 	
 	import mx.resources.IResourceManager;
 	import mx.resources.ResourceManager;
-	import mx.utils.ObjectUtil;
 	
 	import database.BgReading;
 	import database.CGMBlueToothDevice;
 	import database.CommonSettings;
 	import database.Database;
 	import database.LocalSettings;
-	
-	import distriqtkey.DistriqtKey;
 	
 	import events.DatabaseEvent;
 	import events.NotificationServiceEvent;
@@ -30,12 +25,12 @@ package model
 	import services.HealthKitService;
 	import services.ICloudService;
 	import services.IFTTTService;
-	import services.UpdateService;
 	import services.NightscoutService;
 	import services.NotificationService;
 	import services.RemoteAlertService;
 	import services.TextToSpeechService;
 	import services.TransmitterService;
+	import services.UpdateService;
 	import services.WatchService;
 	import services.WidgetService;
 	import services.bluetooth.CGMBluetoothService;
@@ -155,8 +150,6 @@ package model
 				
 				//ANE Initialization
 				SpikeANE.init();
-				NetworkInfo.init(!IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
-				Scanner.init(!IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
 				
 				//Audio Initialization
 				SpikeANE.setAvAudioSessionCategory(true);

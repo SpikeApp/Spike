@@ -43,8 +43,6 @@ package services.bluetooth
 	import database.CommonSettings;
 	import database.LocalSettings;
 	
-	import distriqtkey.DistriqtKey;
-	
 	import events.BlueToothServiceEvent;
 	import events.NotificationServiceEvent;
 	import events.SettingsServiceEvent;
@@ -67,7 +65,6 @@ package services.bluetooth
 	import services.NotificationService;
 	
 	import starling.events.Event;
-	import starling.utils.SystemUtil;
 	
 	import ui.InterfaceController;
 	import ui.popups.AlertManager;
@@ -363,7 +360,6 @@ package services.bluetooth
 			
 			setPeripheralUUIDs();
 			
-			BluetoothLE.init(!ModelLocator.IS_IPAD ? DistriqtKey.distriqtKey : DistriqtKey.distriqtKeyIpad);
 			if (BluetoothLE.isSupported) {
 				switch (BluetoothLE.service.authorisationStatus()) {
 					case AuthorisationStatus.SHOULD_EXPLAIN:
