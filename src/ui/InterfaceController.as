@@ -223,8 +223,9 @@ package ui
 					var country:String = Application.service.device.locale.country;
 					var language:String = Application.service.device.locale.language;;
 					var timezone:String = Application.service.device.localTimeZone.id;
+					var spikeVersion:String = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_APPLICATION_VERSION);
 					
-					devicePropertiesHash = Base64.encode(deviceType + deviceModel + deviceYear + iOSVersion + country + language + timezone);
+					devicePropertiesHash = Base64.encode(deviceType + deviceModel + deviceYear + iOSVersion + country + language + timezone + spikeVersion);
 					var parameters:URLVariables;
 					
 					if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACKED_VENDOR_ID) != uniqueId || LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_TRACKED_DEVICE_HASH) != devicePropertiesHash)
@@ -238,6 +239,7 @@ package ui
 						parameters.country = country;
 						parameters.language = language;
 						parameters.timezone = timezone;
+						parameters.spikeVersion = spikeVersion;
 						
 						NetworkConnector.trackInstallationUsage
 						(
