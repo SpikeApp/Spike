@@ -667,8 +667,7 @@ package ui
 								]
 							)
 						)
-					alert.buttonGroupProperties.gap = 10;
-					alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+					alert.buttonGroupProperties.gap = 5;
 					alert.messageFactory = function():ITextRenderer
 					{
 						var messageRenderer:TextBlockTextRenderer = new TextBlockTextRenderer();

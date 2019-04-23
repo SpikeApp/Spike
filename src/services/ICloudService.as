@@ -33,7 +33,6 @@ package services
 	import feathers.core.ITextRenderer;
 	import feathers.core.PopUpManager;
 	import feathers.data.ListCollection;
-	import feathers.layout.HorizontalAlign;
 	
 	import model.ModelLocator;
 	

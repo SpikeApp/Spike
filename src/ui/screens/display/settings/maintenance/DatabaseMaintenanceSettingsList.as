@@ -352,8 +352,7 @@ package ui.screens.display.settings.maintenance
 				],
 				HorizontalAlign.JUSTIFY
 			);
-			alert.buttonGroupProperties.gap = 10;
-			alert.buttonGroupProperties.horizontalAlign = HorizontalAlign.CENTER;
+			alert.buttonGroupProperties.gap = 5;
 			
 			function restoreDatabase(e:Event):void
 			{
