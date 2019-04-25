@@ -1,3 +1,7 @@
+3.6.3
+ENHANCEMENT: Improvements to several translations. (Translators)
+FIX: Fixes and issue where the word "hour" was incorrectly displayed in the Alarm Snoozer on some languages. (Sascha)
+
 3.6.2
 ENHANCEMENT: Several improvements to the iCloud backup/restore feature including adding a new twice-daily backup option and automatically prompting the user after a clean Spike install if he/she wants to restore from a previous existing iCloud backup. (Miguel)
 ENHANCEMENT: Several improvements to the internal system that checks and notifies of new Spike updates including also notifying the user through a local notification on the lock screen. (Miguel)
