@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Spike Chart</string>
+	<string>chartwidget</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -17,9 +17,9 @@
 	<key>CFBundlePackageType</key>
 	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
-	<string>3.6.3</string>
+	<string>1.0</string>
 	<key>CFBundleVersion</key>
-	<string>3.6.3</string>
+	<string>1</string>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionMainStoryboard</key>
@@ -27,7 +27,5 @@
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.widget-extension</string>
 	</dict>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Access to your location is required to improve accuracy</string>
 </dict>
 </plist>

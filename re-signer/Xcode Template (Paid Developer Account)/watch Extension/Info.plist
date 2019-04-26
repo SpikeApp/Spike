@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Spike WatchKit Extension</string>
+	<string>watch Extension</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -17,37 +17,32 @@
 	<key>CFBundlePackageType</key>
 	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
-	<string>3.6.3</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
+	<string>1.0</string>
 	<key>CFBundleVersion</key>
-	<string>3.6.3</string>
+	<string>1</string>
 	<key>CLKComplicationPrincipalClass</key>
-	<string>$(PRODUCT_MODULE_NAME).Cowmplication</string>
+	<string>$(PRODUCT_MODULE_NAME).ComplicationController</string>
 	<key>CLKComplicationSupportedFamilies</key>
 	<array>
-		<string>CLKComplicationFamilyCircularSmall</string>
-		<string>CLKComplicationFamilyExtraLarge</string>
-		<string>CLKComplicationFamilyGraphicBezel</string>
-		<string>CLKComplicationFamilyGraphicCircular</string>
-		<string>CLKComplicationFamilyGraphicCorner</string>
-		<string>CLKComplicationFamilyGraphicRectangular</string>
 		<string>CLKComplicationFamilyModularSmall</string>
-		<string>CLKComplicationFamilyUtilitarianLarge</string>
+		<string>CLKComplicationFamilyModularLarge</string>
 		<string>CLKComplicationFamilyUtilitarianSmall</string>
 		<string>CLKComplicationFamilyUtilitarianSmallFlat</string>
+		<string>CLKComplicationFamilyUtilitarianLarge</string>
+		<string>CLKComplicationFamilyCircularSmall</string>
+		<string>CLKComplicationFamilyExtraLarge</string>
 	</array>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionAttributes</key>
 		<dict>
 			<key>WKAppBundleIdentifier</key>
-			<string>com.miguelkennedy.spike.watchkitapp</string>
+			<string>com.spike-app.spike.watchkitapp</string>
 		</dict>
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.watchkit</string>
 	</dict>
-	<key>RemoteInterfacePrincipalClass</key>
-	<string>$(PRODUCT_MODULE_NAME).InterfaceController</string>
+	<key>WKExtensionDelegateClassName</key>
+	<string>$(PRODUCT_MODULE_NAME).ExtensionDelegate</string>
 </dict>
 </plist>

@@ -74,7 +74,7 @@ package services
 			if (certificateExpirationDate != null)
 			{
 				checkExpirationTimeout = setTimeout(checkCertificateExpiration, TimeSpan.TIME_1_MINUTE);
-				checkExpirationInterval = setInterval(checkCertificateExpiration, TimeSpan.TIME_1_HOUR);
+				checkExpirationInterval = setInterval(checkCertificateExpiration, TimeSpan.TIME_30_MINUTES);
 			}
 			
 			//Register event listener for app halted
