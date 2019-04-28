@@ -43,7 +43,7 @@ cleanup () {
     fi
 
     if [ $1 = true ]; then
-        echo -e "Done!\n\nNote: To install the resigned Spike IPA file connect your device via USB to your computer, open Xcode, press the upper \"Window\" menu, select \"Devices and Simulators\", select your device from the left list and pres the + button under your installed apps list to browse and install this newly created Spike ipa. \n\n${GREEN}Have a great day!${NC}\n"
+        echo -e "Done!\n\nNote: To install the resigned Spike IPA file connect your device via USB to your computer, open Xcode, press the upper \"Window\" menu, select \"Devices and Simulators\", select your device from the left list and press the + button under your installed apps list to browse and install this newly created Spike ipa. \n\n${GREEN}Have a great day!${NC}\n"
     fi
 }
 
@@ -109,13 +109,13 @@ if [ $SHOULD_DOWNLOAD = "true" ]; then
         case $opt in
             "iPhone/iPodTouch")
                 echo -e "\nDownloading latest Spike iPhone/iPodTouch version...";
-                curl -o "Spike-iPhone-iPodTouch.ipa" --progress-bar "https://spike-app.com/releases/latest/Spike-iPhone-iPodTouch.ipa";
+                curl --output "Spike-iPhone-iPodTouch.ipa" --progress-bar --location "https://spike-app.com/releases/latest-iphone";
                 SELECTED_IPA_FILE="Spike-iPhone-iPodTouch.ipa"
                 break
                 ;;
             "iPad")
                 echo -e "\nDownloading latest Spike iPad version...";
-                curl -o "Spike-iPad.ipa" --progress-bar "https://spike-app.com/releases/latest/Spike-iPad.ipa";
+                curl --output "Spike-iPad.ipa" --progress-bar --location "https://spike-app.com/releases/latest-ipad";
                 SELECTED_IPA_FILE="Spike-iPad.ipa"
                 break
                 ;;
@@ -373,6 +373,7 @@ function checkStatus {
     # shellcheck disable=SC2181
     if [ $? -ne 0 ]; then
         rm -rf "$TEMP_DIR" > /dev/null 2>&1
+        cleanup false
         error "Encountered an error, aborting!"
     fi
 }
