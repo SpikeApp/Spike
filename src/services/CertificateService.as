@@ -379,7 +379,7 @@ package services
 		 */
 		private static function onResignHelp(e:Event):void
 		{
-			navigateToURL(new URLRequest(""));
+			navigateToURL(new URLRequest("https://spike-app.com/re-sign-help/"));
 		}
 		
 		private static function onHaltExecution(e:SpikeEvent):void

@@ -109,13 +109,13 @@ if [ $SHOULD_DOWNLOAD = "true" ]; then
         case $opt in
             "iPhone/iPodTouch")
                 echo -e "\nDownloading latest Spike iPhone/iPodTouch version...";
-                curl --output "Spike-iPhone-iPodTouch.ipa" --progress-bar --location "https://spike-app.com/releases/latest-iphone";
+                curl --output "Spike-iPhone-iPodTouch.ipa" --progress-bar --location "https://spike-app.com/releases/latest-iphone-version";
                 SELECTED_IPA_FILE="Spike-iPhone-iPodTouch.ipa"
                 break
                 ;;
             "iPad")
                 echo -e "\nDownloading latest Spike iPad version...";
-                curl --output "Spike-iPad.ipa" --progress-bar --location "https://spike-app.com/releases/latest-ipad";
+                curl --output "Spike-iPad.ipa" --progress-bar --location "https://spike-app.com/releases/latest-ipad-version";
                 SELECTED_IPA_FILE="Spike-iPad.ipa"
                 break
                 ;;
