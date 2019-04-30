@@ -138,8 +138,18 @@ package ui.screens.display.settings.integration
 			instructionsTitleLabel.width = width - 20;
 			
 			//Instructions Description Label
+			var separator:String = "<p></p>";
+			var loopOfflineInstructions:String = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','loop_offline_integration_instructions');
+			var loopOnlineInstructions:String = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','loop_online_integration_instructions');
+			var masterToFollowerInstructions:String = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','spike_master_to_spike_follower_instructions');
+			var appleWatchOfflineInstructions:String = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','apple_watch_offline_instructions');
+			var pebbleOfflineInstructions:String = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','pebble_offline_instructions');
+			var fitbitOfflineInstructions:String = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','fitbit_offline_instructions');
+			var garminOfflineInstructions:String = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','garmin_offline_instructions');
+			var nightguardOfflineInstructions:String = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','nightguard_offline_instructions');
+			
 			instructionsDescriptionLabel = new Label();
-			instructionsDescriptionLabel.text = ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','instructions_description_label');
+			instructionsDescriptionLabel.text = loopOfflineInstructions + separator + loopOnlineInstructions + separator + masterToFollowerInstructions + separator + appleWatchOfflineInstructions + separator + pebbleOfflineInstructions + separator + fitbitOfflineInstructions + separator + garminOfflineInstructions + separator + nightguardOfflineInstructions;
 			instructionsDescriptionLabel.width = width - 20;
 			instructionsDescriptionLabel.wordWrap = true;
 			instructionsDescriptionLabel.paddingTop = 10;
@@ -239,6 +249,11 @@ package ui.screens.display.settings.integration
 		 */
 		private function onSendEmail(e:starling.events.Event):void
 		{
+			if (instructionsDescriptionLabel == null || instructionsDescriptionLabel.text == null || instructionsDescriptionLabel.text == "")
+			{
+				return;
+			}
+			
 			/* Main Container */
 			var mainLayout:VerticalLayout = new VerticalLayout();
 			mainLayout.horizontalAlign = HorizontalAlign.CENTER;
@@ -351,7 +366,7 @@ package ui.screens.display.settings.integration
 				onLoadCompleteHandler,
 				vars,
 				null,
-				ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','instructions_description_label') + ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','email_signature')
+				instructionsDescriptionLabel.text + ModelLocator.resourceManagerInstance.getString('httpserversettingsscreen','email_signature')
 			);
 		}
 		
