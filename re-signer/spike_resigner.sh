@@ -17,6 +17,9 @@ SHOULD_DOWNLOAD="false"
 SELECTED_IPA_FILE=""
 SHOULD_CLEAR_XCODE_CACHE="false"
 
+# Make sure that PATH includes the location of the PlistBuddy helper tool as its location is not standard
+export PATH=$PATH:/usr/libexec
+
 # Banner
 echo "                                                                                                         "
 echo "███████╗██████╗ ██╗██╗  ██╗███████╗    ██████╗ ███████╗    ███████╗██╗ ██████╗ ███╗   ██╗███████╗██████╗ "
@@ -250,6 +253,90 @@ fi
 
 echo -e "\n${GREEN}Selected code signing identity -> $CODE_SIGN_IDENTITY${NC}"
 
+# Logging functions
+log() {
+    # Make sure it returns 0 code even when verose mode is off (test 1)
+    # To use like [[ condition ]] && log "x" && something
+    if [[ -n "$VERBOSE" ]]; then echo -e "$@"; else test 1; fi
+}
+
+error() {
+    echo -e "${RED}$@${NC}" >&2
+    rm -rf "$TEMP_DIR" > /dev/null 2>&1
+    exit 1
+}
+
+warning() {
+    echo -e "${PURPLE}$@${NC}" >&2
+}
+
+function checkStatus {
+    # shellcheck disable=SC2181
+    if [ $? -ne 0 ]; then
+        rm -rf "$TEMP_DIR" > /dev/null 2>&1
+        cleanup false
+        error "Encountered an error, aborting!"
+    fi
+}
+
+# Check for and remove the temporary directory if it already exists
+ORIGINAL_FILE="$SELECTED_IPA_FILE"
+
+if [ -d "$TEMP_DIR" ]; then
+    log "Removing previous temporary directory: '$TEMP_DIR'"
+    rm -Rf "$TEMP_DIR"
+fi
+
+filename=$(basename "$ORIGINAL_FILE")
+extension="${filename##*.}"
+filename="${filename%.*}"
+
+# Check if the supplied file is an ipa or an app file
+if [ "${extension}" = "ipa" ]; then
+    # Unzip the old ipa quietly
+    unzip -q "$ORIGINAL_FILE" -d $TEMP_DIR
+    checkStatus
+elif [ "${extension}" = "app" ]; then
+    # Copy the app file into an ipa-like structure
+    mkdir -p "$TEMP_DIR/Payload"
+    cp -Rf "${ORIGINAL_FILE}" "$TEMP_DIR/Payload/${filename}.app"
+    checkStatus
+else
+    error "Error: Only can resign .app files and .ipa files."
+fi
+
+# Set the app name
+# In Payload directory may be another file except .app file, such as StoreKit folder.
+# Search the first .app file within the Payload directory
+# shellcheck disable=SC2010
+APP_NAME=$(ls "$TEMP_DIR/Payload/" | grep ".app$" | head -1)
+
+# Determine IPA version
+function get_device_version
+{
+    local APP_PATH="$1"
+
+    # Make sure that the Info.plist file is where we expect it
+    if [ ! -e "$APP_PATH/Info.plist" ]; then
+        error "Expected file does not exist: '$APP_PATH/Info.plist'"
+    fi
+
+    # Read current bundle identifier
+    local BUNDLE_IDENTIFIER=$(PlistBuddy -c "Print :CFBundleIdentifier" "$APP_PATH/Info.plist")
+    local DEVICE_VERSION=""
+
+    # Parse device version
+    if echo "$BUNDLE_IDENTIFIER" | grep -q "spikeipad"; then
+        DEVICE_VERSION="iPad"
+    else
+        DEVICE_VERSION="iPhone-iPodTouch"
+    fi
+
+    echo "$DEVICE_VERSION"
+}
+
+SPIKE_DEVICE_VERSION=$( get_device_version "$TEMP_DIR/Payload/$APP_NAME" )
+
  # Now onto the provisioning profiles...
 TEMP_MOBILEPROVISION_PLIST_PATH=/tmp/mobileprovision.plist
 TEMP_CERTIFICATE_PATH=/tmp/certificate.cer
@@ -277,31 +364,58 @@ do
         # Yay, this mobile provisioning profile matches up with the selected signing identity, let's continue...
         # Get the name of the provisioning profile:
         MOBILEPROVISION_PROFILE_NAME=`/usr/libexec/PlistBuddy -c 'Print Name' $TEMP_MOBILEPROVISION_PLIST_PATH`			
-        
-        #Find corresponding app/extension
-       	if echo "$MOBILEPROVISION_PROFILE_NAME" | grep -q "watchkitextension"; then
-            FOUND_WATCH_EXTENSION_MOBILEPROVISION=true 
-            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/watchkitextension.mobileprovision"
-		elif echo "$MOBILEPROVISION_PROFILE_NAME" | grep -q "watchkitapp"; then
-            FOUND_WATCH_APP_MOBILEPROVISION=true
-            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/watchkitapp.mobileprovision"
-        elif echo "$MOBILEPROVISION_PROFILE_NAME" | grep -q "fswidget"; then
-            FOUND_FS_WIDGET_MOBILEPROVISION=true
-            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/fswidget.mobileprovision"
-        elif echo "$MOBILEPROVISION_PROFILE_NAME" | grep -q "widget"; then
-            FOUND_CHART_WIDGET_MOBILEPROVISION=true
-            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/widget.mobileprovision"
-        elif echo "$MOBILEPROVISION_PROFILE_NAME" | grep -q "spike"; then
-            FOUND_SPIKE_MOBILEPROVISION=true
-            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/spike.mobileprovision"
 
-            #Detect if user is using a free or paid dev account
-            CERTFICATE_TIME_TO_LIVE=`/usr/libexec/PlistBuddy -c 'Print TimeToLive' $TEMP_MOBILEPROVISION_PLIST_PATH`
-            if [ -n "$CERTFICATE_TIME_TO_LIVE" ]; then
-                if (( $CERTFICATE_TIME_TO_LIVE > 7 )); then
-                    IS_FREE="false"
-                fi
-            fi
+        #Find corresponding app/extension
+		if [ "$SPIKE_DEVICE_VERSION" = "iPad" ]; then
+			if [[ "$MOBILEPROVISION_PROFILE_NAME" == *spikeipad.watchkitapp.watchkitextension ]]; then
+	            FOUND_WATCH_EXTENSION_MOBILEPROVISION=true 
+	            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/watchkitextension.mobileprovision"
+			elif [[ "$MOBILEPROVISION_PROFILE_NAME" == *spikeipad.watchkitapp ]]; then
+	            FOUND_WATCH_APP_MOBILEPROVISION=true
+	            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/watchkitapp.mobileprovision"
+	        elif [[ "$MOBILEPROVISION_PROFILE_NAME" == *spikeipad.fswidget ]]; then
+	            FOUND_FS_WIDGET_MOBILEPROVISION=true
+	            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/fswidget.mobileprovision"
+	        elif [[ "$MOBILEPROVISION_PROFILE_NAME" == *spikeipad.widget ]]; then
+	            FOUND_CHART_WIDGET_MOBILEPROVISION=true
+	            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/widget.mobileprovision"
+	        elif [[ "$MOBILEPROVISION_PROFILE_NAME" == *spikeipad ]]; then
+	            FOUND_SPIKE_MOBILEPROVISION=true
+	            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/spike.mobileprovision"
+
+	            #Detect if user is using a free or paid dev account
+	            CERTFICATE_TIME_TO_LIVE=`/usr/libexec/PlistBuddy -c 'Print TimeToLive' $TEMP_MOBILEPROVISION_PLIST_PATH`
+	            if [ -n "$CERTFICATE_TIME_TO_LIVE" ]; then
+	                if (( $CERTFICATE_TIME_TO_LIVE > 7 )); then
+	                    IS_FREE="false"
+	                fi
+	            fi
+			fi
+		else
+			if [[ "$MOBILEPROVISION_PROFILE_NAME" == *spike.watchkitapp.watchkitextension ]]; then
+	            FOUND_WATCH_EXTENSION_MOBILEPROVISION=true 
+	            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/watchkitextension.mobileprovision"
+			elif [[ "$MOBILEPROVISION_PROFILE_NAME" == *spike.watchkitapp ]]; then
+	            FOUND_WATCH_APP_MOBILEPROVISION=true
+	            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/watchkitapp.mobileprovision"
+	        elif [[ "$MOBILEPROVISION_PROFILE_NAME" == *spike.fswidget ]]; then
+	            FOUND_FS_WIDGET_MOBILEPROVISION=true
+	            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/fswidget.mobileprovision"
+	        elif [[ "$MOBILEPROVISION_PROFILE_NAME" == *spike.widget ]]; then
+	            FOUND_CHART_WIDGET_MOBILEPROVISION=true
+	            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/widget.mobileprovision"
+	        elif [[ "$MOBILEPROVISION_PROFILE_NAME" == *spike ]]; then
+	            FOUND_SPIKE_MOBILEPROVISION=true
+	            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/spike.mobileprovision"
+
+	            #Detect if user is using a free or paid dev account
+	            CERTFICATE_TIME_TO_LIVE=`/usr/libexec/PlistBuddy -c 'Print TimeToLive' $TEMP_MOBILEPROVISION_PLIST_PATH`
+	            if [ -n "$CERTFICATE_TIME_TO_LIVE" ]; then
+	                if (( $CERTFICATE_TIME_TO_LIVE > 7 )); then
+	                    IS_FREE="false"
+	                fi
+	            fi
+			fi
 		fi
     fi
 done
@@ -351,34 +465,6 @@ cd "$SCRIPT_DIR"
 # Resign script starts here
 ###########################
 
-# Logging functions
-
-log() {
-    # Make sure it returns 0 code even when verose mode is off (test 1)
-    # To use like [[ condition ]] && log "x" && something
-    if [[ -n "$VERBOSE" ]]; then echo -e "$@"; else test 1; fi
-}
-
-error() {
-    echo -e "${RED}$@${NC}" >&2
-    rm -rf "$TEMP_DIR" > /dev/null 2>&1
-    exit 1
-}
-
-warning() {
-    echo -e "${PURPLE}$@${NC}" >&2
-}
-
-function checkStatus {
-    # shellcheck disable=SC2181
-    if [ $? -ne 0 ]; then
-        rm -rf "$TEMP_DIR" > /dev/null 2>&1
-        cleanup false
-        error "Encountered an error, aborting!"
-    fi
-}
-
-ORIGINAL_FILE="$SELECTED_IPA_FILE"
 NEW_FILE=""
 CERTIFICATE="$CODE_SIGN_IDENTITY"
 BUNDLE_IDENTIFIER=""
@@ -403,46 +489,12 @@ log "Certificate: '$CERTIFICATE'"
 [[ -n "${KEYCHAIN}" ]] && log "Specified keychain to use: '$KEYCHAIN'"
 [[ -n "${KEYCHAIN_FLAG}" ]] && log "Specified keychain to use: '$KEYCHAIN_PATH'"
 
-# Check for and remove the temporary directory if it already exists
-if [ -d "$TEMP_DIR" ]; then
-    log "Removing previous temporary directory: '$TEMP_DIR'"
-    rm -Rf "$TEMP_DIR"
-fi
-
-filename=$(basename "$ORIGINAL_FILE")
-extension="${filename##*.}"
-filename="${filename%.*}"
-
-# Check if the supplied file is an ipa or an app file
-if [ "${extension}" = "ipa" ]; then
-    # Unzip the old ipa quietly
-    unzip -q "$ORIGINAL_FILE" -d $TEMP_DIR
-    checkStatus
-elif [ "${extension}" = "app" ]; then
-    # Copy the app file into an ipa-like structure
-    mkdir -p "$TEMP_DIR/Payload"
-    cp -Rf "${ORIGINAL_FILE}" "$TEMP_DIR/Payload/${filename}.app"
-    checkStatus
-else
-    error "Error: Only can resign .app files and .ipa files."
-fi
-
 # check the keychain
 if [ "${KEYCHAIN}" != "" ]; then
     security list-keychains -s "$KEYCHAIN"
     security unlock "$KEYCHAIN"
     security default-keychain -s "$KEYCHAIN"
 fi
-
-# Set the app name
-# In Payload directory may be another file except .app file, such as StoreKit folder.
-# Search the first .app file within the Payload directory
-# shellcheck disable=SC2010
-APP_NAME=$(ls "$TEMP_DIR/Payload/" | grep ".app$" | head -1)
-
-# Make sure that PATH includes the location of the PlistBuddy helper tool as its location is not standard
-export PATH=$PATH:/usr/libexec
-
 
 function get_bundle_identifier
 {
@@ -474,29 +526,6 @@ function get_app_version
     echo "$APP_VERSION"
 }
 
-function get_device_version
-{
-    local APP_PATH="$1"
-
-    # Make sure that the Info.plist file is where we expect it
-    if [ ! -e "$APP_PATH/Info.plist" ]; then
-        error "Expected file does not exist: '$APP_PATH/Info.plist'"
-    fi
-
-    # Read current bundle identifier
-    local BUNDLE_IDENTIFIER=$(PlistBuddy -c "Print :CFBundleIdentifier" "$APP_PATH/Info.plist")
-    local DEVICE_VERSION=""
-
-    # Parse device version
-    if echo "$BUNDLE_IDENTIFIER" | grep -q "spikeipad"; then
-        DEVICE_VERSION="iPad"
-    else
-        DEVICE_VERSION="iPhone-iPodTouch"
-    fi
-
-    echo "$DEVICE_VERSION"
-}
-
 # Get main bundle identifier
 MAIN_BUNDLE_IDENTIFIER=$( get_bundle_identifier "$TEMP_DIR/Payload/$APP_NAME" )
 
@@ -525,7 +554,6 @@ MAIN_APP_VERSION=$( get_app_version "$TEMP_DIR/Payload/$APP_NAME" )
 echo -e "${GREEN}Spike version -> $MAIN_APP_VERSION${NC}\n"
 
 # Define resigned file name
-SPIKE_DEVICE_VERSION=$( get_device_version "$TEMP_DIR/Payload/$APP_NAME" )
 NEW_FILE="Spike.$SPIKE_DEVICE_VERSION.$MAIN_APP_VERSION-Resigned.ipa"
 
 # Test whether two bundle identifiers match
