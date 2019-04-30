@@ -749,7 +749,7 @@
 				INFOPLIST_FILE = chartwidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.widgetipad";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spikeipad.widget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 4.0;
@@ -766,7 +766,7 @@
 				INFOPLIST_FILE = chartwidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.widgetipad";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spikeipad.widget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 4.0;
@@ -783,7 +783,7 @@
 				INFOPLIST_FILE = fullscreenwidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.fswidgetipad";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spikeipad.fswidget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 4.0;
@@ -800,7 +800,7 @@
 				INFOPLIST_FILE = fullscreenwidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spike.fswidgetipad";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.spike-app.spikeipad.fswidget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 4.0;
