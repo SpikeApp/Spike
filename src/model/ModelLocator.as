@@ -58,7 +58,7 @@ package model
 		public static const MAX_TIME_FOR_BGREADINGS:int = MAX_DAYS_TO_STORE_BGREADINGS_IN_MODELLOCATOR * TimeSpan.TIME_24_HOURS + Constants.READING_OFFSET;
 
 		public static const IS_IPAD:Boolean = false;
-		public static const INTERNAL_TESTING:Boolean = true;
+		public static const INTERNAL_TESTING:Boolean = false;
 		
 		public static function get instance():ModelLocator
 		{
