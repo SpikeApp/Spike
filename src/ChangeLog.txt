@@ -6,6 +6,7 @@ FEATURE: User can now check the certificate's expiration date by pressing the +i
 FEATURE: Spike will automatically notify the user (sound + lock screen notification) when it's time to re-sign the app in order to avoid any down time. (Miguel)
 FEATURE: Completely rewritten from scratch ipa re-signer for Mac users that want to re-sign Spike with Xcode. (Miguel)
 FEATURE: 2 new shortcuts for the Shortcuts app that will allow jailbroken users to update Spike with a single press of a button or by invoking Siri. (Miguel)
+FEATURE: Support for spoofing Spike's ipa file in order to share it publicly without risking Apple revokes. (Miguel)
 ENHANCEMENT: A TON of code changes where done under the hood to allow Spike to be re-sign with different Apple accounts (free and paid). (Miguel)
 ENHANCEMENT: Small tweaks to the database backup/restore popup. (Miguel)
 ENHANCEMENT: Updated several third party libraries to their latest versions. (Miguel)
