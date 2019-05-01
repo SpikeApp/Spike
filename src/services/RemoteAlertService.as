@@ -169,7 +169,7 @@ package services
 				myTrace("no data.id");
 				return;
 			} 
-			else if (data.message == null) 
+			else if (data.message == null || data.message == "") 
 			{
 				myTrace("no data.message");
 				return;
