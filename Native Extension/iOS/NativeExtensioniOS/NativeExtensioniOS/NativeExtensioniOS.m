@@ -911,7 +911,7 @@ void NativeExtensionInitializer( void** extDataToSet, FREContextInitializer* ctx
 
 void NativeExtensionContextInitializer(void* extData, const uint8_t* ctxType, FREContext ctx, uint32_t* numFunctionsToTest, const FRENamedFunction** functionsToSet) {
     
-    *numFunctionsToTest = 54;
+    *numFunctionsToTest = 60;
     
     FRENamedFunction * func = (FRENamedFunction *) malloc(sizeof(FRENamedFunction) * *numFunctionsToTest);
 
