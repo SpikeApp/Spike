@@ -1,6 +1,6 @@
 3.6.3
 FEATURE: New offline Loop integration that supports both the Medtronic and Omnipod branches. Find instructions in Settings > Integration. (Cal Young)
-FEATURE: Non-fixed calibration slopes for Libre users. This should make the calibration algorithm behave better in wider glucose ranges. If Spike is reporting inaccurate readings you can activate this new calibration option in Main Menu > Sensor > Advanced. Be sure to re-calibrate your sensor after enabling it. Available only for Libre users. (Johan & Miguel)
+FEATURE: Non-fixed calibration slopes for Libre users. This should make the calibration algorithm behave better in wider glucose ranges. If Spike is reporting inaccurate readings you can activate this new calibration option in Main Menu > Sensor > Advanced. After enabling it for the first time delete all previous calibrations for the sensor and start over. Available only for Libre users. (Johan & Miguel)
 FEATURE: After installing Spike for the first time on a device, it will automatically look for existing iCloud database backups and if it finds any it will prompt the user if he/she wants to restore the existing iCloud data into Spike. (Miguel)
 FEATURE: Spike can now work with custom/dynamic entitlements by analyzing them programmatically and performing real time adaptations. (Miguel)
 FEATURE: Spike will enable/disable features on the fly based on the entitlements available after re-signing. (Miguel)
