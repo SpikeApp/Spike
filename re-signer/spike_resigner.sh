@@ -7,6 +7,7 @@ export LC_ALL=C
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 PURPLE='\033[0;35m'
+BOLD='\033[1m'
 NC='\033[0m'
 SCRIPT_DIR=$(pwd)
 MOBILE_PROVISION_FILES_DIR="mobileprovisionfiles"
@@ -76,8 +77,10 @@ done
 if [ "$SHOULD_CLEAR_XCODE_CACHE" = "true" ]; then
     rm -rfv "$MOBILEDEVICE_PROVISIONING_PROFILES_FOLDER"/* > /dev/null 2>&1
 
+    RED='\033[0;31m'
+
     echo ""
-    read -n 1 -s -r -p "I've just cleared the old Spike certificates from your Xcode cache! Please open the Spike Xcode template project and ${RED}KEEP IT OPEN AND IN THE FOREGROUND FOR AT LEAST 15 SECONDS${NC} to allow enough time for Xcode to download new certificates. You don't need to do anything, xCode downloads the new certificates automatically. Afterwards, close Xcode, come back here and press any key to continue."
+    read -n 1 -s -r -p "I've just cleared the old Spike certificates from your Xcode cache! Please open the Spike Xcode template project and $(echo -e $RED)$(echo -e $BOLD)KEEP IT OPEN AND IN THE FOREGROUND FOR AT LEAST 15 SECONDS$(echo -e $NC) to allow enough time for Xcode to download new certificates. You don't need to do anything, xCode downloads the new certificates automatically. Afterwards, close Xcode, come back here and press any key to continue."
     echo ""
 fi
 
