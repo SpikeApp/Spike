@@ -13,6 +13,7 @@ ENHANCEMENT: Updated several third party libraries to their latest versions. (Mi
 ENHANCEMENT: Completely re-written update service for the new distribution method. (Miguel)
 ENHANCEMENT: Improvements to several translations. (Translators)
 FIX: The word "hour" was incorrectly displayed in the Alarm Snoozer in some languages. (Sascha)
+FIX: When setting Spike as follower for the first time, only the latest glucose value was initially displayed in the Today Widget. (Miguel)
 FIX: Several small overall bug fixes to improve performance, stability and user experience. (Miguel)
 
 3.6.2

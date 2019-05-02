@@ -163,7 +163,7 @@ package services
 				hasAppGroupEntitlements ? SpikeANE.setUserDefaultsData("oldDataColor", "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_OLD_DATA_COLOR)).toString(16).toUpperCase()) : widgetDataObject["oldDataColor"] = "#" + uint(CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_WIDGET_OLD_DATA_COLOR)).toString(16).toUpperCase();
 		}
 		
-		private static function setInitialGraphData(e:Event = null):void
+		public static function setInitialGraphData(e:Event = null):void
 		{
 			Trace.myTrace("WidgetService.as", "Setting initial widget data!");
 			
@@ -626,38 +626,48 @@ package services
 			if (!initialGraphDataSet) //Compatibility with follower mode because we get a new glucose event before Spike sends the initial chart data.
 				setInitialGraphData();
 			
+			var needsToAddLatestGlucose:Boolean = true;
+			if (CGMBlueToothDevice.isFollower() && (startupGlucoseReadingsList == null || startupGlucoseReadingsList.length == 0))
+			{
+				setInitialGraphData();
+				needsToAddLatestGlucose = false
+			}
+			
 			Trace.myTrace("WidgetService.as", "Sending new glucose reading to widget!");
 			
-			var currentReading:BgReading;
-			if (!CGMBlueToothDevice.isFollower())
-				currentReading = BgReading.lastNoSensor();
-			else
-				currentReading = BgReading.lastWithCalculatedValue();
-			
-			if ((Calibration.allForSensor().length < 2 && !CGMBlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !CGMBlueToothDevice.isFollower()))
-				return;
-			
-			var latestGlucose:String = BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
-			var latestGlucoseValue:Number = Number(latestGlucose);
-			if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+			if (needsToAddLatestGlucose)
 			{
-				if (isLowValue(latestGlucose) || latestGlucoseValue < 40)
-					latestGlucoseValue = 38;
-				else if (latestGlucose == "HIGH" || latestGlucoseValue > 400)
-					latestGlucoseValue = 400;
+				var currentReading:BgReading;
+				if (!CGMBlueToothDevice.isFollower())
+					currentReading = BgReading.lastNoSensor();
+				else
+					currentReading = BgReading.lastWithCalculatedValue();
+				
+				if ((Calibration.allForSensor().length < 2 && !CGMBlueToothDevice.isFollower()) || currentReading == null || currentReading.calculatedValue == 0 || (currentReading.calibration == null && !CGMBlueToothDevice.isFollower()))
+					return;
+				
+				var latestGlucose:String = BgGraphBuilder.unitizedString(currentReading.calculatedValue, CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true");
+				var latestGlucoseValue:Number = Number(latestGlucose);
+				if (CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_DO_MGDL) == "true")
+				{
+					if (isLowValue(latestGlucose) || latestGlucoseValue < 40)
+						latestGlucoseValue = 38;
+					else if (latestGlucose == "HIGH" || latestGlucoseValue > 400)
+						latestGlucoseValue = 400;
+				}
+				else
+				{
+					var lowestPossibleValue:Number = Math.round(((BgReading.mgdlToMmol((40))) * 10)) / 10;
+					var highestPossibleValue:Number = Math.round(((BgReading.mgdlToMmol((400))) * 10)) / 10
+					if (isLowValue(latestGlucose) || latestGlucoseValue < lowestPossibleValue)
+						latestGlucoseValue = lowestPossibleValue;
+					else if (latestGlucose == "HIGH" || latestGlucoseValue > highestPossibleValue)
+						latestGlucoseValue = highestPossibleValue;
+				}
+				
+				activeGlucoseReadingsList.push( { value: latestGlucoseValue, time: getGlucoseTimeFormatted(currentReading.timestamp, true), timestamp: currentReading.timestamp } ); 
+				processChartGlucoseValues();
 			}
-			else
-			{
-				var lowestPossibleValue:Number = Math.round(((BgReading.mgdlToMmol((40))) * 10)) / 10;
-				var highestPossibleValue:Number = Math.round(((BgReading.mgdlToMmol((400))) * 10)) / 10
-				if (isLowValue(latestGlucose) || latestGlucoseValue < lowestPossibleValue)
-					latestGlucoseValue = lowestPossibleValue;
-				else if (latestGlucose == "HIGH" || latestGlucoseValue > highestPossibleValue)
-					latestGlucoseValue = highestPossibleValue;
-			}
-			
-			activeGlucoseReadingsList.push( { value: latestGlucoseValue, time: getGlucoseTimeFormatted(currentReading.timestamp, true), timestamp: currentReading.timestamp } ); 
-			processChartGlucoseValues();
 			
 			var now:Number = new Date().valueOf();
 			
