@@ -68,6 +68,7 @@ package ui.screens.display.sensor
 		private var calibrationActionsContainer:LayoutGroup;
 		private var sensorCountdownLabel:Label;
 		private var skipWarmUpsCheck:Check;
+		private var nonFixedLibreSlopesCheck:Check;
 		
 		/* Properties */
 		private var dateFormatter:DateTimeFormatter;
@@ -79,6 +80,7 @@ package ui.screens.display.sensor
 		private var intervalID:int = -1;
 		private var warmupTime:Number;
 		private var shouldSkipWarmup:Boolean = false;
+		private var nonFixedLibreSlopes:Boolean = false;
 		
 		public function SensorStartStopList()
 		{
@@ -119,6 +121,9 @@ package ui.screens.display.sensor
 		
 		private function setupInitialState():void
 		{
+			/* Libre Calibration */
+			nonFixedLibreSlopes = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NON_FIXED_LIBRE_CALIBRATION_PARAMETERS) == "true";
+			
 			/* Warmup Time */
 			if (!shouldSkipWarmup)
 				shouldSkipWarmup = LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_REMOVE_SENSOR_WARMUP_ENABLED) == "true";
@@ -254,6 +259,10 @@ package ui.screens.display.sensor
 			skipWarmUpsCheck = LayoutFactory.createCheckMark(shouldSkipWarmup);
 			skipWarmUpsCheck.addEventListener(Event.CHANGE, onSkipWarmUpsChanged);
 			
+			//Non-Fixed Libre Slopes Check
+			nonFixedLibreSlopesCheck = LayoutFactory.createCheckMark(nonFixedLibreSlopes);
+			nonFixedLibreSlopesCheck.addEventListener(Event.CHANGE, onNonFixedLibreSlopesChanged);
+			
 			/* Create Screen Data */
 			setDataProvider()
 			
@@ -343,6 +352,13 @@ package ui.screens.display.sensor
 			if (!CGMBlueToothDevice.knowsFSLAge() && CommonSettings.getCommonSetting(CommonSettings.COMMON_SETTING_PERIPHERAL_TYPE) != "" && actionButton != null)
 				sensorChildrenContent.push({ label: "", accessory: actionButton });
 			
+			var advancedOptions:Array = [];
+			advancedOptions.push( { label: ModelLocator.resourceManagerInstance.getString('sensorscreen','skip_sensor_warmups_label'), accessory: skipWarmUpsCheck } );
+			if (CGMBlueToothDevice.isTypeLimitter())
+			{
+				advancedOptions.push( { label: ModelLocator.resourceManagerInstance.getString('sensorscreen','non_fixed_libre_slopes'), accessory: nonFixedLibreSlopesCheck } );
+			}
+			
 			dataProvider = new HierarchicalCollection(
 				[
 					{	
@@ -359,9 +375,7 @@ package ui.screens.display.sensor
 					},
 					{
 						header  : { label: ModelLocator.resourceManagerInstance.getString('sensorscreen','advanced_section_label') },
-						children: [
-							{ label: ModelLocator.resourceManagerInstance.getString('sensorscreen','skip_sensor_warmups_label'), accessory: skipWarmUpsCheck }
-						]
+						children: advancedOptions
 					}
 				]
 			);
@@ -510,12 +524,16 @@ package ui.screens.display.sensor
 			}
 		}
 		
+		private function onNonFixedLibreSlopesChanged(e:Event):void
+		{
+			nonFixedLibreSlopes = nonFixedLibreSlopesCheck.isSelected;
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_NON_FIXED_LIBRE_CALIBRATION_PARAMETERS, String(nonFixedLibreSlopes), true, false);
+		}
+		
 		private function onSkipWarmUpsChanged(e:Event):void
 		{
 			shouldSkipWarmup = skipWarmUpsCheck.isSelected;
-			
-			if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_REMOVE_SENSOR_WARMUP_ENABLED) != String(shouldSkipWarmup))
-				LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_REMOVE_SENSOR_WARMUP_ENABLED, String(shouldSkipWarmup));
+			LocalSettings.setLocalSetting(LocalSettings.LOCAL_SETTING_REMOVE_SENSOR_WARMUP_ENABLED, String(shouldSkipWarmup), true, false);
 			
 			if (shouldSkipWarmup && LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_REMOVE_SENSOR_WARMUP_WARNING_DISPLAYED) != "true")
 			{
@@ -642,6 +660,14 @@ package ui.screens.display.sensor
 				skipWarmUpsCheck.removeFromParent();
 				skipWarmUpsCheck.dispose();
 				skipWarmUpsCheck = null;
+			}
+			
+			if (nonFixedLibreSlopesCheck != null)
+			{
+				nonFixedLibreSlopesCheck.removeEventListener(Event.CHANGE, onNonFixedLibreSlopesChanged);
+				nonFixedLibreSlopesCheck.removeFromParent();
+				nonFixedLibreSlopesCheck.dispose();
+				nonFixedLibreSlopesCheck = null;
 			}
 			
 			super.dispose();

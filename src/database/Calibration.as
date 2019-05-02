@@ -489,7 +489,23 @@ package database
 		 * without database update<br> 
 		 */
 		private static function calculateWLS(calibration:Calibration):Calibration {
-			var sParams:SlopeParameters = CGMBlueToothDevice.isTypeLimitter() ? new LiParameters(): new DexParameters();
+			var sParams:SlopeParameters;
+			if (CGMBlueToothDevice.isTypeLimitter())
+			{
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NON_FIXED_LIBRE_CALIBRATION_PARAMETERS) == "true")
+				{
+					sParams = new LiParametersNonFixed();
+				}
+				else
+				{
+					sParams = new LiParameters();
+				}
+			}
+			else
+			{
+				sParams = new DexParameters();
+			}
+			
 			if (Sensor.getActiveSensor()) {
 				myTrace("calculatewls : sensor is active");
 				var l:Number = 0;
@@ -622,7 +638,22 @@ package database
 		 * calibrations should have maximum 3 calibrations, the latest,  from large to small ie descending
 		 */
 		private function slopeOOBHandler(status:int, calibrations:Array):Number {
-			var sParams:SlopeParameters = CGMBlueToothDevice.isTypeLimitter() ? new LiParameters(): new DexParameters();
+			var sParams:SlopeParameters;
+			if (CGMBlueToothDevice.isTypeLimitter())
+			{
+				if (LocalSettings.getLocalSetting(LocalSettings.LOCAL_SETTING_NON_FIXED_LIBRE_CALIBRATION_PARAMETERS) == "true")
+				{
+					sParams = new LiParametersNonFixed();
+				}
+				else
+				{
+					sParams = new LiParameters();
+				}
+			}
+			else
+			{
+				sParams = new DexParameters();
+			}
 			
 			var thisCalibration:Calibration = calibrations[0] as Calibration;
 			if(status == 0) {
@@ -1032,8 +1063,11 @@ internal class LiParameters extends SlopeParameters {
 		DEFAULT_SLOPE = 1;
 		DEFAULT_HIGH_SLOPE_HIGH = 1;
 		DEFAUL_HIGH_SLOPE_LOW = 1;
-		
-		/*
+	}
+}
+
+internal class LiParametersNonFixed extends SlopeParameters {
+	function LiParametersNonFixed() {
 		LOW_SLOPE_1 = 0.55;
 		LOW_SLOPE_2 = 0.50;
 		HIGH_SLOPE_1 = 1.5;
@@ -1042,8 +1076,6 @@ internal class LiParameters extends SlopeParameters {
 		DEFAULT_LOW_SLOPE_HIGH = 0.50;
 		DEFAULT_SLOPE = 1;
 		DEFAULT_HIGH_SLOPE_HIGH = 1.5;
-		DEFAUL_HIGH_SLOPE_LOW = 1.4;	
-*/
+		DEFAUL_HIGH_SLOPE_LOW = 1.4;
 	}
 }
-
