@@ -77,7 +77,7 @@ if [ "$SHOULD_CLEAR_XCODE_CACHE" = "true" ]; then
     rm -rfv "$MOBILEDEVICE_PROVISIONING_PROFILES_FOLDER"/* > /dev/null 2>&1
 
     echo ""
-    read -n 1 -s -r -p "I've just cleared the old Spike certificates from your Xcode cache! Please open the Spike Xcode template project and keep it open for at least 10-15 seconds to allow enough time for Xcode to download new certificates. You don't need to do anything, xCode downloads the new certificates automatically. Afterwards, close Xcode, come back here and press any key to continue."
+    read -n 1 -s -r -p "I've just cleared the old Spike certificates from your Xcode cache! Please open the Spike Xcode template project and ${RED}KEEP IT OPEN FOR AT LEAST 15 SECONDS${NC} to allow enough time for Xcode to download new certificates. You don't need to do anything, xCode downloads the new certificates automatically. Afterwards, close Xcode, come back here and press any key to continue."
     echo ""
 fi
 
