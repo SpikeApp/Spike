@@ -1,4 +1,5 @@
-# !/bin/bash
+#!/bin/bash
+
 # Spike Re-Signer by Miguel Kennedy
 # Re-signs Spike's ipa file with free or paid Apple accounts
 # Maintains the same bundle id.
@@ -70,7 +71,7 @@ do
             exit 0
             break
             ;;
-        *) 
+        *)
     esac
 done
 
@@ -103,7 +104,7 @@ do
             exit 0
             break
             ;;
-        *) 
+        *)
     esac
 done
 
@@ -130,7 +131,7 @@ if [ $SHOULD_DOWNLOAD = "true" ]; then
                 exit 0
                 break
                 ;;
-            *) 
+            *)
         esac
     done
 else
@@ -233,7 +234,7 @@ select answer in "${choices[@]}"; do
         fi
     done
 done
-    
+
 CODE_SIGN_IDENTITY="$answer"
 
 if [ "$CODE_SIGN_IDENTITY" = "" ]; then
@@ -362,16 +363,16 @@ do
     /usr/libexec/PlistBuddy -c 'Print DeveloperCertificates:0' $TEMP_MOBILEPROVISION_PLIST_PATH > $TEMP_CERTIFICATE_PATH
     # Get the common name (CN) from the certificate (regex capture between 'CN=' and '/OU'):
     MOBILEPROVISION_IDENTITY_NAME=`openssl x509 -inform DER -in $TEMP_CERTIFICATE_PATH -subject -noout | perl -n -e '/CN=(.+)\/OU/ && print "$1"'`
-		
+
 	if [ "$CODE_SIGN_IDENTITY" = "$MOBILEPROVISION_IDENTITY_NAME" ]; then
         # Yay, this mobile provisioning profile matches up with the selected signing identity, let's continue...
         # Get the name of the provisioning profile:
-        MOBILEPROVISION_PROFILE_NAME=`/usr/libexec/PlistBuddy -c 'Print Name' $TEMP_MOBILEPROVISION_PLIST_PATH`			
+        MOBILEPROVISION_PROFILE_NAME=`/usr/libexec/PlistBuddy -c 'Print Name' $TEMP_MOBILEPROVISION_PLIST_PATH`
 
         #Find corresponding app/extension
 		if [ "$SPIKE_DEVICE_VERSION" = "iPad" ]; then
 			if [[ "$MOBILEPROVISION_PROFILE_NAME" == *spikeipad.watchkitapp.watchkitextension ]]; then
-	            FOUND_WATCH_EXTENSION_MOBILEPROVISION=true 
+	            FOUND_WATCH_EXTENSION_MOBILEPROVISION=true
 	            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/watchkitextension.mobileprovision"
 			elif [[ "$MOBILEPROVISION_PROFILE_NAME" == *spikeipad.watchkitapp ]]; then
 	            FOUND_WATCH_APP_MOBILEPROVISION=true
@@ -396,7 +397,7 @@ do
 			fi
 		else
 			if [[ "$MOBILEPROVISION_PROFILE_NAME" == *spike.watchkitapp.watchkitextension ]]; then
-	            FOUND_WATCH_EXTENSION_MOBILEPROVISION=true 
+	            FOUND_WATCH_EXTENSION_MOBILEPROVISION=true
 	            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/watchkitextension.mobileprovision"
 			elif [[ "$MOBILEPROVISION_PROFILE_NAME" == *spike.watchkitapp ]]; then
 	            FOUND_WATCH_APP_MOBILEPROVISION=true
@@ -784,7 +785,7 @@ function resign {
 
             log "Added iCloud service entitlements"
         fi
-    fi 
+    fi
 
     log "Resigning application using certificate: '$CERTIFICATE'"
     log "and entitlements from provisioning profile: $NEW_PROVISION"
