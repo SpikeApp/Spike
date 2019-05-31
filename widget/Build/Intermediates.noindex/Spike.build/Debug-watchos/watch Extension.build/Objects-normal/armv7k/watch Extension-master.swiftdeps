@@ -1,9 +1,0 @@
-version: "Apple Swift version 4.0.3 (swiftlang-900.0.74.1 clang-900.0.39.2)"
-options: "0e236f55d636a4df8a304db95dd285ce"
-build_time: [1524955117, 562316000]
-inputs:
-  "/Volumes/Data HD/Development/GitHub/widget/watch Extension/NotificationController.swift": [1524174625, 0]
-  "/Volumes/Data HD/Development/GitHub/widget/watch Extension/ExtensionDelegate.swift": [1524174780, 0]
-  "/Volumes/Data HD/Development/GitHub/widget/widget/Classes/UIColor+colorFromHex.swift": [1524716041, 0]
-  "/Volumes/Data HD/Development/GitHub/widget/watch Extension/InterfaceController.swift": [1524803861, 0]
-  "/Volumes/Data HD/Development/GitHub/widget/watch Extension/GlanceController.swift": [1522783000, 0]

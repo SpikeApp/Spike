@@ -1,6 +1,0 @@
-version: "Apple Swift version 4.0.3 (swiftlang-900.0.74.1 clang-900.0.39.2)"
-options: "90bc564597a55094627ccd438acd7ed1"
-build_time: [1524955123, 720800000]
-inputs:
-  "/Volumes/Data HD/Development/GitHub/widget/fswidget/TodayViewController.swift": [1524087738, 0]
-  "/Volumes/Data HD/Development/GitHub/widget/widget/Classes/UIColor+colorFromHex.swift": [1524716041, 0]
