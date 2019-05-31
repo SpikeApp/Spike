@@ -39,9 +39,9 @@
 		9654C7FD2087C35F0021B684 /* fswidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9654C7F22087C35F0021B684 /* fswidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9654C8012087C8790021B684 /* Pods_widget.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9654C8022087C8790021B684 /* Pods_widget.framework */; };
 		9654C8042087C8DB0021B684 /* UIColor+colorFromHex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB729D62029FD3500965219 /* UIColor+colorFromHex.swift */; };
+		9656E7B522A1285600F3E027 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9656E7B422A1285600F3E027 /* HealthKit.framework */; };
 		965DE933221C50FA001307A5 /* ClockKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 965DE932221C50FA001307A5 /* ClockKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		96728E612096D27700ADFFDE /* ComplicationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96728E602096D27700ADFFDE /* ComplicationController.swift */; };
-		96A8E1AE227C528E0062996D /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96A8E1AD227C528E0062996D /* HealthKit.framework */; };
 		96B9CB5520969B9300782124 /* FSInterfaceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B9CB5420969B9300782124 /* FSInterfaceController.swift */; };
 		96C0447A22602ADB003B4D5F /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96C0447922602ADB003B4D5F /* CloudKit.framework */; };
 		96C844B2226506BF00EE01DF /* watch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 961EB75F2089460D005F0E9F /* watch.app */; };
@@ -190,9 +190,9 @@
 		9654C7FA2087C35F0021B684 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9654C8022087C8790021B684 /* Pods_widget.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Pods_widget.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9654C8052087CED70021B684 /* fswidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = fswidget.entitlements; sourceTree = "<group>"; };
+		9656E7B422A1285600F3E027 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		965DE932221C50FA001307A5 /* ClockKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ClockKit.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS5.1.sdk/System/Library/Frameworks/ClockKit.framework; sourceTree = DEVELOPER_DIR; };
 		96728E602096D27700ADFFDE /* ComplicationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComplicationController.swift; sourceTree = "<group>"; };
-		96A8E1AD227C528E0062996D /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		96B9CB5420969B9300782124 /* FSInterfaceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FSInterfaceController.swift; sourceTree = "<group>"; };
 		96C0447922602ADB003B4D5F /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		B878BEBC93CA067751E1A08D /* Pods-fswidget.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-fswidget.debug.xcconfig"; path = "Pods/Target Support Files/Pods-fswidget/Pods-fswidget.debug.xcconfig"; sourceTree = "<group>"; };
@@ -205,7 +205,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				96A8E1AE227C528E0062996D /* HealthKit.framework in Frameworks */,
+				9656E7B522A1285600F3E027 /* HealthKit.framework in Frameworks */,
 				89E17E0D4380005A601C4E69 /* Pods_Spike.framework in Frameworks */,
 				96C0447A22602ADB003B4D5F /* CloudKit.framework in Frameworks */,
 			);
@@ -348,7 +348,7 @@
 		1C510154202806D600872D37 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				96A8E1AD227C528E0062996D /* HealthKit.framework */,
+				9656E7B422A1285600F3E027 /* HealthKit.framework */,
 				96C0447922602ADB003B4D5F /* CloudKit.framework */,
 				965DE932221C50FA001307A5 /* ClockKit.framework */,
 				9654C8022087C8790021B684 /* Pods_widget.framework */,
@@ -1175,14 +1175,14 @@
 				CODE_SIGN_ENTITLEMENTS = Spike/Spike.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4J6GHFAM55;
+				DEVELOPMENT_TEAM = X9JY9J897M;
 				INFOPLIST_FILE = Spike/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wearenotwaiting.spike;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 4.0;
@@ -1199,14 +1199,14 @@
 				CODE_SIGN_ENTITLEMENTS = Spike/Spike.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4J6GHFAM55;
+				DEVELOPMENT_TEAM = X9JY9J897M;
 				INFOPLIST_FILE = Spike/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wearenotwaiting.spike;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 4.0;
@@ -1221,7 +1221,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = M295NYD8ZT;
+				DEVELOPMENT_TEAM = X9JY9J897M;
 				INFOPLIST_FILE = SpikeTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1243,7 +1243,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = M295NYD8ZT;
+				DEVELOPMENT_TEAM = X9JY9J897M;
 				INFOPLIST_FILE = SpikeTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1264,7 +1264,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = M295NYD8ZT;
+				DEVELOPMENT_TEAM = X9JY9J897M;
 				INFOPLIST_FILE = SpikeUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1285,7 +1285,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = M295NYD8ZT;
+				DEVELOPMENT_TEAM = X9JY9J897M;
 				INFOPLIST_FILE = SpikeUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1307,7 +1307,7 @@
 				CODE_SIGN_ENTITLEMENTS = widget/widget.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4J6GHFAM55;
+				DEVELOPMENT_TEAM = X9JY9J897M;
 				INFOPLIST_FILE = widget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1315,7 +1315,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.todaywidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wearenotwaiting.spike.todaywidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -1332,7 +1332,7 @@
 				CODE_SIGN_ENTITLEMENTS = widget/widget.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4J6GHFAM55;
+				DEVELOPMENT_TEAM = X9JY9J897M;
 				INFOPLIST_FILE = widget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1340,7 +1340,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.todaywidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wearenotwaiting.spike.todaywidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -1358,10 +1358,10 @@
 				CODE_SIGN_ENTITLEMENTS = watch/watch.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4J6GHFAM55;
+				DEVELOPMENT_TEAM = X9JY9J897M;
 				IBSC_MODULE = watch_Extension;
 				INFOPLIST_FILE = watch/Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wearenotwaiting.spike.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
@@ -1380,10 +1380,10 @@
 				CODE_SIGN_ENTITLEMENTS = watch/watch.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4J6GHFAM55;
+				DEVELOPMENT_TEAM = X9JY9J897M;
 				IBSC_MODULE = watch_Extension;
 				INFOPLIST_FILE = watch/Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wearenotwaiting.spike.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
@@ -1401,14 +1401,14 @@
 				CODE_SIGN_ENTITLEMENTS = "watch Extension/watch Extension.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4J6GHFAM55;
+				DEVELOPMENT_TEAM = X9JY9J897M;
 				INFOPLIST_FILE = "watch Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.watchkitapp.watchkitextension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wearenotwaiting.spike.watchkitapp.watchkitextension;
 				PRODUCT_NAME = "${TARGET_NAME}";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
@@ -1426,14 +1426,14 @@
 				CODE_SIGN_ENTITLEMENTS = "watch Extension/watch Extension.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4J6GHFAM55;
+				DEVELOPMENT_TEAM = X9JY9J897M;
 				INFOPLIST_FILE = "watch Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.watchkitapp.watchkitextension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wearenotwaiting.spike.watchkitapp.watchkitextension;
 				PRODUCT_NAME = "${TARGET_NAME}";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = watchos;
@@ -1451,7 +1451,7 @@
 				CODE_SIGN_ENTITLEMENTS = fswidget/fswidget.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4J6GHFAM55;
+				DEVELOPMENT_TEAM = X9JY9J897M;
 				INFOPLIST_FILE = fswidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1459,7 +1459,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.fswidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wearenotwaiting.spike.fswidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -1476,7 +1476,7 @@
 				CODE_SIGN_ENTITLEMENTS = fswidget/fswidget.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 4J6GHFAM55;
+				DEVELOPMENT_TEAM = X9JY9J897M;
 				INFOPLIST_FILE = fswidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1484,7 +1484,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.miguelkennedy.spike.fswidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wearenotwaiting.spike.fswidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;

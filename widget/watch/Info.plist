@@ -28,7 +28,7 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
 	<key>WKCompanionAppBundleIdentifier</key>
-	<string>com.miguelkennedy.spike</string>
+	<string>com.wearenotwaiting.spike</string>
 	<key>WKWatchKitApp</key>
 	<true/>
 </dict>

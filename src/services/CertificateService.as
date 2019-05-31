@@ -45,7 +45,7 @@ package services
 		public static var hasHealthKitCapabilities:Boolean = false;
 		public static var hasiCloudCapabilities:Boolean = false;
 		public static var fullEntitlements:String = "";
-		public static var bundleID:String = "com.miguelkennedy.spike";
+		public static var bundleID:String = "";
 		public static var isFreeCertificate:Boolean = true;
 
 		public function CertificateService()

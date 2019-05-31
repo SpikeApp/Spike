@@ -11,7 +11,7 @@
 	<!-- A universally unique application identifier. Must be unique across 
 		all AIR applications. Using a reverse DNS-style name as the id is recommended. 
 		(Eg. com.example.ExampleApplication.) Required. -->
-	<id>com.miguelkennedy.spike</id>
+	<id>com.wearenotwaiting.spike</id>
 
 	<!-- Used as the filename for the application. Required. -->
 	<filename>Spike</filename>
@@ -244,7 +244,7 @@
 				<array>
 					<dict>
 						<key>CFBundleURLName</key>
-						<string>com.miguelkennedy.spike</string>
+						<string>com.wearenotwaiting.spike</string>
 						<key>CFBundleURLSchemes</key>
 						<array>
 							<string>spikeapp</string>
@@ -313,20 +313,20 @@
 		<Entitlements> 
 			<![CDATA[
 				<key>application-identifier</key>
-				<string>4J6GHFAM55.com.miguelkennedy.spike</string>
+				<string>X9JY9J897M.com.wearenotwaiting.spike</string>
 				<key>com.apple.developer.healthkit</key>
 				<true/>
 				<key>com.apple.security.application-groups</key>
 				<array>
-					<string>group.com.miguelkennedy.spike</string>
+					<string>group.com.wearenotwaiting.spike</string>
 				</array>
 				<key>keychain-access-groups</key>
 				<array>
-					<string>4J6GHFAM55.*</string>
+					<string>X9JY9J897M.*</string>
 				</array>
 				<key>com.apple.developer.icloud-container-identifiers</key>
 				<array>
-					<string>iCloud.com.miguelkennedy.spike</string>
+					<string>iCloud.com.wearenotwaiting.spike</string>
 				</array>
 				<key>com.apple.developer.icloud-services</key>
 				<array>
@@ -335,10 +335,10 @@
 				</array>
 				<key>com.apple.developer.ubiquity-container-identifiers</key>
 				<array>
-					<string>iCloud.com.miguelkennedy.spike</string>
+					<string>iCloud.com.wearenotwaiting.spike</string>
 				</array>
 				<key>com.apple.developer.ubiquity-kvstore-identifier</key>
-				<string>4J6GHFAM55.com.miguelkennedy.spike</string>
+				<string>X9JY9J897M.com.wearenotwaiting.spike</string>
 			 ]]>
 		</Entitlements>
 		<!-- 
