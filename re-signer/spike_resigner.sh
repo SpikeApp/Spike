@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 # Spike Re-Signer by Miguel Kennedy
 # Re-signs Spike's ipa file with free or paid Apple accounts
 # Maintains the same bundle id.

@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 # Spike Bundle ID Changer by Miguel Kennedy
 # Changes the bundle id of all apps and extensions inside an ipa file
 
