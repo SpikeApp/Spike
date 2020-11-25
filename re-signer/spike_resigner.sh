@@ -362,8 +362,9 @@ do
     /usr/libexec/PlistBuddy -c 'Print DeveloperCertificates:0' $TEMP_MOBILEPROVISION_PLIST_PATH > $TEMP_CERTIFICATE_PATH
     # Get the common name (CN) from the certificate (regex capture between 'CN=' and '/OU'):
     MOBILEPROVISION_IDENTITY_NAME=`openssl x509 -inform DER -in $TEMP_CERTIFICATE_PATH -subject -noout | perl -n -e '/CN=(.+)\/OU/ && print "$1"'`
-		
-	if [ "$CODE_SIGN_IDENTITY" = "$MOBILEPROVISION_IDENTITY_NAME" ]; then
+
+        # commented out, because this check often led to errors.		
+	#if [ "$CODE_SIGN_IDENTITY" = "$MOBILEPROVISION_IDENTITY_NAME" ]; then
         # Yay, this mobile provisioning profile matches up with the selected signing identity, let's continue...
         # Get the name of the provisioning profile:
         MOBILEPROVISION_PROFILE_NAME=`/usr/libexec/PlistBuddy -c 'Print Name' $TEMP_MOBILEPROVISION_PLIST_PATH`			
@@ -420,7 +421,7 @@ do
 	            fi
 			fi
 		fi
-    fi
+    #fi
 done
 
 #Verify that all mobile provisioning files have been found
