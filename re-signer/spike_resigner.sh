@@ -3,20 +3,37 @@
 # Re-signs Spike's ipa file with free or paid Apple accounts
 # Maintains the same bundle id.
 
+# Define colors and formatting
 export LC_ALL=C
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 PURPLE='\033[0;35m'
 BOLD='\033[1m'
 NC='\033[0m'
-SCRIPT_DIR=$(pwd)
+
+# Define directories and paths
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 MOBILE_PROVISION_FILES_DIR="mobileprovisionfiles"
-MOBILEDEVICE_PROVISIONING_PROFILES_FOLDER="${HOME}/Library/MobileDevice/Provisioning Profiles"
 TEMP_DIR="Temp"
 IS_FREE="true"
 SHOULD_DOWNLOAD="false"
 SELECTED_IPA_FILE=""
 SHOULD_CLEAR_XCODE_CACHE="false"
+
+# Detect the Xcode path.
+XCODE_PATH=$(mdfind 'kMDItemCFBundleIdentifier == com.apple.dt.Xcode')
+if [ -z "$XCODE_PATH" ]; then
+    echo -e "${RED}Error: Xcode is not installed.${NC}"
+    exit 1
+fi
+
+# Check Xcode version (avoid using xcodebuild if someone has XCode Command Line Tools installed and selected as default)
+XCODE_VERSION=$(defaults read $XCODE_PATH/Contents/Info.plist CFBundleShortVersionString | cut -d ' ' -f 2 | cut -d '.' -f 1)
+if [ "$XCODE_VERSION" -ge 16 ]; then
+    MOBILEDEVICE_PROVISIONING_PROFILES_FOLDER="${HOME}/Library/Developer/Xcode/UserData/Provisioning Profiles"
+else
+    MOBILEDEVICE_PROVISIONING_PROFILES_FOLDER="${HOME}/Library/MobileDevice/Provisioning Profiles"
+fi
 
 # Make sure that PATH includes the location of the PlistBuddy helper tool as its location is not standard
 export PATH=$PATH:/usr/libexec
@@ -29,10 +46,10 @@ echo "███████╗██████╔╝██║█████�
 echo "╚════██║██╔═══╝ ██║██╔═██╗ ██╔══╝      ██╔══██╗██╔══╝╚════╝╚════██║██║██║   ██║██║╚██╗██║██╔══╝  ██╔══██╗"
 echo "███████║██║     ██║██║  ██╗███████╗    ██║  ██║███████╗    ███████║██║╚██████╔╝██║ ╚████║███████╗██║  ██║"
 echo "╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝    ╚═╝  ╚═╝╚══════╝    ╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝"
-echo "v1.0"
+echo "v1.0.1"
 echo ""
 
-#Helper Functions
+# Helper Functions
 cleanup () {
     if [ $1 = true ]; then
         echo -e "Cleaning up...${NC}"
@@ -51,7 +68,7 @@ cleanup () {
     fi
 }
 
-#Prompt for Xcode cache clearance
+# Prompt for Xcode cache clearance
 echo -e "\nDo you want me to clear all previous Spike certificates from your Xcode cache? This is needed if you want to renew the expiration date of your currently installed Spike. If you're signing Spike for the first time or just updating to a new Spike version using a paid Apple Developer Account you can choose \"NO\"."
 options=("YES" "NO" "CANCEL")
 select opt in "${options[@]}"
@@ -85,7 +102,7 @@ if [ "$SHOULD_CLEAR_XCODE_CACHE" = "true" ]; then
 fi
 
 # Prompt for ipa download or selection
-echo -e '\nDo you want me to download the lastest available Spike version?'
+echo -e '\nDo you want me to download the latest available Spike version?'
 options=("YES" "NO, I've already added my own Spike IPA file to the folder" "CANCEL")
 select opt in "${options[@]}"
 do
@@ -134,13 +151,13 @@ if [ $SHOULD_DOWNLOAD = "true" ]; then
         esac
     done
 else
-    #Find IPA files and save them in a comma sepparated list
+    # Find IPA files and save them in a comma separated list
     IPA_FILES_LIST=""
 
     EXT=ipa
     for i in *; do
         if [ "${i}" != "${i%.${EXT}}" ];then
-            #Found IPA file, add it to the list
+            # Found IPA file, add it to the list
             IPA_FILES_LIST="$IPA_FILES_LIST$i,"
         fi
     done
@@ -151,11 +168,11 @@ else
         exit 0
     fi
 
-    #Remove last comma from the list
+    # Remove last comma from the list
     IPA_FILES_LIST=`echo "$IPA_FILES_LIST" | sed 's/,$//'`
     IPA_FILES_LIST="$IPA_FILES_LIST,CANCEL"
 
-    #Present dialog with list of IPA files and let user pick one.
+    # Present dialog with list of IPA files and let user pick one.
     echo -e "\nPlease select an IPA file:"
 
     oldIFS=$IFS
@@ -199,7 +216,7 @@ if [ "$SELECTED_IPA_FILE" = "" ]; then
     exit 0
 fi
 
-#Check file structure and create required dirs
+# Check file structure and create required dirs
 echo -e "\nPreparing file structure..."
 mkdir -p $MOBILE_PROVISION_FILES_DIR
 rm -rfv "$MOBILE_PROVISION_FILES_DIR"/* > /dev/null 2>&1
@@ -219,7 +236,7 @@ SIGNING_IDENTITIES_COMMA_SEPARATED_LIST=`echo "$SIGNING_IDENTITIES_LIST" | tr '\
 SIGNING_IDENTITIES_COMMA_SEPARATED_LIST=${SIGNING_IDENTITIES_COMMA_SEPARATED_LIST//\"/}
 SIGNING_IDENTITIES_COMMA_SEPARATED_LIST="$SIGNING_IDENTITIES_COMMA_SEPARATED_LIST,CANCEL"
 
-# Present dialog with list of code signing identites and let the user pick one. The identity that from the build settings is selected by default.
+# Present dialog with list of code signing identities and let the user pick one. The identity that from the build settings is selected by default.
 echo -e "\nPlease select a code signing identity:"
 
 oldIFS=$IFS
@@ -254,11 +271,13 @@ if [ -z "$CODE_SIGN_IDENTITY" ]; then
     exit 0
 fi
 
+SELECTED_TEAM=`echo $CODE_SIGN_IDENTITY | sed 's/.*(\(.*\))/\1/'`
+
 echo -e "\n${GREEN}Selected code signing identity -> $CODE_SIGN_IDENTITY${NC}"
 
 # Logging functions
 log() {
-    # Make sure it returns 0 code even when verose mode is off (test 1)
+    # Make sure it returns 0 code even when verbose mode is off (test 1)
     # To use like [[ condition ]] && log "x" && something
     if [[ -n "$VERBOSE" ]]; then echo -e "$@"; else test 1; fi
 }
@@ -349,7 +368,7 @@ FOUND_FS_WIDGET_MOBILEPROVISION=false
 FOUND_WATCH_APP_MOBILEPROVISION=false
 FOUND_WATCH_EXTENSION_MOBILEPROVISION=false
 
-#Parse all Xcode provisioning profiles
+# Parse all Xcode provisioning profiles
 cd "$MOBILEDEVICE_PROVISIONING_PROFILES_FOLDER"
 
 for MOBILEPROVISION_FILENAME in *.mobileprovision
@@ -360,16 +379,16 @@ do
         > "$TEMP_MOBILEPROVISION_PLIST_PATH"
     # The plist root dict contains an array called 'DeveloperCertificates'. It seems to contain one element with the certificate data. Dump to temp file:
     /usr/libexec/PlistBuddy -c 'Print DeveloperCertificates:0' $TEMP_MOBILEPROVISION_PLIST_PATH > $TEMP_CERTIFICATE_PATH
-    # Get the common name (CN) from the certificate (regex capture between 'CN=' and '/OU'):
-    MOBILEPROVISION_IDENTITY_NAME=`openssl x509 -inform DER -in $TEMP_CERTIFICATE_PATH -subject -noout | perl -n -e '/CN=(.+)\/OU/ && print "$1"'`
 
-        # commented out, because this check often led to errors.		
-	#if [ "$CODE_SIGN_IDENTITY" = "$MOBILEPROVISION_IDENTITY_NAME" ]; then
+    # Get the common name (CN) from the certificate (regex capture between 'CN=' and '/OU') and extract the ID in parentheses.
+	CURRENT_TEAM=`openssl x509 -inform DER -in $TEMP_CERTIFICATE_PATH -subject -noout | sed -n 's/.*CN=[^)]* (\([^)]*\)).*/\1/p'`
+
+	if [ "$SELECTED_TEAM" = "$CURRENT_TEAM" ]; then
         # Yay, this mobile provisioning profile matches up with the selected signing identity, let's continue...
         # Get the name of the provisioning profile:
         MOBILEPROVISION_PROFILE_NAME=`/usr/libexec/PlistBuddy -c 'Print Name' $TEMP_MOBILEPROVISION_PLIST_PATH`			
 
-        #Find corresponding app/extension
+        # Find corresponding app/extension
 		if [ "$SPIKE_DEVICE_VERSION" = "iPad" ]; then
 			if [[ "$MOBILEPROVISION_PROFILE_NAME" == *spikeipad.watchkitapp.watchkitextension ]]; then
 	            FOUND_WATCH_EXTENSION_MOBILEPROVISION=true 
@@ -387,10 +406,10 @@ do
 	            FOUND_SPIKE_MOBILEPROVISION=true
 	            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/spike.mobileprovision"
 
-	            #Detect if user is using a free or paid dev account
-	            CERTFICATE_TIME_TO_LIVE=`/usr/libexec/PlistBuddy -c 'Print TimeToLive' $TEMP_MOBILEPROVISION_PLIST_PATH`
-	            if [ -n "$CERTFICATE_TIME_TO_LIVE" ]; then
-	                if (( $CERTFICATE_TIME_TO_LIVE > 7 )); then
+	            # Detect if user is using a free or paid dev account
+	            CERTIFICATE_TIME_TO_LIVE=`/usr/libexec/PlistBuddy -c 'Print TimeToLive' $TEMP_MOBILEPROVISION_PLIST_PATH`
+	            if [ -n "$CERTIFICATE_TIME_TO_LIVE" ]; then
+	                if (( $CERTIFICATE_TIME_TO_LIVE > 7 )); then
 	                    IS_FREE="false"
 	                fi
 	            fi
@@ -412,19 +431,23 @@ do
 	            FOUND_SPIKE_MOBILEPROVISION=true
 	            cp $MOBILEPROVISION_FILENAME "${SCRIPT_DIR}/${MOBILE_PROVISION_FILES_DIR}/spike.mobileprovision"
 
-	            #Detect if user is using a free or paid dev account
-	            CERTFICATE_TIME_TO_LIVE=`/usr/libexec/PlistBuddy -c 'Print TimeToLive' $TEMP_MOBILEPROVISION_PLIST_PATH`
-	            if [ -n "$CERTFICATE_TIME_TO_LIVE" ]; then
-	                if (( $CERTFICATE_TIME_TO_LIVE > 7 )); then
+	            # Detect if user is using a free or paid dev account
+	            CERTIFICATE_TIME_TO_LIVE=`/usr/libexec/PlistBuddy -c 'Print TimeToLive' $TEMP_MOBILEPROVISION_PLIST_PATH`
+	            if [ -n "$CERTIFICATE_TIME_TO_LIVE" ]; then
+	                if (( $CERTIFICATE_TIME_TO_LIVE > 7 )); then
 	                    IS_FREE="false"
 	                fi
 	            fi
 			fi
 		fi
-    #fi
+	else
+    	echo -e "${RED}Error: The development team in the Xcode template ($SELECTED_TEAM) does not match the current team selected in the resigner script ($CURRENT_TEAM). Aborting!${NC}"
+    	cleanup false
+    	exit 0
+    fi
 done
 
-#Verify that all mobile provisioning files have been found
+# Verify that all mobile provisioning files have been found
 if [ $FOUND_WATCH_EXTENSION_MOBILEPROVISION = false ]; then
     echo -e "${RED}Can't find watch extension's mobileprovision file. Please make sure you performed all Xcode steps correctly. Aborting!${NC}"
     cleanup false
@@ -455,14 +478,14 @@ if [ $FOUND_SPIKE_MOBILEPROVISION = false ]; then
     exit 0
 fi
 
-#Output account type
+# Output account type
 if [ $IS_FREE = "true" ]; then
     echo -e "${GREEN}Detected account type -> Free Apple Account${NC}";
 else
     echo -e "${GREEN}Detected account type -> Paid Developer Account${NC}";
 fi
 
-#Return to originl dir
+# Return to originl dir
 cd "$SCRIPT_DIR"
 
 ###########################
@@ -680,7 +703,7 @@ function resign {
 
     local PROVISION_BUNDLE_IDENTIFIER=$(bundle_id_for_provison "$NEW_PROVISION")
 
-    #Maintain same bundle identifier depending on current settings
+    # Maintain same bundle identifier depending on current settings
     BUNDLE_IDENTIFIER="$CURRENT_BUNDLE_IDENTIFIER"
 
     # Replace the embedded mobile provisioning profile
@@ -701,7 +724,7 @@ function resign {
         log "Profile app identifier prefix is '$APP_IDENTIFIER_PREFIX'"
     fi
 
-    # Set new app identifer prefix if such entry exists in plist file
+    # Set new app identifier prefix if such entry exists in plist file
     PlistBuddy -c "Set :AppIdentifierPrefix $APP_IDENTIFIER_PREFIX." "$APP_PATH/Info.plist" 2>/dev/null
 
     TEAM_IDENTIFIER=$(PlistBuddy -c "Print :Entitlements:com.apple.developer.team-identifier" "$TEMP_DIR/profile.plist" | tr -d '\n')
@@ -722,7 +745,7 @@ function resign {
     # Replace embedded provisioning profile with new file
     cp -f "$NEW_PROVISION" "$APP_PATH/embedded.mobileprovision"
 
-    #if the current bundle identifier is different from the new one in the provisioning profile, then change it.
+    # if the current bundle identifier is different from the new one in the provisioning profile, then change it.
     if [ "$CURRENT_BUNDLE_IDENTIFIER" != "$BUNDLE_IDENTIFIER" ]; then
         log "Updating the bundle identifier from '$CURRENT_BUNDLE_IDENTIFIER' to '$BUNDLE_IDENTIFIER'"
         PlistBuddy -c "Set :CFBundleIdentifier $BUNDLE_IDENTIFIER" "$APP_PATH/Info.plist"
@@ -733,7 +756,7 @@ function resign {
     FRAMEWORKS_DIR="$APP_PATH/Frameworks"
     if [ -d "$FRAMEWORKS_DIR" ]; then
         if [ "$TEAM_IDENTIFIER" == "" ]; then
-            error "ERROR: embedded frameworks detected, re-signing iOS 8 (or higher) applications wihout a team identifier in the certificate/profile does not work"
+            error "ERROR: embedded frameworks detected, re-signing iOS 8 (or higher) applications without a team identifier in the certificate/profile does not work"
         fi
 
         log "Resigning embedded frameworks using certificate: '$CERTIFICATE'"
@@ -741,7 +764,7 @@ function resign {
         do
             if [[ "$framework" == *.framework || "$framework" == *.dylib ]]; then
                 log "Resigning '$framework'"
-                # Must not qote KEYCHAIN_FLAG because it needs to be unwrapped and passed to codesign with spaces
+                # Must not quote KEYCHAIN_FLAG because it needs to be unwrapped and passed to codesign with spaces
                 # shellcheck disable=SC2086
                 /usr/bin/codesign ${VERBOSE} ${KEYCHAIN_FLAG} -f -s "$CERTIFICATE" "$framework"
                 checkStatus
@@ -751,16 +774,16 @@ function resign {
         done
     fi
 
-    #Process entitlements & resign
+    # Process entitlements & resign
     log "Extracting entitlements from provisioning profile"
     PlistBuddy -x -c "Print Entitlements" "$TEMP_DIR/profile.plist" > "$TEMP_DIR/newEntitlements"
     checkStatus
 
-    #Patch iCloud entitlements for Spike app
+    # Patch iCloud entitlements for Spike app
     if  [[ "$NESTED" != NESTED && "$IS_FREE" == "false" ]]; then
         log "Checking iCloud entitlements"
 
-        #Get current entitlements file
+        # Get current entitlements file
         PROVISION_ENTITLEMENTS="$TEMP_DIR/newEntitlements"
 
         # Check if current entitlements support iCloud
@@ -768,18 +791,18 @@ function resign {
         ICLOUD_CONTAINER_VALUE=$(PlistBuddy -c "Print $ICLOUD_CONTAINER_KEY" "$PROVISION_ENTITLEMENTS" | grep -E '^[A-Z0-9]*' -o | tr -d '\n')
 
         if [ -n "$ICLOUD_CONTAINER_VALUE" ]; then
-            #Lets take care of the iCLoud services entitlements
+            # Lets take care of the iCLoud services entitlements
             log "Adding missing iCloud service entitlements"
 
-            #Define iCloud services entitlements key
+            # Define iCloud services entitlements key
             ICLOUD_SERVICES_KEY="com.apple.developer.icloud-services"
             PLUTIL_ICLOUD_SERVICES_KEY=$(echo "$ICLOUD_SERVICES_KEY" | sed 's/\./\\\./g')
 
-            #First delete them in case they already exist
+            # First delete them in case they already exist
             PlistBuddy -c "Delete $ICLOUD_SERVICES_KEY" "$PROVISION_ENTITLEMENTS" 2>/dev/null
             checkStatus
 
-            #Insert them
+            # Insert them
             plutil -insert "$PLUTIL_ICLOUD_SERVICES_KEY" -json '[ "CloudDocuments", "CloudKit"]' "$PROVISION_ENTITLEMENTS"
             checkStatus
 
@@ -793,7 +816,7 @@ function resign {
         log "Creating an archived-expanded-entitlements.xcent file for Xcode 9 builds or earlier"
         cp -- "$TEMP_DIR/newEntitlements" "$APP_PATH/archived-expanded-entitlements.xcent"
     fi
-    # Must not qote KEYCHAIN_FLAG because it needs to be unwrapped and passed to codesign with spaces
+    # Must not quote KEYCHAIN_FLAG because it needs to be unwrapped and passed to codesign with spaces
     # shellcheck disable=SC2086
     /usr/bin/codesign ${VERBOSE} ${KEYCHAIN_FLAG} -f -s "$CERTIFICATE" --entitlements "$TEMP_DIR/newEntitlements" "$APP_PATH"
     checkStatus
@@ -826,7 +849,7 @@ log "Repackaging as $NEW_FILE"
 # Zip up the contents of the "$TEMP_DIR" folder
 # Navigate to the temporary directory (sending the output to null)
 # Zip all the contents, saving the zip file in the above directory
-# Navigate back to the orignating directory (sending the output to null)
+# Navigate back to the originating directory (sending the output to null)
 pushd "$TEMP_DIR" > /dev/null
 # TODO: Fix shellcheck warning and remove directive
 # shellcheck disable=SC2035
@@ -841,5 +864,5 @@ rm -rf "$TEMP_DIR"
 
 log "Process complete"
 
-#Clean up
+# Clean up
 cleanup true
